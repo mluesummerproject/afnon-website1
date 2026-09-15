@@ -1,0 +1,175 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   Design tokens
+   Channel triplets so Tailwind can apply opacity (`bg-anor/10`).
+   ========================================================================== */
+:root {
+  /* Surfaces */
+  --paper: 250 243 232;        /* #FAF3E8 ivory — primary ground */
+  --paper-alt: 243 233 216;    /* warmer paper — alternate sections */
+  --surface: 255 252 246;      /* raised surface, admin fields */
+  --night: 27 22 19;           /* dark section ground */
+  --night-soft: 42 35 32;      /* charcoal — footer, dark panels */
+
+  /* Ink */
+  --ink: 42 35 32;             /* #2A2320 primary text */
+  --ink-secondary: 106 92 81;  /* body on paper */
+  --ink-muted: 155 140 126;    /* metadata, captions */
+  --on-night: 246 237 224;
+  --on-night-muted: 173 158 142;
+
+  /* Lines */
+  --line: 226 214 194;
+  --line-strong: 201 183 157;
+  --line-night: 78 66 58;
+
+  /* Accent */
+  --anor: 140 31 46;           /* #8C1F2E pomegranate */
+  --anor-deep: 108 23 35;
+  --anor-light: 176 62 78;     /* legible on night */
+  --anor-tint: 244 230 226;
+  --gold: 201 162 39;          /* #C9A227 — detail only */
+  --gold-soft: 223 197 118;
+
+  /* Admin feedback */
+  --positive: 61 106 76;
+  --critical: 155 44 44;
+
+  /* The house arch, used by .arch-mask */
+  --arch: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 130' preserveAspectRatio='none'><path d='M0 130V54C0 26 22 3 50 0c28 3 50 26 50 54v76Z' fill='black'/></svg>");
+
+  /* Rhythm */
+  --gutter: 1.25rem;
+  --section-y: 5.5rem;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --gutter: 2.5rem;
+    --section-y: 8rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --gutter: 4rem;
+    --section-y: 10.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-line;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    /* Fixed header clearance for in-page anchors */
+    scroll-padding-top: 5rem;
+  }
+
+  body {
+    @apply bg-paper font-sans text-body text-ink-secondary antialiased;
+    /* Nothing may push the viewport sideways. */
+    overflow-x: hidden;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display font-normal text-ink;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background-color: rgb(var(--anor) / 0.92);
+    color: rgb(var(--paper));
+  }
+
+  /* Visible, on-brand focus for every interactive element. */
+  :focus-visible {
+    outline: 2px solid rgb(var(--anor));
+    outline-offset: 3px;
+    border-radius: 1px;
+  }
+
+  .on-night :focus-visible,
+  .on-night:focus-visible {
+    outline-color: rgb(var(--gold-soft));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Page shell — one horizontal rhythm for the whole site. */
+  .shell {
+    @apply mx-auto w-full max-w-shell px-gutter;
+  }
+
+  /* Tracked-out micro label. Used for section indices, eyebrows, metadata. */
+  .label {
+    @apply font-sans text-label font-medium uppercase;
+  }
+
+  /* A hairline that reads as printed rule, not as a border box. */
+  .rule {
+    @apply h-px w-full bg-line;
+  }
+
+  /* Link that underlines from the baseline on hover. */
+  .link-underline {
+    @apply relative inline-block;
+    background-image: linear-gradient(currentColor, currentColor);
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    background-size: 0% 1px;
+    transition: background-size 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .link-underline:hover,
+  .link-underline:focus-visible {
+    background-size: 100% 1px;
+  }
+
+  /* Permanently underlined editorial link (used for contact channels). */
+  .link-rule {
+    @apply border-b pb-1 transition-colors duration-base ease-brand;
+  }
+
+  /* The pomegranate motif, abstracted: a pointed arch.
+     A scaling SVG mask rather than a border-radius, so the apex stays a point
+     at every aspect ratio. Also the geometry of Central Asian arches. */
+  .arch-mask {
+    -webkit-mask-image: var(--arch);
+    mask-image: var(--arch);
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+  }
+
+  /* Number-safe tabular figures for prices and hours. */
+  .figures {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+}
