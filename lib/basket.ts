@@ -1,6 +1,7 @@
 /**
- * The basket — pure logic, no React, no storage access. A browser-only
- * convenience: it never leaves the device except as one Telegram message.
+ * The basket — pure logic, no React, no storage access. It lives in the
+ * browser until the visitor places an order (app/actions/order.ts), which
+ * records it for staff and hands back one Telegram message.
  */
 
 import { format } from '@/lib/i18n';
@@ -100,14 +101,17 @@ export type OrderTemplates = {
  *   2. Choy × 1
  *   Jami: 130 000 soʻm
  * A total line appears only when at least one dish has a numeric price.
+ * A placed order adds its code after the greeting and its details (type,
+ * phone, address, payment…) after the total, through `extra`.
  */
 export function composeOrderMessage(
   lines: BasketLine[],
   dishes: Map<number, BasketDish>,
   templates: OrderTemplates,
   currency: string,
+  extra: { afterGreeting?: string[]; afterTotal?: string[] } = {},
 ): string {
-  const rows: string[] = [templates.messageGreeting];
+  const rows: string[] = [templates.messageGreeting, ...(extra.afterGreeting ?? [])];
   let index = 0;
   let priced = 0;
 
@@ -133,6 +137,7 @@ export function composeOrderMessage(
   if (priced > 0) {
     rows.push(format(templates.messageTotal, { amount: formatAmount(basketTotal(lines, dishes).amount, currency, ' ') }));
   }
+  if (extra.afterTotal?.length) rows.push('', ...extra.afterTotal);
   return rows.join('\n');
 }
 

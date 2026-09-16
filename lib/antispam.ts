@@ -71,6 +71,23 @@ export function visitorKey(): string {
   return createHmac('sha256', secret()).update(`visitor|${clientIp()}`).digest('base64url').slice(0, 32);
 }
 
+/** `value.signature` — proves this server issued `value` for `purpose` (e.g. an order receipt). */
+export function signValue(purpose: string, value: string): string {
+  return `${value}.${sign(`${purpose}|${value}`)}`;
+}
+
+/** The value inside a `signValue` token, or null if it was not signed here for `purpose`. */
+export function readSignedValue(purpose: string, token: unknown): string | null {
+  if (typeof token !== 'string' || token.length > 200) return null;
+  const dot = token.lastIndexOf('.');
+  if (dot <= 0) return null;
+  const value = token.slice(0, dot);
+  const expected = Buffer.from(sign(`${purpose}|${value}`));
+  const received = Buffer.from(token.slice(dot + 1));
+  if (expected.length !== received.length || !timingSafeEqual(expected, received)) return null;
+  return value;
+}
+
 const hits = new Map<string, number[]>();
 
 /** True when the visitor is still within `limit` submissions per window. */
