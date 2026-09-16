@@ -5,7 +5,16 @@ import { HEADER_HEIGHT, scrollToElement } from '@/lib/client-scroll';
 import type { Dictionary, Locale } from '@/lib/i18n';
 
 /** Client boundary so the sheet's "browse the menu" action can scroll the page. */
-export function BasketSheetMount(props: { locale: Locale; basket: Dictionary['basket']; menu: Dictionary['menu'] }) {
+export function BasketSheetMount(props: {
+  locale: Locale;
+  basket: Dictionary['basket'];
+  menu: Dictionary['menu'];
+  order: Dictionary['order'];
+  privacy: string;
+  token: string;
+  pickupAddress: string | null;
+  telegramUsername: string | null;
+}) {
   return (
     <BasketSheet
       {...props}

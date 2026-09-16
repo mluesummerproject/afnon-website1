@@ -7,16 +7,16 @@
  * no field, type or rule here for cards, fees, minimums or delivery times.
  */
 
-import { MAX_QTY, type BasketLine } from '@/lib/basket';
+import { MAX_LINES, MAX_QTY, type BasketLine } from '@/lib/basket';
 
 export type Fulfillment = 'delivery' | 'pickup';
 export type OrderField = 'phone' | 'name' | 'address' | 'addressNote';
 
 export const ORDER_LIMITS = {
   name: 80,
-  address: { min: 5, max: 300 },
+  address: { min: 5, max: 500 },
   addressNote: 200,
-  lines: 60,
+  lines: MAX_LINES,
 } as const;
 
 /** Uzbekistan: +998 followed by 9 digits. */

@@ -45,7 +45,7 @@ type Widen<T> = T extends string
 const en = {
   meta: {
     title: 'Afnon — restaurant on Qatortol Street, Tashkent',
-    description: 'Afnon restaurant on Qatortol Street, Tashkent. Browse the menu and send your order via Telegram. Open 24/7, self-service.',
+    description: 'Afnon restaurant on Qatortol Street, Tashkent. Browse the menu and order for delivery or pickup, paid in cash. Open 24/7, self-service.',
     imageAlt: 'The Afnon mark and name beside a plate of osh',
   },
   brand: { descriptor: 'Restaurant · Tashkent', city: 'Tashkent' },
@@ -202,11 +202,15 @@ const en = {
     },
     confirmation: {
       label: 'Order received',
-      title: 'Thank you!',
+      title: 'Your order is saved',
       codeLabel: 'Order number',
       body: 'We received your order. Our staff will call you at {phone} to confirm it.',
-      telegram: 'Also send it via Telegram',
-      telegramHint: 'Optional — opens Telegram with your order already written.',
+      saved: 'Nothing else is needed — the restaurant already has your order.',
+      faster: 'Want staff to see it even sooner?',
+      telegram: 'Send it to staff via Telegram',
+      copy: 'Copy order text',
+      copied: 'Order text copied',
+      copyManual: 'Copy the text below.',
       done: 'Back to the menu',
     },
     message: {
@@ -291,7 +295,7 @@ export type Dictionary = Widen<typeof en>;
 const uz: Dictionary = {
   meta: {
     title: 'Afnon — Qatortol koʻchasidagi restoran, Toshkent',
-    description: 'Toshkentdagi Qatortol koʻchasida joylashgan Afnon restorani. Menyuni koʻring va buyurtmani Telegram orqali yuboring. 24/7 ochiq, oʻz-oʻziga xizmat.',
+    description: 'Toshkentdagi Qatortol koʻchasida joylashgan Afnon restorani. Menyuni koʻring va yetkazib berish yoki olib ketish uchun buyurtma bering, toʻlov naqd pulda. 24/7 ochiq, oʻz-oʻziga xizmat.',
     imageAlt: 'Afnon belgisi va nomi, yonida bir lagan osh',
   },
   brand: { descriptor: 'Restoran · Toshkent', city: 'Toshkent' },
@@ -455,11 +459,15 @@ const uz: Dictionary = {
     },
     confirmation: {
       label: 'Buyurtma qabul qilindi',
-      title: 'Rahmat!',
+      title: 'Buyurtmangiz saqlandi',
       codeLabel: 'Buyurtma raqami',
       body: 'Buyurtmangizni qabul qildik. Xodimlarimiz tasdiqlash uchun {phone} raqamiga qoʻngʻiroq qiladi.',
-      telegram: 'Telegram orqali ham yuborish',
-      telegramHint: 'Ixtiyoriy — Telegram buyurtmangiz yozilgan holda ochiladi.',
+      saved: 'Boshqa hech narsa qilish shart emas — buyurtmangiz restoranda.',
+      faster: 'Xodimlar yanada tezroq koʻrishini xohlaysizmi?',
+      telegram: 'Telegram orqali xodimlarga yuborish',
+      copy: 'Buyurtma matnini nusxalash',
+      copied: 'Buyurtma matni nusxalandi',
+      copyManual: 'Quyidagi matnni nusxalang.',
       done: 'Menyuga qaytish',
     },
     message: {
@@ -542,7 +550,7 @@ const uz: Dictionary = {
 const ru: Dictionary = {
   meta: {
     title: 'Afnon — ресторан на улице Катартал, Ташкент',
-    description: 'Ресторан Afnon на улице Катартал в Ташкенте. Смотрите меню и отправляйте заказ в Telegram. Открыто 24/7, самообслуживание.',
+    description: 'Ресторан Afnon на улице Катартал в Ташкенте. Смотрите меню и заказывайте доставку или самовывоз с оплатой наличными. Открыто 24/7, самообслуживание.',
     imageAlt: 'Знак и название Afnon рядом с блюдом плова',
   },
   brand: { descriptor: 'Ресторан · Ташкент', city: 'Ташкент' },
@@ -706,11 +714,15 @@ const ru: Dictionary = {
     },
     confirmation: {
       label: 'Заказ принят',
-      title: 'Спасибо!',
+      title: 'Ваш заказ сохранён',
       codeLabel: 'Номер заказа',
       body: 'Мы получили ваш заказ. Сотрудники позвонят на номер {phone}, чтобы подтвердить его.',
-      telegram: 'Также отправить в Telegram',
-      telegramHint: 'Необязательно — откроется Telegram с уже написанным заказом.',
+      saved: 'Больше ничего делать не нужно — заказ уже в ресторане.',
+      faster: 'Хотите, чтобы сотрудники увидели его ещё быстрее?',
+      telegram: 'Отправить сотрудникам в Telegram',
+      copy: 'Скопировать текст заказа',
+      copied: 'Текст заказа скопирован',
+      copyManual: 'Скопируйте текст ниже.',
       done: 'Вернуться к меню',
     },
     message: {

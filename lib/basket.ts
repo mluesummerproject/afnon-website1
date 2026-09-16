@@ -13,7 +13,8 @@ export type BasketDish = { id: number; name: string; priceValue: number | null; 
 
 export const BASKET_STORAGE_KEY = 'afnon_basket_v1';
 export const MAX_QTY = 99;
-const MAX_LINES = 60;
+/** Matches the order limit (lib/checkout.ts), so a basket the site lets you build can always be ordered. */
+export const MAX_LINES = 50;
 
 const clampQty = (qty: number) => Math.max(0, Math.min(MAX_QTY, Math.floor(qty)));
 

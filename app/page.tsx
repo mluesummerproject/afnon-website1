@@ -56,6 +56,7 @@ export default async function HomePage() {
   const phoneHref = settings.configured.phone && settings.phone ? settings.phone.href : null;
 
   const cardLabels = { ...dict.menu, close: dict.menu.close, photoPosition: dict.menu.photoPosition, showPhoto: dict.menu.showPhoto };
+  const formToken = issueFormToken();
 
   return (
     <BasketProvider dishes={basketDishes} templates={dict.basket} currency={dict.menu.currency} telegramUsername={settings.telegramUsername}>
@@ -111,8 +112,17 @@ export default async function HomePage() {
       <SeedGutters />
       <ScrollSeed />
       <ScrollTopButton label={dict.a11y.backToTop} />
-      <ContactFab labels={dict.fab} contactCopy={dict.contact} token={issueFormToken()} telegramHref={telegramHref} phoneHref={phoneHref} />
-      <BasketSheetMount locale={locale} basket={dict.basket} menu={dict.menu} />
+      <ContactFab labels={dict.fab} contactCopy={dict.contact} token={formToken} telegramHref={telegramHref} phoneHref={phoneHref} />
+      <BasketSheetMount
+        locale={locale}
+        basket={dict.basket}
+        menu={dict.menu}
+        order={dict.order}
+        privacy={dict.footer.privacy}
+        token={formToken}
+        pickupAddress={settings.address}
+        telegramUsername={settings.configured.telegram ? settings.telegramUsername : null}
+      />
       <SiteToaster closeLabel={dict.a11y.close} />
     </BasketProvider>
   );
