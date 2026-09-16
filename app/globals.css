@@ -483,3 +483,54 @@ dialog::backdrop {
   0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
   50% { transform: translate3d(14px, -16px, 0) rotate(4deg); }
 }
+
+/* ==========================================================================
+   Ambient seed drift — two decorative gutters in the page's side margins.
+
+   The width is the margin itself: clamp() collapses the gutter to nothing
+   as soon as the content column fills the viewport, so a phone never gets
+   seeds drifting over the menu. Everything moves on transform and opacity
+   only, from CSS, with no scroll or rAF work of any kind, and the whole
+   thing is pointer-events: none so it can never take a tap.
+   ========================================================================== */
+.seed-gutter {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  width: clamp(0px, calc((100vw - 75rem) / 2), 5.5rem);
+  overflow: hidden;
+  pointer-events: none;
+}
+.seed-gutter-left { left: 0; }
+.seed-gutter-right { right: 0; }
+
+/* Outer span carries the fall; the inner one sways across it, because a
+   single element cannot animate two different transforms at once. */
+.seed-fall {
+  position: absolute;
+  top: 0;
+  left: var(--x);
+  animation: seed-fall var(--dur) linear var(--delay) infinite;
+}
+@keyframes seed-fall {
+  0% { transform: translate3d(0, -18vh, 0); opacity: 0; }
+  10% { opacity: var(--op); }
+  86% { opacity: var(--op); }
+  100% { transform: translate3d(0, 116vh, 0); opacity: 0; }
+}
+.seed-sway {
+  display: block;
+  color: rgb(var(--anor));
+  animation: seed-sway var(--sway-dur) ease-in-out var(--delay) infinite alternate;
+}
+@keyframes seed-sway {
+  from { transform: translate3d(calc(var(--sway) * -1), 0, 0) rotate(-14deg); }
+  to { transform: translate3d(var(--sway), 0, 0) rotate(16deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The sitewide rule already freezes the animation; hide it outright so it
+     does not freeze mid-fade as a row of specks. */
+  .seed-gutter { display: none; }
+}

@@ -9,6 +9,7 @@ import { IntroOverlay } from '@/components/site/IntroOverlay';
 import { MenuExplorer } from '@/components/site/menu/MenuExplorer';
 import { PromotionsSection } from '@/components/site/PromotionsSection';
 import { ScrollSeed } from '@/components/site/ScrollSeed';
+import { SeedGutters } from '@/components/site/SeedGutters';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteHero } from '@/components/site/SiteHero';
@@ -107,6 +108,7 @@ export default async function HomePage() {
 
       <SiteFooter dict={dict} settings={settings} />
       <BottomNav nav={dict.nav} label={dict.a11y.bottomNav} />
+      <SeedGutters />
       <ScrollSeed />
       <ScrollTopButton label={dict.a11y.backToTop} />
       <ContactFab labels={dict.fab} contactCopy={dict.contact} token={issueFormToken()} telegramHref={telegramHref} phoneHref={phoneHref} />
