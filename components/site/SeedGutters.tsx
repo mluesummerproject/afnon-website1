@@ -1,19 +1,28 @@
 /**
  * Ambient anor seeds drifting down the page's side margins — background
- * texture, in the brand's own seed shape.
+ * texture, in the brand's own seed: the same shape the opening sequence
+ * scatters, fly-to-basket throws and the scroll seed carries.
  *
- * Deliberately a Server Component with no JavaScript at all: the whole thing
- * is markup plus two CSS keyframes, so it costs nothing on the main thread
+ * What keeps them reading as seeds in air rather than rain: every seed rests
+ * at its own angle and tumbles slowly, sways sideways on its own rhythm, and
+ * sizes, depths and speeds vary widely — a few large, faint, slow seeds behind
+ * smaller, darker, livelier ones.
+ *
+ * Deliberately a Server Component with no JavaScript at all: markup plus CSS
+ * keyframes on transform and opacity, so it costs nothing on the main thread
  * and cannot jank the menu while it scrolls. The gutters are pointer-events:
- * none and, through clamp(), are exactly as wide as the real side margin —
- * which is zero on a phone, so they never appear over content.
+ * none, overflow: hidden, narrower than the real side margin and kept clear of
+ * the content column — and zero-width on a phone, which has no margin to fill.
  *
  * Randomness is hashed from each seed's index rather than drawn from
  * Math.random(), so the server and the browser agree on every value and the
  * scatter still reads as unplanned.
  */
 
-const PER_SIDE = 40;
+const PER_SIDE = 18;
+
+/** The brand seed (see BasketProvider's flight, IntroOverlay, ScrollSeed). */
+const SEED_PATH = 'M5 0C7 3.5 9 6.5 9 9a4 4 0 0 1-8 0C1 6.5 3 3.5 5 0Z';
 
 /** Deterministic 0..1 from two small integers — cheap, stable, good enough to look unplanned. */
 function noise(index: number, salt: number): number {
@@ -22,31 +31,38 @@ function noise(index: number, salt: number): number {
 }
 
 function Seed({ index, side }: { index: number; side: 0 | 1 }) {
-  const salt = side * 97;
-  const size = 6 + noise(index, salt + 1) * 8; // 6–14px
-  const opacity = 0.25 + noise(index, salt + 2) * 0.35; // 0.25–0.6
-  const duration = 26 + noise(index, salt + 3) * 34; // 26–60s, so none of them keep time together
-  const delay = -noise(index, salt + 4) * duration; // negative: the gutter is already full on arrival
-  const swayDuration = 5 + noise(index, salt + 5) * 7; // 5–12s
-  const sway = 3 + noise(index, salt + 6) * 7; // 3–10px
+  const salt = side * 97 + 13;
+  const n = (k: number) => noise(index, salt + k);
+
+  // Depth drives the rest: near seeds are small, dark and quicker; far ones large, faint and slow.
+  const depth = n(1) ** 1.6; // skewed toward near
+  const size = 5 + depth * 11 + n(2) * 3; // ~5–19px
+  const opacity = 0.78 - depth * 0.56 + (n(3) - 0.5) * 0.12; // ~0.16–0.84
+  const duration = 38 + depth * 70 + n(4) * 30; // 38–138s to cross the screen
+  const swayDuration = 6 + n(5) * 12; // 6–18s per side-to-side
+  const sway = 5 + n(6) * 17; // 5–22px either way
 
   return (
     <span
       className="seed-fall"
       style={
         {
-          '--x': `${noise(index, salt + 7) * 78}%`,
-          '--dur': `${duration}s`,
-          '--delay': `${delay}s`,
-          '--op': opacity,
-          '--sway-dur': `${swayDuration}s`,
-          '--sway': `${sway}px`,
+          '--xr': n(7).toFixed(3),
+          '--dur': `${duration.toFixed(1)}s`,
+          '--delay': `${(-n(8) * duration).toFixed(1)}s`, // already mid-flight on arrival
+          '--op': opacity.toFixed(2),
+          '--sway-dur': `${swayDuration.toFixed(1)}s`,
+          '--sway-delay': `${(-n(9) * swayDuration).toFixed(1)}s`,
+          '--sway': `${sway.toFixed(1)}px`,
+          '--angle': `${Math.round(n(10) * 360)}deg`,
+          '--spin': `${Math.round((n(11) < 0.5 ? -1 : 1) * (90 + n(12) * 320))}deg`,
+          '--size': `${size.toFixed(1)}px`,
         } as React.CSSProperties
       }
     >
       <span className="seed-sway">
-        <svg width={size} height={size * 1.3} viewBox="0 0 10 13" fill="none" aria-hidden="true" focusable="false">
-          <path d="M5 0C7 3.5 9 6.5 9 9a4 4 0 0 1-8 0C1 6.5 3 3.5 5 0Z" fill="currentColor" />
+        <svg className="seed-spin" viewBox="0 0 10 13" aria-hidden="true" focusable="false">
+          <path d={SEED_PATH} fill="currentColor" />
         </svg>
       </span>
     </span>

@@ -411,8 +411,9 @@
     --reveal-delay: calc(var(--col3, 0) * 40ms);
   }
 }
+/* 4-up only where the grid really has four columns (Promotions at lg). */
 @media (min-width: 1024px) {
-  .stagger-grid > .reveal {
+  .stagger-grid.lg\:grid-cols-4 > .reveal {
     --reveal-delay: calc(var(--col4, 0) * 40ms);
   }
 }
@@ -487,46 +488,58 @@ dialog::backdrop {
 /* ==========================================================================
    Ambient seed drift — two decorative gutters in the page's side margins.
 
-   The width is the margin itself: clamp() collapses the gutter to nothing
-   as soon as the content column fills the viewport, so a phone never gets
-   seeds drifting over the menu. Everything moves on transform and opacity
-   only, from CSS, with no scroll or rAF work of any kind, and the whole
-   thing is pointer-events: none so it can never take a tap.
+   Each gutter is narrower than the real margin and hugs the outer edge, so a
+   seed never drifts up against the content column; clamp() collapses it to
+   nothing once the content fills the viewport (every phone). Three nested
+   layers each animate one transform — fall, sideways sway, slow tumble —
+   because one element cannot run three transform animations at once. CSS
+   only, transform and opacity only, pointer-events: none throughout.
    ========================================================================== */
 .seed-gutter {
   position: fixed;
   top: 0;
   bottom: 0;
   z-index: 1;
-  width: clamp(0px, calc((100vw - 75rem) / 2), 5.5rem);
+  width: clamp(0px, calc((100vw - 75rem) / 2 - 1.25rem), 5rem);
   overflow: hidden;
   pointer-events: none;
+  contain: strict;
 }
 .seed-gutter-left { left: 0; }
 .seed-gutter-right { right: 0; }
 
-/* Outer span carries the fall; the inner one sways across it, because a
-   single element cannot animate two different transforms at once. */
 .seed-fall {
   position: absolute;
   top: 0;
-  left: var(--x);
+  /* Keep the whole sway inside the gutter: never clipped mid-swing at its edge. */
+  left: calc(var(--sway) + (100% - 2 * var(--sway) - var(--size)) * var(--xr));
+  opacity: 0;
   animation: seed-fall var(--dur) linear var(--delay) infinite;
 }
 @keyframes seed-fall {
-  0% { transform: translate3d(0, -18vh, 0); opacity: 0; }
-  10% { opacity: var(--op); }
-  86% { opacity: var(--op); }
-  100% { transform: translate3d(0, 116vh, 0); opacity: 0; }
+  0% { transform: translate3d(0, -12vh, 0); opacity: 0; }
+  12% { opacity: var(--op); }
+  84% { opacity: var(--op); }
+  100% { transform: translate3d(0, 112vh, 0); opacity: 0; }
 }
 .seed-sway {
   display: block;
-  color: rgb(var(--anor));
-  animation: seed-sway var(--sway-dur) ease-in-out var(--delay) infinite alternate;
+  animation: seed-sway var(--sway-dur) ease-in-out var(--sway-delay) infinite alternate;
 }
 @keyframes seed-sway {
-  from { transform: translate3d(calc(var(--sway) * -1), 0, 0) rotate(-14deg); }
-  to { transform: translate3d(var(--sway), 0, 0) rotate(16deg); }
+  from { transform: translate3d(calc(var(--sway) * -1), 0, 0); }
+  to { transform: translate3d(var(--sway), 0, 0); }
+}
+.seed-spin {
+  display: block;
+  width: var(--size);
+  height: calc(var(--size) * 1.3);
+  color: rgb(var(--anor-deep));
+  animation: seed-spin var(--dur) linear var(--delay) infinite;
+}
+@keyframes seed-spin {
+  from { transform: rotate(var(--angle)); }
+  to { transform: rotate(calc(var(--angle) + var(--spin))); }
 }
 
 @media (prefers-reduced-motion: reduce) {
