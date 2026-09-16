@@ -523,7 +523,37 @@ export async function updateBannerTitle(_prev: ActionResult, formData: FormData)
   if (error) return fail(format(t.actions.titleSaveFailed, { reason: error.message }));
   if (!data) return fail(t.actions.bannerGone);
   refreshSite();
-  return succeed(t.actions.videoTitleSaved, id);
+  return succeed(t.actions.bannerTitleSaved, id);
+}
+
+/**
+ * Where a banner goes when a guest taps it: a menu category, an outside link,
+ * or nowhere. An empty value clears the link and the banner becomes a plain
+ * picture again — never a button that leads somewhere broken.
+ */
+export async function updateBannerLink(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  requireAdmin();
+
+  const t = getAdminDict();
+  const id = toId(formData.get('id'));
+  if (id === null) return fail(t.actions.bannerNotIdentified);
+
+  const type = readText(formData, 'link_type');
+  const value = readText(formData, 'link_value').slice(0, 500);
+
+  let link: { link_type: string | null; link_value: string | null } = { link_type: null, link_value: null };
+  if (type === 'category' && value) {
+    link = { link_type: 'category', link_value: value };
+  } else if (type === 'external' && value) {
+    if (!/^https:\/\/\S+$/.test(value)) return fail(t.actions.bannerLinkInvalid);
+    link = { link_type: 'external', link_value: value };
+  }
+
+  const { data, error } = await getSupabaseAdmin().from('banners').update(link).eq('id', id).select('id').maybeSingle();
+  if (error) return fail(format(t.actions.titleSaveFailed, { reason: error.message }));
+  if (!data) return fail(t.actions.bannerGone);
+  refreshSite();
+  return succeed(t.actions.bannerLinkSaved, id);
 }
 
 export async function setBannerActive(bannerId: unknown, active: unknown): Promise<ActionResult> {

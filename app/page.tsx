@@ -15,7 +15,7 @@ import { SiteHero } from '@/components/site/SiteHero';
 import { SiteToaster } from '@/components/site/SiteToaster';
 import { VisitCard } from '@/components/site/VisitCard';
 import { issueFormToken } from '@/lib/antispam';
-import { getActiveBanners } from '@/lib/banners';
+import { getActiveBanners, heroSlides } from '@/lib/banners';
 import { getLocaleAndDictionary } from '@/lib/locale';
 import { getMenu } from '@/lib/menu';
 import { sectionsFor } from '@/lib/sections';
@@ -33,6 +33,10 @@ export default async function HomePage() {
 
   // Videos are only a destination when staff have actually uploaded one.
   const sections = sectionsFor(videos.length > 0);
+
+  // Banners are the hero. Each one's link is resolved here, against the
+  // categories this page actually rendered.
+  const slides = heroSlides(banners, menu.categories);
 
   const allDishes = menu.categories.flatMap((category) => category.dishes);
   const discountedDishes = allDishes.filter((dish) => dish.discountPercent !== null);
@@ -82,17 +86,15 @@ export default async function HomePage() {
 
       <main id="main">
         <h1 className="sr-only">{dict.meta.title}</h1>
-        <SiteHero brandName={brand.name} hero={dict.hero} badge={dict.visit.badge} />
+        <SiteHero brandName={brand.name} hero={dict.hero} badge={dict.visit.badge} slides={slides} bannerLabels={dict.banners} />
 
         <MenuExplorer status={menu.status} categories={menu.categories} locale={locale} search={dict.search} picksHeading={dict.picks.heading} menu={dict.menu} />
         {videos.length > 0 ? <Films dict={dict} videos={videos} /> : null}
 
         <PromotionsSection
-          banners={banners}
           dishes={discountedDishes}
           locale={locale}
           copy={dict.promotions}
-          bannerLabels={dict.banners}
           cardLabels={cardLabels}
         />
 

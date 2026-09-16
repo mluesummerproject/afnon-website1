@@ -121,11 +121,22 @@ export async function getCategoryOverview(): Promise<{ categories: CategoryOverv
   return { categories: [...overview, ...orphanLabels] };
 }
 
+/**
+ * Whether supabase/migrations/0001_banner_links.sql has been run yet. The
+ * per-banner link controls are hidden until it has, so staff are never shown
+ * a control that cannot save.
+ */
+export async function bannerLinksAvailable(): Promise<boolean> {
+  if (!isAdminSupabaseConfigured) return false;
+  const { error } = await getSupabaseAdmin().from('banners').select('link_type').limit(1);
+  return !error;
+}
+
 export async function getAdminBanners(): Promise<{ banners: Banner[]; error?: string }> {
   if (!isAdminSupabaseConfigured) return { banners: [], error: t().toast.missingKey };
   const { data, error } = await getSupabaseAdmin()
     .from('banners')
-    .select('id, image_url, title, sort_order, is_active')
+    .select('*')
     .order('sort_order', { ascending: true, nullsFirst: false })
     .order('id', { ascending: true });
   if (error) return { banners: [], error: format(t().toast.loadBanners, { reason: error.message }) };

@@ -41,18 +41,27 @@ function isBelowViewport(element: Element): boolean {
 /**
  * Imperative form, for elements that already have a ref of their own. Safe to
  * call more than once for the same element (e.g. from a callback ref that
- * re-fires on every render) — every call after the first is a no-op.
+ * re-fires on every render, or React running an effect twice): observing an
+ * element the observer already watches does nothing.
+ *
+ * It must NOT bail out just because the element is already marked pending.
+ * The cleanup this returns unobserves, so a second call that skipped
+ * re-observing would leave a hidden element with nothing left to reveal it —
+ * which is precisely how a card full of real content ends up invisible for
+ * good.
  */
 export function observeReveal(element: Element | null): () => void {
-  if (!element || element.hasAttribute('data-inview') || element.hasAttribute('data-pending')) return () => {};
+  if (!element || element.hasAttribute('data-inview')) return () => {};
 
   if (typeof IntersectionObserver === 'undefined' || typeof window === 'undefined') {
+    element.removeAttribute('data-pending');
     element.setAttribute('data-inview', 'true');
     return () => {};
   }
 
   // Already on screen (or above it) — nothing to animate in, so just show it.
   if (!isBelowViewport(element)) {
+    element.removeAttribute('data-pending');
     element.setAttribute('data-inview', 'true');
     return () => {};
   }

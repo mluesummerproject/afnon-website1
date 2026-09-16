@@ -1,14 +1,14 @@
 import type { Metadata } from 'next';
 
 import { BannerManager } from '@/components/admin/BannerManager';
-import { getAdminBanners, getAdminMenu } from '@/lib/admin-data';
+import { bannerLinksAvailable, getAdminBanners, getAdminMenu } from '@/lib/admin-data';
 import { getAdminDict } from '@/lib/admin-locale';
 import { groupByCategory } from '@/lib/ordering';
 
 export const metadata: Metadata = { title: 'Banners' };
 
 export default async function AdminBannersPage() {
-  const [{ banners, error }, { dishes }] = await Promise.all([getAdminBanners(), getAdminMenu()]);
+  const [{ banners, error }, { dishes }, linksReady] = await Promise.all([getAdminBanners(), getAdminMenu(), bannerLinksAvailable()]);
   const categories = groupByCategory(dishes).map((group) => group.name);
   const t = getAdminDict();
 
@@ -23,7 +23,7 @@ export default async function AdminBannersPage() {
         </p>
       ) : null}
 
-      <BannerManager banners={banners} categories={categories} />
+      <BannerManager banners={banners} categories={categories} linksReady={linksReady} />
     </main>
   );
 }

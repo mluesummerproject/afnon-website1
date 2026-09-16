@@ -3,7 +3,15 @@
 import Image from 'next/image';
 import { useState } from 'react';
 
-import { deleteBanner, finalizeBannerUpload, moveBanner, requestBannerUpload, setBannerActive, updateBannerTitle } from '@/app/admin/media-actions';
+import {
+  deleteBanner,
+  finalizeBannerUpload,
+  moveBanner,
+  requestBannerUpload,
+  setBannerActive,
+  updateBannerLink,
+  updateBannerTitle,
+} from '@/app/admin/media-actions';
 import { ActionForm } from '@/components/admin/ActionForm';
 import { useT } from '@/components/admin/AdminLangProvider';
 import { Chevron } from '@/components/admin/AdminMenu';
@@ -21,7 +29,71 @@ type Upload = { name: string; size: number; stage: 'uploading' | 'checking' | 'f
  * The promo carousel on the website: wide (16:9) photos, one active set at a
  * time, in this order. Mirrors the Films manager so the two feel familiar.
  */
-export function BannerManager({ banners, categories }: { banners: Banner[]; categories: string[] }) {
+function BannerLink({ banner, categories }: { banner: Banner; categories: string[] }) {
+  const t = useT();
+  const [type, setType] = useState<'' | 'category' | 'external'>(banner.link_type ?? '');
+
+  return (
+    <ActionForm action={updateBannerLink} className="space-y-2 border-t border-line pt-3">
+      <input type="hidden" name="id" value={banner.id} />
+      <label htmlFor={`banner-link-type-${banner.id}`} className="block text-body-sm font-medium text-ink">
+        {t.banners.linkLabel}
+      </label>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <select
+          id={`banner-link-type-${banner.id}`}
+          name="link_type"
+          value={type}
+          onChange={(event) => setType(event.target.value as '' | 'category' | 'external')}
+          className="field border-line-strong sm:w-52"
+        >
+          <option value="">{t.banners.linkNone}</option>
+          <option value="category">{t.banners.linkCategory}</option>
+          <option value="external">{t.banners.linkExternal}</option>
+        </select>
+
+        {type === 'category' ? (
+          categories.length > 0 ? (
+            <select
+              name="link_value"
+              defaultValue={banner.link_type === 'category' ? banner.link_value ?? '' : ''}
+              aria-label={t.banners.linkCategoryLabel}
+              className="field border-line-strong"
+            >
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <p className="self-center text-micro text-ink-muted">{t.banners.linkNoCategories}</p>
+          )
+        ) : null}
+
+        {type === 'external' ? (
+          <input
+            name="link_value"
+            type="url"
+            inputMode="url"
+            maxLength={500}
+            defaultValue={banner.link_type === 'external' ? banner.link_value ?? '' : ''}
+            placeholder="https://…"
+            aria-label={t.banners.linkExternalLabel}
+            className="field border-line-strong"
+          />
+        ) : null}
+
+        <SubmitButton variant="secondary" pendingLabel={t.banners.saving} className="shrink-0">
+          {t.banners.saveLink}
+        </SubmitButton>
+      </div>
+      <p className="text-micro text-ink-muted">{t.banners.linkHint}</p>
+    </ActionForm>
+  );
+}
+
+export function BannerManager({ banners, categories, linksReady }: { banners: Banner[]; categories: string[]; linksReady: boolean }) {
   const t = useT();
   const uploadMessages = {
     photoFormat: t.toast.photoFormat,
@@ -179,6 +251,8 @@ export function BannerManager({ banners, categories }: { banners: Banner[]; cate
                           {t.banners.saveTitle}
                         </SubmitButton>
                       </ActionForm>
+
+                      {linksReady ? <BannerLink banner={banner} categories={categories} /> : null}
                     </div>
                   </div>
 

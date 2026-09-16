@@ -52,12 +52,21 @@ export type Message = {
   created_at: string;
 };
 
+export type BannerLinkType = 'category' | 'external';
+
 export type Banner = {
   id: number;
   image_url: string;
   title: string | null;
   sort_order: number | null;
   is_active: boolean | null;
+  /**
+   * Where tapping the banner goes. Optional in the type as well as in the
+   * database: the columns arrive with supabase/migrations/0001_banner_links.sql,
+   * and until that has been run every banner is simply an untappable picture.
+   */
+  link_type?: BannerLinkType | null;
+  link_value?: string | null;
 };
 
 export type CategoryLabelRow = {
