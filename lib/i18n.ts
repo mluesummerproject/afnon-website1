@@ -46,6 +46,7 @@ const en = {
   meta: {
     title: 'Afnon — restaurant on Qatortol Street, Tashkent',
     description: 'Afnon restaurant on Qatortol Street, Tashkent. Browse the menu and send your order via Telegram. Open 24/7, self-service.',
+    imageAlt: 'The Afnon mark and name beside a plate of osh',
   },
   brand: { descriptor: 'Restaurant · Tashkent', city: 'Tashkent' },
   a11y: {
@@ -215,6 +216,7 @@ const uz: Dictionary = {
   meta: {
     title: 'Afnon — Qatortol koʻchasidagi restoran, Toshkent',
     description: 'Toshkentdagi Qatortol koʻchasida joylashgan Afnon restorani. Menyuni koʻring va buyurtmani Telegram orqali yuboring. 24/7 ochiq, oʻz-oʻziga xizmat.',
+    imageAlt: 'Afnon belgisi va nomi, yonida bir lagan osh',
   },
   brand: { descriptor: 'Restoran · Toshkent', city: 'Toshkent' },
   a11y: {
@@ -389,6 +391,7 @@ const ru: Dictionary = {
   meta: {
     title: 'Afnon — ресторан на улице Катартал, Ташкент',
     description: 'Ресторан Afnon на улице Катартал в Ташкенте. Смотрите меню и отправляйте заказ в Telegram. Открыто 24/7, самообслуживание.',
+    imageAlt: 'Знак и название Afnon рядом с блюдом плова',
   },
   brand: { descriptor: 'Ресторан · Ташкент', city: 'Ташкент' },
   a11y: {
