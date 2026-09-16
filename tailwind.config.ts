@@ -12,6 +12,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Phase 3 surfaces
+        page: 'rgb(var(--page) / <alpha-value>)',
+        card: 'rgb(var(--card) / <alpha-value>)',
+        fill: 'rgb(var(--fill) / <alpha-value>)',
+        placeholder: 'rgb(var(--placeholder) / <alpha-value>)',
+        accent: 'rgb(var(--anor) / <alpha-value>)',
+
         // Backgrounds
         paper: 'rgb(var(--paper) / <alpha-value>)',
         'paper-alt': 'rgb(var(--paper-alt) / <alpha-value>)',
@@ -33,21 +40,36 @@ const config: Config = {
 
         // Accents
         anor: 'rgb(var(--anor) / <alpha-value>)',
+        'anor-hover': 'rgb(var(--anor-hover) / <alpha-value>)',
         'anor-deep': 'rgb(var(--anor-deep) / <alpha-value>)',
         'anor-light': 'rgb(var(--anor-light) / <alpha-value>)',
         'anor-tint': 'rgb(var(--anor-tint) / <alpha-value>)',
         gold: 'rgb(var(--gold) / <alpha-value>)',
         'gold-soft': 'rgb(var(--gold-soft) / <alpha-value>)',
+        scrim: 'rgb(var(--scrim) / <alpha-value>)',
 
         // Feedback (admin only)
         positive: 'rgb(var(--positive) / <alpha-value>)',
         critical: 'rgb(var(--critical) / <alpha-value>)',
       },
       fontFamily: {
-        display: ['var(--font-display)', 'Georgia', 'serif'],
+        // One family for every word of UI, in all three languages.
         sans: ['var(--font-sans)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        // Kept as an alias so older markup (staff panel) renders in the same sans.
+        display: ['var(--font-sans)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        // The serif survives in exactly one place: the Afnon wordmark.
+        wordmark: ['var(--font-wordmark)', 'Georgia', 'serif'],
       },
       fontSize: {
+        // Phase 3 mobile type scale (exact values from the brief)
+        'dish-name': ['15px', { lineHeight: '1.3', fontWeight: '600' }],
+        'dish-desc': ['13px', { lineHeight: '1.45', fontWeight: '400' }],
+        price: ['17px', { lineHeight: '1.2', fontWeight: '700' }],
+        tab: ['14px', { lineHeight: '1', fontWeight: '600' }],
+        section: ['20px', { lineHeight: '1.25', fontWeight: '700', letterSpacing: '-0.01em' }],
+        button: ['14px', { lineHeight: '1', fontWeight: '600' }],
+        'nav-label': ['10px', { lineHeight: '1', fontWeight: '600' }],
+
         // Editorial display scale — fluid, set tight, never "just bigger".
         'display-hero': ['clamp(3.1rem, 10.5vw, 9.5rem)', { lineHeight: '0.88', letterSpacing: '-0.025em' }],
         'display-xl': ['clamp(2.6rem, 6.6vw, 5.75rem)', { lineHeight: '0.95', letterSpacing: '-0.02em' }],
@@ -89,9 +111,11 @@ const config: Config = {
         quick: '180ms',
         base: '320ms',
         slow: '640ms',
+        cinematic: '1100ms',
       },
       boxShadow: {
-        // One shadow only, used for admin overlays. The marketing site uses none.
+        card: '0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)',
+        sheet: '0 -8px 32px rgba(0,0,0,0.12)',
         panel: '0 18px 48px -24px rgb(var(--ink) / 0.28)',
       },
       keyframes: {

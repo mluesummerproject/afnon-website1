@@ -3,60 +3,64 @@
 @tailwind utilities;
 
 /* ==========================================================================
-   Design tokens
-   Channel triplets so Tailwind can apply opacity (`bg-anor/10`).
+   Afnon — design tokens (Phase 3: food-ordering system)
+   Near-white page, white cards, one accent used without hesitation.
+   Channel triplets so Tailwind can apply opacity (`text-ink/70`).
+   Old token names are kept (mapped to the new values) so the staff panel
+   inherits the same system without a rewrite.
    ========================================================================== */
 :root {
   /* Surfaces */
-  --paper: 250 243 232;        /* #FAF3E8 ivory — primary ground */
-  --paper-alt: 243 233 216;    /* warmer paper — alternate sections */
-  --surface: 255 252 246;      /* raised surface, admin fields */
-  --night: 27 22 19;           /* dark section ground */
-  --night-soft: 42 35 32;      /* charcoal — footer, dark panels */
+  --page: 250 250 248;          /* #FAFAF8 */
+  --card: 255 255 255;          /* #FFFFFF */
+  --fill: 241 241 239;          /* #F1F1EF search field */
+  --placeholder: 244 244 242;   /* #F4F4F2 image placeholder */
 
-  /* Ink */
-  --ink: 42 35 32;             /* #2A2320 primary text */
-  --ink-secondary: 106 92 81;  /* body on paper */
-  --ink-muted: 155 140 126;    /* metadata, captions */
-  --on-night: 246 237 224;
-  --on-night-muted: 173 158 142;
+  /* Ink — near-black so 60% / 70% opacity text still clears WCAG AA */
+  --ink: 18 17 16;              /* #121110  18.9:1 on white */
+  --ink-secondary: 89 88 88;    /* = ink at 70% on white, 7.1:1 */
+  --ink-muted: 111 110 109;     /* = ink at 60% on page, 4.9:1 */
 
   /* Lines */
-  --line: 226 214 194;
-  --line-strong: 201 183 157;
-  --line-night: 78 66 58;
+  --line: 232 232 228;
+  --line-strong: 214 214 209;
 
-  /* Accent */
-  --anor: 140 31 46;           /* #8C1F2E pomegranate */
-  --anor-deep: 108 23 35;
-  --anor-light: 176 62 78;     /* legible on night */
-  --anor-tint: 244 230 226;
-  --gold: 201 162 39;          /* #C9A227 — detail only */
+  /* The one accent — Afnon's signage red */
+  --anor: 92 18 30;             /* #5C121E  13.5:1 on white, white text on it 13.5:1 */
+  --anor-hover: 122 28 42;
+  --anor-deep: 70 12 22;
+  --anor-tint: 242 236 237;     /* accent at ~8% on white */
+
+  /* Legacy names used by the staff panel, mapped onto the new system */
+  --paper: var(--page);
+  --paper-alt: var(--placeholder);
+  --surface: var(--card);
+  --night: 18 17 16;
+  --night-soft: 38 36 34;
+  --on-night: 255 255 255;
+  --on-night-muted: 190 188 186;
+  --line-night: 70 68 66;
+  --anor-light: 214 122 132;
+  --gold: 201 162 39;
   --gold-soft: 223 197 118;
+  --scrim: 0 0 0;
+  --positive: 36 110 64;
+  --critical: 170 32 32;
 
-  /* Admin feedback */
-  --positive: 61 106 76;
-  --critical: 155 44 44;
+  /* Layout */
+  --header-h: 56px;
+  --strip-h: 52px;
+  --bottom-nav-h: 56px;
+  --gutter: 1rem;
 
-  /* The house arch, used by .arch-mask */
-  --arch: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 130' preserveAspectRatio='none'><path d='M0 130V54C0 26 22 3 50 0c28 3 50 26 50 54v76Z' fill='black'/></svg>");
-
-  /* Rhythm */
-  --gutter: 1.25rem;
-  --section-y: 5.5rem;
+  /* Motion */
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @media (min-width: 768px) {
   :root {
-    --gutter: 2.5rem;
-    --section-y: 8rem;
-  }
-}
-
-@media (min-width: 1280px) {
-  :root {
-    --gutter: 4rem;
-    --section-y: 10.5rem;
+    --gutter: 1.5rem;
   }
 }
 
@@ -67,109 +71,415 @@
 
   html {
     -webkit-text-size-adjust: 100%;
-    scroll-behavior: smooth;
-    /* Fixed header clearance for in-page anchors */
-    scroll-padding-top: 5rem;
+    -webkit-tap-highlight-color: transparent;
+    scroll-padding-top: calc(var(--header-h) + var(--strip-h) + 8px);
   }
 
   body {
-    @apply bg-paper font-sans text-body text-ink-secondary antialiased;
-    /* Nothing may push the viewport sideways. */
+    @apply bg-page font-sans text-ink antialiased;
+    font-size: 15px;
+    line-height: 1.45;
     overflow-x: hidden;
-    text-rendering: optimizeLegibility;
+    font-feature-settings: 'cv11', 'ss01';
   }
 
   h1, h2, h3, h4 {
-    @apply font-display font-normal text-ink;
-    text-wrap: balance;
+    @apply font-sans text-ink;
+    font-weight: 700;
   }
 
-  p {
-    text-wrap: pretty;
-  }
-
-  ::selection {
-    background-color: rgb(var(--anor) / 0.92);
-    color: rgb(var(--paper));
-  }
-
-  /* Visible, on-brand focus for every interactive element. */
   :focus-visible {
     outline: 2px solid rgb(var(--anor));
-    outline-offset: 3px;
-    border-radius: 1px;
+    outline-offset: 2px;
+    border-radius: 6px;
   }
 
-  .on-night :focus-visible,
-  .on-night:focus-visible {
-    outline-color: rgb(var(--gold-soft));
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    html {
-      scroll-behavior: auto;
-    }
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-      scroll-behavior: auto !important;
-    }
+  button {
+    -webkit-user-select: none;
+    user-select: none;
   }
 }
 
 @layer components {
-  /* Page shell — one horizontal rhythm for the whole site. */
   .shell {
-    @apply mx-auto w-full max-w-shell px-gutter;
+    @apply mx-auto w-full max-w-[75rem] px-gutter;
   }
 
-  /* Tracked-out micro label. Used for section indices, eyebrows, metadata. */
+  /* Staff-panel helpers (kept) */
   .label {
-    @apply font-sans text-label font-medium uppercase;
+    @apply font-sans text-label font-semibold uppercase;
   }
-
-  /* A hairline that reads as printed rule, not as a border box. */
   .rule {
     @apply h-px w-full bg-line;
   }
-
-  /* Link that underlines from the baseline on hover. */
   .link-underline {
-    @apply relative inline-block;
-    background-image: linear-gradient(currentColor, currentColor);
-    background-position: 0 100%;
-    background-repeat: no-repeat;
-    background-size: 0% 1px;
-    transition: background-size 320ms cubic-bezier(0.22, 1, 0.36, 1);
+    @apply relative inline-block underline-offset-4 hover:underline;
   }
-
-  .link-underline:hover,
-  .link-underline:focus-visible {
-    background-size: 100% 1px;
-  }
-
-  /* Permanently underlined editorial link (used for contact channels). */
-  .link-rule {
-    @apply border-b pb-1 transition-colors duration-base ease-brand;
-  }
-
-  /* The pomegranate motif, abstracted: a pointed arch.
-     A scaling SVG mask rather than a border-radius, so the apex stays a point
-     at every aspect ratio. Also the geometry of Central Asian arches. */
-  .arch-mask {
-    -webkit-mask-image: var(--arch);
-    mask-image: var(--arch);
-    -webkit-mask-size: 100% 100%;
-    mask-size: 100% 100%;
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-  }
-
-  /* Number-safe tabular figures for prices and hours. */
   .figures {
     font-variant-numeric: tabular-nums lining-nums;
   }
+  .field {
+    @apply w-full rounded-[12px] border bg-card px-3.5 text-ink outline-none transition-colors duration-quick;
+    min-height: 3rem;
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+  .field:focus {
+    border-color: rgb(var(--anor));
+  }
+  textarea.field {
+    @apply py-3;
+    resize: vertical;
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Native horizontal swipe rail (photo sheet). */
+  .swipe-rail {
+    display: flex;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .swipe-rail::-webkit-scrollbar {
+    display: none;
+  }
+  .swipe-rail > * {
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+    flex: 0 0 100%;
+  }
+
+  /* Tap feedback: scale(0.97) over 100ms ease-out, transform only. */
+  .tap {
+    transition: transform 100ms var(--ease-out);
+  }
+  .tap:active {
+    transform: scale(0.97);
+  }
+  /* A card presses as one — but not when the press is on a control inside it. */
+  .tap-card {
+    transition: transform 100ms var(--ease-out);
+  }
+  .tap-card:active:not(:has(button:active, a:active)) {
+    transform: scale(0.97);
+  }
+
+  /* Visual size stays as specified; the hit area grows to at least 44px. */
+  .hit-44:not(.absolute):not(.fixed) {
+    position: relative;
+  }
+  .hit-44::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* ==========================================================================
+   Dish card
+   ========================================================================== */
+.dish-card {
+  container-type: inline-size;
+}
+/* ==========================================================================
+   Price row + Add → stepper morph
+   The control is anchored bottom-right and animates only its own width, so
+   the card never changes size. Wide cards: it grows beside the price.
+   Narrow cards (2-up phones, rails): it grows across the row and the price
+   fades out underneath while the dish is in the basket.
+   ========================================================================== */
+.price-block {
+  padding-right: var(--price-reserve, 112px);
+  transition: opacity 140ms var(--ease-standard);
+}
+.add-control {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  height: 36px;
+  border-radius: 18px;
+  width: var(--add-w, 88px);
+  transition: width 200ms var(--ease-standard), background-color 200ms var(--ease-standard);
+}
+.add-control[data-state='stepper'] {
+  width: 104px;
+}
+.add-face,
+.stepper-face {
+  position: absolute;
+  inset: 0;
+  transition: opacity 140ms var(--ease-standard);
+}
+.add-control[data-state='stepper'] .add-face,
+.add-control[data-state='add'] .stepper-face {
+  opacity: 0;
+  pointer-events: none;
+}
+.add-plus {
+  display: none;
+}
+@container (max-width: 195.98px) {
+  .price-block {
+    padding-right: 54px;
+  }
+  .add-control {
+    width: 46px;
+  }
+  .add-control[data-state='stepper'] {
+    width: 100%;
+  }
+  .dish-card[data-in-basket='true'] .price-block {
+    opacity: 0;
+  }
+  .add-label {
+    display: none;
+  }
+  .add-plus {
+    display: block;
+  }
+}
+
+/* Pill ripple — from the touch point, accent-tinted, fades. */
+.ripple {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border-radius: 999px;
+  background: rgb(var(--anor) / 0.3);
+  pointer-events: none;
+  animation: ripple 460ms var(--ease-out) forwards;
+}
+.ripple-light {
+  background: rgb(255 255 255 / 0.4);
+}
+@keyframes ripple {
+  from { transform: scale(0); opacity: 1; }
+  to { transform: scale(9); opacity: 0; }
+}
+
+/* Favourite: scale burst to 1.3 with a soft accent radial pulse, 300ms. */
+.heart-burst {
+  animation: heart-burst 300ms var(--ease-out);
+}
+@keyframes heart-burst {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+.heart-pulse {
+  position: absolute;
+  inset: -6px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgb(var(--anor) / 0.35) 0%, rgb(var(--anor) / 0) 70%);
+  pointer-events: none;
+  animation: heart-pulse 300ms var(--ease-out) forwards;
+}
+@keyframes heart-pulse {
+  from { transform: scale(0.5); opacity: 1; }
+  to { transform: scale(1.7); opacity: 0; }
+}
+
+/* Basket badge glow when the basket goes from empty to one item. */
+.badge-glow {
+  position: absolute;
+  inset: -3px;
+  border-radius: 999px;
+  background: rgb(var(--anor) / 0.5);
+  pointer-events: none;
+  animation: badge-glow 650ms var(--ease-out) forwards;
+}
+@keyframes badge-glow {
+  from { transform: scale(0.8); opacity: 0.9; }
+  to { transform: scale(2.4); opacity: 0; }
+}
+
+/* Image: shimmer on the placeholder, 200ms fade to the photo, no layout shift. */
+.shimmer {
+  background-color: rgb(var(--placeholder));
+  background-image: linear-gradient(100deg, transparent 20%, rgb(255 255 255 / 0.65) 50%, transparent 80%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s linear infinite;
+}
+@keyframes shimmer {
+  from { background-position: 150% 0; }
+  to { background-position: -50% 0; }
+}
+.shimmer[data-loaded='true'] {
+  animation: none;
+  background-image: none;
+}
+.dish-img {
+  opacity: 0;
+  transition: opacity 200ms var(--ease-out);
+}
+.dish-img[data-loaded='true'] {
+  opacity: 1;
+}
+
+/* Header mark: the seed gives one soft pulse roughly every 20s — mostly still. */
+.seed-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: seed-pulse 20s ease-in-out infinite;
+}
+@keyframes seed-pulse {
+  0%, 95%, 100% { transform: scale(1); opacity: 1; }
+  97.5% { transform: scale(1.45); opacity: 0.75; }
+}
+
+/* Slow status pulse for the 24/7 badge. */
+.pulse-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: rgb(var(--anor));
+  animation: pulse-ring 2.4s var(--ease-out) infinite;
+}
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.55; }
+  70%, 100% { transform: scale(2.6); opacity: 0; }
+}
+
+/* ==========================================================================
+   Section entry — 12px rise + fade over 250ms, once; cards in a row stagger
+   40ms. Driven by useReveal (one shared IntersectionObserver).
+
+   Visible is the resting state — animation is purely additive. An element
+   only ever starts hidden when JS has synchronously confirmed, before paint,
+   that it is genuinely below the viewport (`data-pending`); anything already
+   on screen, or rendered before JS runs at all, is just shown. That way a
+   slow observer callback, a component that mounts already in view, or JS
+   never running can never leave real content permanently invisible.
+   ========================================================================== */
+.reveal {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 250ms var(--ease-out) var(--reveal-delay, 0ms),
+    transform 250ms var(--ease-out) var(--reveal-delay, 0ms);
+}
+.reveal[data-pending] {
+  opacity: 0;
+  transform: translate3d(0, 12px, 0);
+}
+/* Category heading arrival — 10px rise + fade over 220ms, once. */
+.reveal-heading {
+  opacity: 1;
+  transform: none;
+  transition: opacity 220ms var(--ease-out), transform 220ms var(--ease-out);
+}
+.reveal-heading[data-pending] {
+  opacity: 0;
+  transform: translate3d(0, 10px, 0);
+}
+
+/* Thin accent rule under a section heading, drawn left-to-right as the
+   heading's own reveal fires (shares its `data-inview`/pending state). */
+.heading-rule {
+  display: block;
+  height: 2px;
+  width: 40px;
+  margin-top: 10px;
+  background: rgb(var(--anor));
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 400ms var(--ease-out) 120ms;
+}
+.reveal-heading:not([data-pending]) .heading-rule {
+  transform: scaleX(1);
+}
+
+/* Column-aware stagger: 2 / 3 / 4 columns. */
+.stagger-grid > .reveal {
+  --reveal-delay: calc(var(--col2, 0) * 40ms);
+}
+@media (min-width: 768px) {
+  .stagger-grid > .reveal {
+    --reveal-delay: calc(var(--col3, 0) * 40ms);
+  }
+}
+@media (min-width: 1024px) {
+  .stagger-grid > .reveal {
+    --reveal-delay: calc(var(--col4, 0) * 40ms);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal,
+  .reveal-heading,
+  .reveal[data-pending],
+  .reveal-heading[data-pending] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .ripple,
+  .heart-pulse,
+  .badge-glow {
+    display: none;
+  }
+  .heart-burst {
+    animation: none;
+  }
+  .tap:active,
+  .tap-card:active {
+    transform: none;
+  }
+  .shimmer {
+    animation: none;
+  }
+  .pulse-dot::after {
+    display: none;
+  }
+}
+
+dialog::backdrop {
+  background: transparent;
+}
+
+/* ==========================================================================
+   Hero — a slow, continuous drift built from the brand red. Felt, not
+   noticed; collapses to a static frame under reduced motion (the sitewide
+   rule above already zeroes every animation-duration).
+   ========================================================================== */
+.hero-drift {
+  background: linear-gradient(135deg, rgb(var(--anor-deep)), rgb(var(--anor)) 45%, rgb(var(--anor-hover)) 78%, rgb(var(--anor-deep)));
+  background-size: 240% 240%;
+  animation: hero-drift 20s ease-in-out infinite;
+}
+@keyframes hero-drift {
+  0%, 100% { background-position: 8% 24%; }
+  50% { background-position: 92% 76%; }
+}
+.hero-mark-bg {
+  animation: hero-mark-float 24s ease-in-out infinite;
+}
+.hero-mark-bg-2 {
+  animation-duration: 29s;
+  animation-direction: reverse;
+}
+@keyframes hero-mark-float {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(14px, -16px, 0) rotate(4deg); }
 }

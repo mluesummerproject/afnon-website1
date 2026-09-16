@@ -2,6 +2,8 @@ type AnorMarkProps = {
   className?: string;
   /** Outer arch only — for use at watermark scale, where the full mark reads as clutter. */
   outline?: boolean;
+  /** The seed gives one soft pulse roughly every 20s — reserved for the header, where the mark is always on screen. */
+  pulse?: boolean;
 };
 
 /**
@@ -10,7 +12,7 @@ type AnorMarkProps = {
  * single seed at its centre. It is the only ornament the site owns, and it is
  * never drawn as a literal fruit.
  */
-export function AnorMark({ className = '', outline = false }: AnorMarkProps) {
+export function AnorMark({ className = '', outline = false, pulse = false }: AnorMarkProps) {
   return (
     <svg
       viewBox="0 0 24 28"
@@ -32,7 +34,14 @@ export function AnorMark({ className = '', outline = false }: AnorMarkProps) {
             strokeWidth="1.1"
             opacity="0.45"
           />
-          <circle cx="12" cy="15.4" r="1.6" fill="currentColor" />
+          <circle
+            cx="12"
+            cy="15.4"
+            r="1.6"
+            fill="currentColor"
+            className={pulse ? 'seed-pulse' : undefined}
+            {...(pulse ? { 'data-intro-target': 'mark' } : {})}
+          />
         </>
       )}
     </svg>

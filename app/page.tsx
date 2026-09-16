@@ -1,41 +1,110 @@
-import { Gallery } from '@/components/site/Gallery';
-import { Hero } from '@/components/site/Hero';
-import { Location } from '@/components/site/Location';
-import { Menu } from '@/components/site/Menu';
-import { Reserve } from '@/components/site/Reserve';
+import { AboutSection } from '@/components/site/AboutSection';
+import { BasketProvider } from '@/components/site/basket/BasketProvider';
+import { BasketSheetMount } from '@/components/site/basket/BasketSheetMount';
+import { BottomNav } from '@/components/site/BottomNav';
+import { ContactInfoSection } from '@/components/site/ContactInfoSection';
+import { Films } from '@/components/site/Films';
+import { ContactFab, ScrollTopButton } from '@/components/site/FloatingButtons';
+import { IntroOverlay } from '@/components/site/IntroOverlay';
+import { MenuExplorer } from '@/components/site/menu/MenuExplorer';
+import { PromotionsSection } from '@/components/site/PromotionsSection';
+import { ScrollSeed } from '@/components/site/ScrollSeed';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
-import { Story } from '@/components/site/Story';
-import { MENU_REVALIDATE_SECONDS } from '@/lib/supabase';
+import { SiteHero } from '@/components/site/SiteHero';
+import { SiteToaster } from '@/components/site/SiteToaster';
+import { VisitCard } from '@/components/site/VisitCard';
+import { issueFormToken } from '@/lib/antispam';
+import { getActiveBanners } from '@/lib/banners';
+import { getLocaleAndDictionary } from '@/lib/locale';
+import { getMenu } from '@/lib/menu';
+import { getSiteSettings } from '@/lib/settings';
+import { brand } from '@/lib/site';
+import { getActiveVideos } from '@/lib/videos';
 
 /**
- * Statically rendered and revalidated on a timer, with every admin write also
- * busting the menu cache tag — so edits are live without a redeploy.
+ * Rendered per request (the language comes from a cookie). Every Supabase
+ * read underneath stays in Next's data cache and is refreshed by staff edits.
  */
-export const revalidate = MENU_REVALIDATE_SECONDS;
+export default async function HomePage() {
+  const { locale, dict } = getLocaleAndDictionary();
+  const [menu, videos, banners, settings] = await Promise.all([getMenu(locale, dict), getActiveVideos(), getActiveBanners(), getSiteSettings()]);
 
-export default function HomePage() {
+  const allDishes = menu.categories.flatMap((category) => category.dishes);
+  const discountedDishes = allDishes.filter((dish) => dish.discountPercent !== null);
+
+  const basketDishes = allDishes.map((dish) => ({
+    id: dish.id,
+    name: dish.name,
+    priceValue: dish.priceValue,
+    available: dish.available,
+    image: dish.images[0]?.src ?? null,
+    imageAlt: dish.images[0]?.alt ?? dish.name,
+  }));
+
+  // Offered only when the restaurant actually saved them in Settings.
+  const telegramHref = settings.configured.telegram && settings.telegram ? settings.telegram.href : null;
+  const phoneHref = settings.configured.phone && settings.phone ? settings.phone.href : null;
+
+  const cardLabels = { ...dict.menu, close: dict.menu.close, photoPosition: dict.menu.photoPosition, showPhoto: dict.menu.showPhoto };
+
   return (
-    <>
+    <BasketProvider dishes={basketDishes} templates={dict.basket} currency={dict.menu.currency} telegramUsername={settings.telegramUsername}>
+      <IntroOverlay />
+      <div id="top" />
       <a
-        href="#main"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-hair focus:bg-ink focus:px-5 focus:py-3 focus:text-label focus:uppercase focus:text-paper"
+        href="#menu"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-[12px] focus:bg-ink focus:px-4 focus:py-3 focus:text-white"
       >
-        Skip to content
+        {dict.a11y.skipToContent}
       </a>
 
-      <SiteHeader />
+      <SiteHeader
+        locale={locale}
+        brandName={brand.name}
+        phoneHref={phoneHref}
+        nav={dict.nav}
+        labels={{
+          home: dict.a11y.siteNav,
+          cta: dict.header.cta,
+          basket: dict.header.basket,
+          call: dict.header.call,
+          language: dict.a11y.language,
+          switchTo: dict.a11y.switchTo,
+          siteNav: dict.a11y.siteNav,
+        }}
+      />
 
       <main id="main">
-        <Hero />
-        <Story />
-        <Menu />
-        <Gallery />
-        <Location />
-        <Reserve />
+        <h1 className="sr-only">{dict.meta.title}</h1>
+        <SiteHero brandName={brand.name} hero={dict.hero} badge={dict.visit.badge} />
+
+        <MenuExplorer status={menu.status} categories={menu.categories} locale={locale} search={dict.search} picksHeading={dict.picks.heading} menu={dict.menu} />
+        {videos.length > 0 ? <Films dict={dict} videos={videos} /> : null}
+
+        <PromotionsSection
+          banners={banners}
+          dishes={discountedDishes}
+          locale={locale}
+          copy={dict.promotions}
+          bannerLabels={dict.banners}
+          cardLabels={cardLabels}
+        />
+
+        <AboutSection locale={locale} copy={dict.about} settings={settings} />
+
+        <VisitCard visit={dict.visit} settings={settings} />
+
+        <ContactInfoSection copy={dict.contactSection} settings={settings} />
       </main>
 
-      <SiteFooter />
-    </>
+      <SiteFooter dict={dict} settings={settings} />
+      <BottomNav nav={dict.nav} label={dict.a11y.bottomNav} />
+      <ScrollSeed />
+      <ScrollTopButton label={dict.a11y.backToTop} />
+      <ContactFab labels={dict.fab} contactCopy={dict.contact} token={issueFormToken()} telegramHref={telegramHref} phoneHref={phoneHref} />
+      <BasketSheetMount locale={locale} basket={dict.basket} menu={dict.menu} />
+      <SiteToaster closeLabel={dict.a11y.close} />
+    </BasketProvider>
   );
 }
