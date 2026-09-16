@@ -124,7 +124,14 @@ function useCountUpOnView(target: number, active: boolean): [React.RefObject<HTM
       if (progress < 1) frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(frame);
+      // Interrupted before it finished — by an unmount, or by React re-running the
+      // effect (StrictMode does exactly that in development). Never leave a price
+      // frozen mid-count at "0": show the real value and let a re-run count again.
+      started.current = false;
+      setValue(target);
+    };
   };
 
   useLayoutEffect(() => {
