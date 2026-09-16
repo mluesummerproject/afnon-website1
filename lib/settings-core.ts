@@ -21,13 +21,18 @@ export type SettingKey = (typeof SETTING_KEYS)[number];
 export type StoredSettings = Partial<Record<SettingKey, string>>;
 export type ContactLink = { display: string; href: string };
 
+export type SocialKey = 'instagram' | 'facebook' | 'tiktok' | 'youtube';
+
+/** A saved social account. `key` lets the UI pick the right icon. */
+export type SocialLink = { key: SocialKey; label: string; href: string };
+
 export type SettingsFallback = {
   phone: string;
   telegramUsername: string;
   whatsapp: string;
   email: string;
   mapUrl: string;
-  social: { label: string; href: string }[];
+  social: SocialLink[];
 };
 
 export type ResolvedSettings = {
@@ -41,14 +46,14 @@ export type ResolvedSettings = {
   /** null → show the translated default hours from the dictionary */
   workingHours: string | null;
   mapUrl: string;
-  social: { label: string; href: string }[];
+  social: SocialLink[];
   /** Whether the owner actually saved each channel (placeholders don't count). */
   configured: { phone: boolean; telegram: boolean; whatsapp: boolean; email: boolean };
   /** Raw "About us" text per language, exactly as the owner wrote it — null when never filled in. No fallback text is ever synthesized here. */
   about: { uz: string | null; ru: string | null; en: string | null };
 };
 
-const SOCIAL_LABELS: Record<'instagram' | 'facebook' | 'tiktok' | 'youtube', string> = {
+const SOCIAL_LABELS: Record<SocialKey, string> = {
   instagram: 'Instagram',
   facebook: 'Facebook',
   tiktok: 'TikTok',
@@ -150,9 +155,9 @@ export function resolveSettings(stored: StoredSettings, fallback: SettingsFallba
   const whatsapp = stored.whatsapp ?? fallback.whatsapp;
   const email = stored.email ?? fallback.email;
 
-  const storedSocial = (Object.keys(SOCIAL_LABELS) as (keyof typeof SOCIAL_LABELS)[])
+  const storedSocial = (Object.keys(SOCIAL_LABELS) as SocialKey[])
     .filter((key) => stored[key])
-    .map((key) => ({ label: SOCIAL_LABELS[key], href: stored[key] as string }));
+    .map((key) => ({ key, label: SOCIAL_LABELS[key], href: stored[key] as string }));
 
   return {
     phone: phone ? phoneLink(phone) : null,

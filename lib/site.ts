@@ -14,7 +14,7 @@
  * ===========================================================================
  */
 
-import type { SettingsFallback } from '@/lib/settings-core';
+import type { SettingsFallback, SocialLink } from '@/lib/settings-core';
 
 export const brand = {
   name: 'Afnon',
@@ -36,7 +36,7 @@ export const contact = {
 export const telegramProfileUrl = contact.telegramUsername ? `https://t.me/${contact.telegramUsername}` : '';
 
 /** Social links shown when Settings has none. Empty until the restaurant supplies real accounts. */
-export const social: { label: string; href: string }[] = [];
+export const social: SocialLink[] = [];
 
 /** Address used for the map embed and directions link. No invented coordinates. */
 export const mapQuery = 'Qatortol Street, Tashkent, Uzbekistan';

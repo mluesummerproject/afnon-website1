@@ -89,3 +89,60 @@ export const TagIcon = ({ className, size = 22 }: IconProps) => (
 export const InfoIcon = ({ className, size = 22 }: IconProps) => (
   <svg {...base(size)} className={className}><circle cx="12" cy="12" r="8.5" /><path d="M12 11v5.5" /><circle cx="12" cy="8" r="0.9" fill="currentColor" stroke="none" /></svg>
 );
+
+/* ------------------------------------------------------------------ channels
+ * Brand marks drawn to the same 24px grid, weight and round joins as the rest
+ * of the set, rather than pasted in from a third-party icon pack — a row of
+ * mismatched logos is the quickest way to make a careful page look assembled.
+ */
+
+export const WhatsappIcon = ({ className, size = 22 }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <path d="M20 11.7a8 8 0 0 1-11.9 7L4 20l1.4-4a8 8 0 1 1 14.6-4.3Z" />
+    <path d="M9.3 8.8c.3-.1.6 0 .8.3l.7 1.2c.1.3.1.6-.1.8l-.5.5a5.6 5.6 0 0 0 2.4 2.4l.5-.5c.2-.2.5-.3.8-.1l1.2.7c.3.2.4.5.3.8-.2.6-.8 1-1.5 1-2.8-.2-5.1-2.5-5.3-5.3 0-.7.3-1.3 1-1.5Z" />
+  </svg>
+);
+
+export const InstagramIcon = ({ className, size = 22 }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
+    <circle cx="12" cy="12" r="4" />
+    <circle cx="16.9" cy="7.1" r="1" fill="currentColor" stroke="none" />
+  </svg>
+);
+
+export const FacebookIcon = ({ className, size = 22 }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
+    <path d="M15 8.2h-1.4c-.9 0-1.6.7-1.6 1.6V20M9.8 12.6h4.6" />
+  </svg>
+);
+
+export const TiktokIcon = ({ className, size = 22 }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <path d="M14.2 3.5v10.9a3.6 3.6 0 1 1-3.6-3.6" />
+    <path d="M14.2 3.5a5 5 0 0 0 5 5" />
+  </svg>
+);
+
+export const YoutubeIcon = ({ className, size = 22 }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <rect x="2.5" y="5.5" width="19" height="13" rx="4" />
+    <path d="M10.4 9.4l4.6 2.6-4.6 2.6Z" fill="currentColor" />
+  </svg>
+);
+
+export const DirectionsIcon = ({ className, size = 22 }: IconProps) => (
+  <svg {...base(size)} className={className}><path d="M20.5 3.5 3.5 10.2l7.2 2.9 2.6 7.4Z" /></svg>
+);
+
+export const PlayIcon = ({ className, size = 22 }: IconProps) => (
+  <svg {...base(size)} className={className}><path d="M8 5.2 19 12 8 18.8Z" /></svg>
+);
+
+export const FilmIcon = ({ className, size = 22 }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <rect x="3" y="5" width="18" height="14" rx="2.5" />
+    <path d="M7.5 5v14M16.5 5v14M3 12h18" />
+  </svg>
+);
