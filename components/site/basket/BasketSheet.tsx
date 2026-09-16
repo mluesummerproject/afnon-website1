@@ -99,10 +99,16 @@ export function BasketSheet({ locale, basket, menu, order, privacy, token, picku
     });
   }, []);
 
+  /** Moves focus to the first field that needs attention — only ever in answer to a Continue or a refused submit, never while typing. */
+  const focusField = (field: OrderField | undefined) => {
+    if (field) window.setTimeout(() => document.getElementById(`order-${field}`)?.focus({ preventScroll: false }), 260);
+  };
+
   const checkDetails = () => {
     const { invalid: problems } = validateDetails(draft);
     setInvalid(problems);
     if (problems.length === 0) go('review');
+    else focusField(problems[0]);
   };
 
   const orderable = lines.length > 0 && total.complete && total.amount > 0;
@@ -134,6 +140,7 @@ export function BasketSheet({ locale, basket, menu, order, privacy, token, picku
         setInvalid(result.invalid);
         go('details');
         setError('fields');
+        focusField(result.invalid[0]);
       } else {
         setError(result.reason);
       }

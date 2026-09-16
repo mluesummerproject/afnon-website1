@@ -35,7 +35,8 @@ export function cleanLine(value: unknown): string {
  */
 export function uzNationalDigits(raw: unknown): string | null {
   if (typeof raw !== 'string' || raw.length > 40) return null;
-  let digits = raw.replace(/\D/g, '');
+  // The written "+998" is the country code, never part of the 9 digits: "+998 00 000 0" has six.
+  let digits = (raw.includes(UZ_PREFIX) ? raw.replace(UZ_PREFIX, '') : raw).replace(/\D/g, '');
   if (digits.length === 12 && digits.startsWith('998')) digits = digits.slice(3);
   return /^\d{9}$/.test(digits) ? digits : null;
 }
@@ -57,8 +58,8 @@ export function displayUzPhone(stored: string): string {
  * A pasted full number ("+998 90…" or "998 90…") has its country code folded in.
  */
 export function maskUzPhoneInput(value: string): string {
-  const trimmed = value.trimStart();
-  let digits = (trimmed.startsWith(UZ_PREFIX) ? trimmed.slice(UZ_PREFIX.length) : trimmed).replace(/\D/g, '');
+  // Remove the one fixed prefix wherever it sits (a digit typed in front of it must not merge into "998").
+  let digits = (value.includes(UZ_PREFIX) ? value.replace(UZ_PREFIX, '') : value).replace(/\D/g, '');
   if (digits.length > 9 && digits.startsWith('998')) digits = digits.slice(3);
   return `${UZ_PREFIX} ${groupNational(digits.slice(0, 9))}`;
 }

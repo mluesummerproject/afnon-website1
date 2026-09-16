@@ -5,7 +5,8 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 import type { PlacedOrder } from '@/app/actions/order';
 import type { BasketDishInfo } from '@/components/site/basket/BasketProvider';
-import { BasketIcon, ChevronIcon, PinIcon, TelegramIcon } from '@/components/ui/icons';
+import { AnorMark } from '@/components/ui/AnorMark';
+import { BasketIcon, ChevronIcon, CloseIcon, PinIcon, TelegramIcon } from '@/components/ui/icons';
 import { toast } from '@/components/ui/toast';
 import { composeOrderMessage, orderUrl, type BasketLine, type OrderTemplates } from '@/lib/basket';
 import { displayUzPhone, mapsLink, maskUzPhoneInput, type Fulfillment, type OrderField } from '@/lib/checkout';
@@ -50,7 +51,12 @@ export function CheckoutHeader({ step, copy, onBack }: { step: CheckoutStep; cop
         <h2 id="basket-title" className="min-w-0 flex-1 truncate text-[18px] font-bold">
           {copy.steps[step]}
         </h2>
-        <span className="shrink-0 text-[13px] tabular-nums text-ink/60">{format(copy.stepOf, { step: index + 1, total: CHECKOUT_STEPS.length })}</span>
+        <span className="shrink-0 text-[13px] font-semibold tabular-nums text-ink/60">
+          <span aria-hidden="true">
+            {index + 1}/{CHECKOUT_STEPS.length}
+          </span>
+          <span className="sr-only">{format(copy.stepOf, { step: index + 1, total: CHECKOUT_STEPS.length })}</span>
+        </span>
       </div>
       <div className="mt-2 grid grid-cols-3 gap-1.5" aria-hidden="true">
         {CHECKOUT_STEPS.map((name, position) => (
@@ -127,6 +133,9 @@ function FieldError({ id, children }: { id: string; children: ReactNode }) {
   );
 }
 
+/** "+998 " — the part of the phone field the visitor cannot edit. */
+const PHONE_PREFIX_LENGTH = 5;
+
 const inputClass = (invalid: boolean) => `field mt-1.5 ${invalid ? 'border-accent ring-1 ring-accent' : 'border-line-strong'}`;
 
 type GeoState = 'idle' | 'locating' | 'denied' | 'unsupported' | 'failed';
@@ -156,14 +165,6 @@ export function DetailsStep({
   const [geoState, setGeoState] = useState<GeoState>('idle');
   const delivery = draft.fulfillment === 'delivery';
   const bad = (field: OrderField) => invalid.includes(field);
-  const firstInvalid = useRef<OrderField | null>(null);
-
-  // Bring the first problem into view and focus when a Continue is refused.
-  useEffect(() => {
-    const first = invalid[0] ?? null;
-    if (first && first !== firstInvalid.current) document.getElementById(`order-${first}`)?.focus();
-    firstInvalid.current = first;
-  }, [invalid]);
 
   const onPhone = (next: string) => {
     let masked = maskUzPhoneInput(next);
@@ -219,9 +220,11 @@ export function DetailsStep({
           autoComplete="tel"
           value={draft.phone}
           onChange={(event) => onPhone(event.target.value)}
-          onFocus={(event) => {
-            const end = event.target.value.length;
-            window.requestAnimationFrame(() => event.target.setSelectionRange(end, end));
+          onSelect={(event) => {
+            // The "+998 " prefix is fixed: keep the caret (and any selection) after it.
+            const input = event.currentTarget;
+            const floor = PHONE_PREFIX_LENGTH;
+            if (input.selectionStart !== null && input.selectionStart < floor) input.setSelectionRange(floor, Math.max(floor, input.selectionEnd ?? floor));
           }}
           onBlur={onBlurPhone}
           aria-invalid={bad('phone') || undefined}
@@ -285,13 +288,19 @@ export function DetailsStep({
 
           <div aria-live="polite">
             {draft.geo ? (
-              <div className="flex items-center justify-between gap-3 rounded-[12px] bg-accent/[0.06] px-3.5 py-2.5">
-                <span className="flex items-center gap-2 text-[14px] font-semibold text-accent">
-                  <PinIcon size={18} />
+              <div className="flex min-h-[44px] items-center justify-between gap-2 rounded-[12px] bg-accent/[0.06] pl-3.5">
+                <span className="flex min-w-0 items-center gap-2 text-[14px] font-semibold text-accent">
+                  <PinIcon size={18} className="shrink-0" />
                   {copy.located}
                 </span>
-                <button type="button" onClick={() => onChange({ geo: null })} className="tap -mr-2 min-h-[44px] px-2 text-[13px] font-medium text-ink/60 underline underline-offset-2">
-                  {copy.locationRemove}
+                <button
+                  type="button"
+                  onClick={() => onChange({ geo: null })}
+                  aria-label={copy.locationRemove}
+                  title={copy.locationRemove}
+                  className="tap flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink/60 hover:text-accent"
+                >
+                  <CloseIcon size={18} />
                 </button>
               </div>
             ) : (
@@ -489,16 +498,15 @@ export function Confirmation({
   return (
     <div role="status" className="px-4 pb-6 pt-2">
       <div className="flex flex-col items-center text-center">
-        {/* The seed settles into place: the same spring the fulfillment choice uses. */}
+        {/* The house mark settles in on a spring (no pulse here: that, and the intro landing spot, belong to the header). */}
         <motion.span
           aria-hidden="true"
-          initial={{ scale: 0.4, rotate: -40, opacity: 0 }}
-          animate={{ scale: 1, rotate: 0, opacity: 1 }}
-          transition={{ type: 'spring', stiffness: 420, damping: 22, delay: 0.05 }}
-          className="relative flex h-16 w-16 items-center justify-center rounded-full bg-accent/[0.08] text-accent"
+          initial={{ scale: 0.5, y: 8, opacity: 0 }}
+          animate={{ scale: 1, y: 0, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 420, damping: 24, delay: 0.05 }}
+          className="flex h-16 w-16 items-center justify-center rounded-full bg-accent/[0.08] text-accent"
         >
-          <span className="pulse-dot absolute inset-3 rounded-full opacity-40" />
-          <Seed className="relative h-7 w-[22px]" />
+          <AnorMark className="h-8 w-auto" />
         </motion.span>
         <p className="mt-4 text-[13px] font-semibold uppercase tracking-[0.1em] text-accent">{c.label}</p>
         <h2 id="basket-title" ref={headingRef} tabIndex={-1} className="mt-1 text-[22px] font-bold leading-tight outline-none">
