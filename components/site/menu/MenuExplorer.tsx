@@ -209,7 +209,7 @@ export function MenuExplorer({ status, categories, locale, search, picksHeading,
                   >
                     {category.label}
                   </h2>
-                  <div className="stagger-grid mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
+                  <div className="stagger-grid mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
                     {category.dishes.map((dish, position) => (
                       <DishCard key={dish.id} dish={dish} index={position} {...cardProps} />
                     ))}

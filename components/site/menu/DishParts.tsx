@@ -54,7 +54,7 @@ export function AddControl({ dish, locale, labels }: { dish: Dish; locale: Local
       <button
         ref={addRef}
         type="button"
-        className="add-face tap hit-44 flex items-center justify-center gap-1 rounded-[18px] px-4 text-button disabled:cursor-not-allowed"
+        className="add-face tap hit-44 absolute flex items-center justify-center gap-1 rounded-[18px] px-4 text-button disabled:cursor-not-allowed"
         onClick={(event) => add(dish.id, event.currentTarget)}
         disabled={disabled}
         aria-label={format(labels.addAria, { dish: dish.name })}
