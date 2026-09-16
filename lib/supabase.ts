@@ -12,9 +12,6 @@ const supabaseKey =
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseKey);
 
-/** How long cached public reads may live before Next revalidates them. */
-export const MENU_REVALIDATE_SECONDS = 300;
-
 /** Cache tags busted by admin writes, so edits appear without a redeploy. */
 export const MENU_CACHE_TAG = 'menu';
 export const VIDEOS_CACHE_TAG = 'videos';
@@ -24,18 +21,22 @@ export const SETTINGS_CACHE_TAG = 'settings';
 const options = { auth: { persistSession: false, autoRefreshToken: false } };
 
 /**
- * READ client. Every request carries both tags and a revalidation ceiling, so
- * reads are cached but never held indefinitely, and any admin write can
- * refresh them immediately.
+ * READ client. Deliberately uncached.
+ *
+ * These reads were previously held in Next's data cache for five minutes and
+ * refreshed by `revalidateTag` after every admin write. That only holds while
+ * the write and the read happen in the same server process: a second instance,
+ * a separate deployment or a build that predates the write all keep serving
+ * the old menu, and the symptom — a dish that exists in the database but is
+ * invisible on the site — looks like data loss to staff. The page is already
+ * dynamic (the language comes from a cookie), each render dedupes its reads
+ * through React `cache`, and the payload is a few kilobytes, so what caching
+ * bought here never justified the risk of a menu that silently lies.
  */
 export const supabase = createClient(supabaseUrl ?? '', supabaseKey ?? '', {
   ...options,
   global: {
-    fetch: (input, init) =>
-      fetch(input, {
-        ...init,
-        next: { revalidate: MENU_REVALIDATE_SECONDS, tags: [MENU_CACHE_TAG, VIDEOS_CACHE_TAG, BANNERS_CACHE_TAG, SETTINGS_CACHE_TAG] },
-      } as RequestInit),
+    fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' } as RequestInit),
   },
 });
 
