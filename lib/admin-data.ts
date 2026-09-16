@@ -5,7 +5,7 @@ import { labelsByCategory, orderCategoryGroups } from '@/lib/categories';
 import { groupByCategory, sortForAdmin } from '@/lib/ordering';
 import { rowsToStored, type StoredSettings } from '@/lib/settings-core';
 import { getSupabaseAdmin, isAdminSupabaseConfigured } from '@/lib/supabase-admin';
-import { MENU_ITEM_COLUMNS, type Banner, type CategoryLabelRow, type Message, type MenuImage, type MenuItem, type PromoVideo } from '@/lib/types';
+import { MENU_ITEM_COLUMNS, ORDER_STATUSES, type Banner, type CategoryLabelRow, type Message, type MenuImage, type MenuItem, type Order, type OrderStatus, type PromoVideo } from '@/lib/types';
 
 export type { AdminDish } from '@/lib/admin-types';
 import type { AdminDish } from '@/lib/admin-types';
@@ -106,6 +106,47 @@ export async function getUnreadCount(): Promise<number> {
     .from('messages')
     .select('id', { count: 'exact', head: true })
     .or('is_read.is.null,is_read.eq.false');
+  return count ?? 0;
+}
+
+export const ORDERS_PAGE_SIZE = 25;
+
+const ORDER_COLUMNS =
+  'id, created_at, order_code, fulfillment_type, customer_name, phone, address, address_note, geo_lat, geo_lng, items, total, payment_method, status, language, telegram_opened';
+
+/** Orders newest first, optionally one status only. Read only here, with the service role. */
+export async function getOrders(filter: OrderStatus | 'all', page: number): Promise<{ orders: Order[]; total: number; error?: string }> {
+  if (!isAdminSupabaseConfigured) return { orders: [], total: 0, error: t().toast.missingKey };
+
+  const from = (Math.max(1, page) - 1) * ORDERS_PAGE_SIZE;
+  let query = getSupabaseAdmin()
+    .from('orders')
+    .select(ORDER_COLUMNS, { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
+    .range(from, from + ORDERS_PAGE_SIZE - 1);
+  if (filter !== 'all') query = query.eq('status', filter);
+
+  const { data, error, count } = await query;
+  if (error) return { orders: [], total: 0, error: format(t().toast.loadOrders, { reason: error.message }) };
+  return { orders: (data ?? []) as Order[], total: count ?? 0 };
+}
+
+/** How many orders sit in each status — real counts, zero included. */
+export async function getOrderCounts(): Promise<Record<OrderStatus, number>> {
+  const zero = { new: 0, confirmed: 0, completed: 0, cancelled: 0 };
+  if (!isAdminSupabaseConfigured) return zero;
+  const supabase = getSupabaseAdmin();
+  const results = await Promise.all(
+    ORDER_STATUSES.map((status) => supabase.from('orders').select('id', { count: 'exact', head: true }).eq('status', status)),
+  );
+  return Object.fromEntries(ORDER_STATUSES.map((status, index) => [status, results[index].count ?? 0])) as Record<OrderStatus, number>;
+}
+
+/** Orders nobody has handled yet — the Orders tab badge. */
+export async function getNewOrderCount(): Promise<number> {
+  if (!isAdminSupabaseConfigured) return 0;
+  const { count } = await getSupabaseAdmin().from('orders').select('id', { count: 'exact', head: true }).eq('status', 'new');
   return count ?? 0;
 }
 

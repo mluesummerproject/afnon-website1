@@ -52,6 +52,33 @@ export type Message = {
   created_at: string;
 };
 
+export const ORDER_STATUSES = ['new', 'confirmed', 'completed', 'cancelled'] as const;
+export type OrderStatus = (typeof ORDER_STATUSES)[number];
+
+export function isOrderStatus(value: unknown): value is OrderStatus {
+  return typeof value === 'string' && (ORDER_STATUSES as readonly string[]).includes(value);
+}
+
+/** A cash order as staff see it. `items` is the snapshot taken when it was placed. */
+export type Order = {
+  id: number;
+  created_at: string;
+  order_code: string;
+  fulfillment_type: 'delivery' | 'pickup';
+  customer_name: string | null;
+  phone: string;
+  address: string | null;
+  address_note: string | null;
+  geo_lat: number | null;
+  geo_lng: number | null;
+  items: { id: number; name: string; unit_price: number; qty: number }[];
+  total: number;
+  payment_method: 'cash';
+  status: OrderStatus;
+  language: 'uz' | 'ru' | 'en' | null;
+  telegram_opened: boolean;
+};
+
 export type BannerLinkType = 'category' | 'external';
 
 export type Banner = {

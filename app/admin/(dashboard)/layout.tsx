@@ -10,7 +10,7 @@ import { SubmitButton } from '@/components/admin/SubmitButton';
 import { Toaster } from '@/components/admin/Toaster';
 import { AnorMark } from '@/components/ui/AnorMark';
 import { getAdminLocaleAndDict } from '@/lib/admin-locale';
-import { getUnreadCount } from '@/lib/admin-data';
+import { getNewOrderCount, getUnreadCount } from '@/lib/admin-data';
 import { hasSessionCookie, isAuthenticated } from '@/lib/auth';
 import { brand } from '@/lib/site';
 
@@ -21,7 +21,7 @@ import { brand } from '@/lib/site';
  */
 export default async function ProtectedAdminLayout({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated()) redirect(`/admin/login?m=${hasSessionCookie() ? 'expired' : 'required'}`);
-  const unread = await getUnreadCount();
+  const [unread, newOrders] = await Promise.all([getUnreadCount(), getNewOrderCount()]);
   const { locale, dict } = getAdminLocaleAndDict();
 
   return (
@@ -47,7 +47,7 @@ export default async function ProtectedAdminLayout({ children }: { children: Rea
             </div>
           </div>
           <div className="border-t border-line">
-            <AdminNav unread={unread} />
+            <AdminNav unread={unread} newOrders={newOrders} />
           </div>
         </header>
         <HomeScreenHint
