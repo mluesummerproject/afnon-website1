@@ -12,11 +12,13 @@ import {
   requestImageUpload,
   updateImageCaption,
 } from '@/app/admin/media-actions';
+import { useT } from '@/components/admin/AdminLangProvider';
 import { Chevron } from '@/components/admin/AdminMenu';
 import { toast } from '@/components/admin/toast';
 import { prepareImage, uploadToSignedUrl } from '@/components/admin/upload';
 import { useAdminAction } from '@/components/admin/useAdminAction';
 import { DragIcon } from '@/components/ui/icons';
+import { format } from '@/lib/i18n';
 import { formatBytes } from '@/lib/media';
 import type { MenuImage } from '@/lib/types';
 
@@ -30,15 +32,6 @@ type QueueItem = {
   file: File;
 };
 
-const stageLabel: Record<QueueItem['stage'], string> = {
-  waiting: 'Waiting',
-  preparing: 'Preparing',
-  uploading: 'Uploading',
-  checking: 'Checking',
-  done: 'Added',
-  failed: 'Failed',
-};
-
 /**
  * Built for a phone in the kitchen first, a computer second: one large button
  * adds photos, each tile shows its position with an explicit Cover badge on
@@ -47,6 +40,22 @@ const stageLabel: Record<QueueItem['stage'], string> = {
  * by dragging on a computer or with arrow buttons on a phone.
  */
 export function ImageManager({ dishId, dishName, images }: { dishId: number; dishName: string; images: MenuImage[] }) {
+  const t = useT();
+  const uploadMessages = {
+    photoFormat: t.toast.photoFormat,
+    connectionDropped: t.toast.connectionDropped,
+    uploadTimedOut: t.toast.uploadTimedOut,
+    uploadFailedStatus: t.toast.uploadFailedStatus,
+    uploadFailedReason: t.toast.uploadFailedReason,
+  };
+  const stageLabel: Record<QueueItem['stage'], string> = {
+    waiting: t.photos.stageWaiting,
+    preparing: t.photos.stagePreparing,
+    uploading: t.photos.stageUploading,
+    checking: t.photos.stageChecking,
+    done: t.photos.stageDone,
+    failed: t.photos.stageFailed,
+  };
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [busy, setBusy] = useState(false);
   const [confirmId, setConfirmId] = useState<number | null>(null);
@@ -68,25 +77,29 @@ export function ImageManager({ dishId, dishName, images }: { dishId: number; dis
   const processOne = async (item: QueueItem) => {
     try {
       update(item.key, { stage: 'preparing', progress: 0, error: undefined });
-      const blob = await prepareImage(item.file);
+      const blob = await prepareImage(item.file, uploadMessages);
       update(item.key, { size: blob.size });
 
       const ticket = await requestImageUpload(dishId, blob.type, blob.size);
       if (!ticket.ok) throw new Error(ticket.message);
 
       update(item.key, { stage: 'uploading' });
-      await uploadToSignedUrl(ticket.url, blob, ticket.path.split('/').pop() ?? 'photo.jpg', (fraction) =>
-        update(item.key, { progress: fraction }),
+      await uploadToSignedUrl(
+        ticket.url,
+        blob,
+        ticket.path.split('/').pop() ?? 'photo.jpg',
+        (fraction) => update(item.key, { progress: fraction }),
+        uploadMessages,
       );
 
       update(item.key, { stage: 'checking', progress: 1 });
       const result = await finalizeImageUpload(dishId, ticket.path);
-      if (!result?.ok) throw new Error(result?.message ?? 'The photo could not be saved.');
+      if (!result?.ok) throw new Error(result?.message ?? t.photos.couldNotSave);
 
       update(item.key, { stage: 'done' });
       return true;
     } catch (error) {
-      update(item.key, { stage: 'failed', error: error instanceof Error ? error.message : 'Upload failed.' });
+      update(item.key, { stage: 'failed', error: error instanceof Error ? error.message : t.photos.uploadFailed });
       return false;
     }
   };
@@ -100,7 +113,7 @@ export function ImageManager({ dishId, dishName, images }: { dishId: number; dis
     }
     setBusy(false);
     if (added > 0) toast({ ok: true, message: `${added} photo${added === 1 ? '' : 's'} added to ${dishName}.` });
-    if (added < items.length) toast({ ok: false, message: 'Some photos could not be added. You can retry them below.' });
+    if (added < items.length) toast({ ok: false, message: t.photos.someFailed });
     window.setTimeout(() => setQueue((list) => list.filter((entry) => entry.stage !== 'done')), 2500);
   };
 
@@ -116,7 +129,7 @@ export function ImageManager({ dishId, dishName, images }: { dishId: number; dis
       progress: 0,
       file,
     }));
-    if (files.length > 12) toast({ ok: false, message: 'Up to 12 photos at a time — the first 12 were taken.' });
+    if (files.length > 12) toast({ ok: false, message: format(t.photos.tooMany, { max: 12 }) });
     setQueue((list) => [...list.filter((entry) => entry.stage !== 'done'), ...items]);
     void processQueue(items);
   };
@@ -133,15 +146,15 @@ export function ImageManager({ dishId, dishName, images }: { dishId: number; dis
 
     setReplacingId(image.id);
     try {
-      const blob = await prepareImage(file);
+      const blob = await prepareImage(file, uploadMessages);
       const ticket = await requestImageUpload(dishId, blob.type, blob.size);
       if (!ticket.ok) throw new Error(ticket.message);
-      await uploadToSignedUrl(ticket.url, blob, ticket.path.split('/').pop() ?? 'photo.jpg', () => {});
+      await uploadToSignedUrl(ticket.url, blob, ticket.path.split('/').pop() ?? 'photo.jpg', () => {}, uploadMessages);
       const result = await finalizeImageReplace(image.id, ticket.path);
-      if (!result?.ok) throw new Error(result?.message ?? 'The photo could not be replaced.');
+      if (!result?.ok) throw new Error(result?.message ?? t.photos.couldNotReplace);
       toast({ ok: true, message: result.message });
     } catch (error) {
-      toast({ ok: false, message: error instanceof Error ? error.message : 'The photo could not be replaced.' });
+      toast({ ok: false, message: error instanceof Error ? error.message : t.photos.couldNotReplace });
     } finally {
       setReplacingId(null);
     }
@@ -178,12 +191,9 @@ export function ImageManager({ dishId, dishName, images }: { dishId: number; dis
     <section aria-labelledby={`photos-${dishId}`} className="border-t border-line pt-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 id={`photos-${dishId}`} className="font-display text-display-sm text-ink">
-          Photos <span className="label figures align-middle text-ink-muted">{images.length}</span>
+          {t.photos.heading} <span className="label figures align-middle text-ink-muted">{images.length}</span>
         </h3>
-        <p className="max-w-measure text-micro text-ink-muted">
-          Best results: square, about 1200×1200px, plain light background, dish centred, same angle across photos. The photo marked
-          “Cover” is what guests see first.
-        </p>
+        <p className="max-w-measure text-micro text-ink-muted">{t.photos.bestResults}</p>
       </div>
 
       <label
@@ -195,7 +205,7 @@ export function ImageManager({ dishId, dishName, images }: { dishId: number; dis
           <path d="M1 5.5H5.5L7 3H13L14.5 5.5H19V17H1Z" />
           <circle cx="10" cy="10.5" r="3.5" />
         </svg>
-        {busy ? 'Uploading…' : 'Add photos'}
+        {busy ? t.photos.uploading : t.photos.add}
         <input type="file" accept="image/*" multiple onChange={onPick} disabled={busy} className="sr-only" />
       </label>
 
@@ -257,7 +267,7 @@ export function ImageManager({ dishId, dishName, images }: { dishId: number; dis
                   <div className="relative aspect-square bg-paper-alt">
                     <Image
                       src={image.image_url}
-                      alt={image.caption?.trim() || `${dishName}, photo ${index + 1}`}
+                      alt={image.caption?.trim() || format(t.photos.photoAlt, { name: dishName, index: index + 1 })}
                       fill
                       sizes="(min-width: 1024px) 14rem, 45vw"
                       className="object-cover"
@@ -266,7 +276,7 @@ export function ImageManager({ dishId, dishName, images }: { dishId: number; dis
                     <span
                       className={`label absolute left-2 top-2 rounded-hair px-1.5 py-1 ${isCover ? 'bg-anor text-paper' : 'bg-ink/80 text-paper'}`}
                     >
-                      {isCover ? 'Cover' : index + 1}
+                      {isCover ? t.photos.cover : index + 1}
                     </span>
                     <span
                       aria-hidden="true"
@@ -275,36 +285,36 @@ export function ImageManager({ dishId, dishName, images }: { dishId: number; dis
                       <DragIcon size={15} />
                     </span>
                     {replacing ? (
-                      <div className="absolute inset-0 flex items-center justify-center bg-ink/60 text-micro font-medium text-paper">Replacing…</div>
+                      <div className="absolute inset-0 flex items-center justify-center bg-ink/60 text-micro font-medium text-paper">{t.photos.replacing}</div>
                     ) : null}
                   </div>
 
                   <div className="space-y-2 p-2">
                     <label className="block">
-                      <span className="sr-only">Caption for photo {index + 1}</span>
+                      <span className="sr-only">{format(t.photos.captionFor, { index: index + 1 })}</span>
                       <input
                         type="text"
                         maxLength={160}
                         defaultValue={image.caption ?? ''}
                         onBlur={onCaptionBlur(image)}
-                        placeholder={`Caption (defaults to “${dishName}”)`}
+                        placeholder={format(t.photos.captionDefault, { name: dishName })}
                         className="field min-h-[2.5rem] border-line-strong text-micro"
                       />
                     </label>
 
                     {confirmId === image.id ? (
                       <div className="space-y-1.5">
-                        <p className="text-micro text-ink">Remove this photo?</p>
+                        <p className="text-micro text-ink">{t.photos.removeConfirm}</p>
                         <button
                           type="button"
                           disabled={pending}
                           onClick={() => void run(() => deleteImage(image.id)).then(() => setConfirmId(null))}
                           className="min-h-[2.75rem] w-full rounded-hair bg-critical text-label font-medium uppercase text-paper disabled:opacity-50"
                         >
-                          {pending ? 'Removing…' : 'Remove'}
+                          {pending ? t.photos.removing : t.photos.remove}
                         </button>
                         <button type="button" onClick={() => setConfirmId(null)} className="min-h-[2.75rem] w-full text-label font-medium uppercase text-ink-secondary">
-                          Keep
+                          {t.photos.keep}
                         </button>
                       </div>
                     ) : (
@@ -313,7 +323,7 @@ export function ImageManager({ dishId, dishName, images }: { dishId: number; dis
                           type="button"
                           disabled={pending || index === 0}
                           onClick={() => void run(() => moveImage(image.id, 'up'))}
-                          aria-label={`Move photo ${index + 1} earlier`}
+                          aria-label={format(t.photos.moveEarlier, { index: index + 1 })}
                           className="flex min-h-[2.5rem] items-center justify-center gap-1 rounded-hair border border-line text-ink-secondary hover:text-ink disabled:opacity-30"
                         >
                           <Chevron direction="left" />
@@ -322,7 +332,7 @@ export function ImageManager({ dishId, dishName, images }: { dishId: number; dis
                           type="button"
                           disabled={pending || index === images.length - 1}
                           onClick={() => void run(() => moveImage(image.id, 'down'))}
-                          aria-label={`Move photo ${index + 1} later`}
+                          aria-label={format(t.photos.moveLater, { index: index + 1 })}
                           className="flex min-h-[2.5rem] items-center justify-center gap-1 rounded-hair border border-line text-ink-secondary hover:text-ink disabled:opacity-30"
                         >
                           <Chevron direction="right" />
@@ -333,14 +343,14 @@ export function ImageManager({ dishId, dishName, images }: { dishId: number; dis
                           onClick={() => void run(() => moveImage(image.id, 'first'))}
                           className="col-span-2 flex min-h-[2.5rem] items-center justify-center rounded-hair border border-line text-label text-ink-secondary hover:text-ink disabled:opacity-30"
                         >
-                          {isCover ? 'Cover photo' : 'Make cover'}
+                          {isCover ? t.photos.coverPhoto : t.photos.makeCover}
                         </button>
                         <label
                           className={`col-span-2 flex min-h-[2.5rem] items-center justify-center rounded-hair border border-line text-label uppercase text-ink-secondary hover:text-ink ${
                             replacingId !== null ? 'cursor-wait opacity-40' : 'cursor-pointer'
                           }`}
                         >
-                          Replace photo
+                          {t.photos.replacePhoto}
                           <input
                             type="file"
                             accept="image/*"
@@ -358,7 +368,7 @@ export function ImageManager({ dishId, dishName, images }: { dishId: number; dis
                           <svg aria-hidden="true" width="13" height="14" viewBox="0 0 13 14" fill="none" stroke="currentColor" strokeWidth="1.3">
                             <path d="M1 3.5H12M4.5 3.5V1.5H8.5V3.5M2.5 3.5L3.2 13H9.8L10.5 3.5" />
                           </svg>
-                          Remove
+                          {t.photos.remove}
                         </button>
                       </div>
                     )}
@@ -369,7 +379,7 @@ export function ImageManager({ dishId, dishName, images }: { dishId: number; dis
           </ul>
         </>
       ) : (
-        <p className="mt-4 text-body-sm text-ink-muted">No photos yet. The dish still shows on the menu without them.</p>
+        <p className="mt-4 text-body-sm text-ink-muted">{t.photos.noneYet}</p>
       )}
     </section>
   );

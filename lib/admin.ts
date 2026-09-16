@@ -10,8 +10,8 @@ import type { ActionResult } from '@/lib/admin-types';
 
 export type { ActionResult };
 
-export function succeed(message: string, id?: number): NonNullable<ActionResult> {
-  return { ok: true, message, id, at: Date.now() };
+export function succeed(message: string, id?: number, extra?: { moved?: boolean }): NonNullable<ActionResult> {
+  return { ok: true, message, id, at: Date.now(), ...extra };
 }
 
 export function fail(message: string): NonNullable<ActionResult> {

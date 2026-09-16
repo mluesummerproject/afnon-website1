@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { moveCategory } from '@/app/admin/actions';
+import { useT } from '@/components/admin/AdminLangProvider';
 import { DishRow } from '@/components/admin/DishRow';
 import { ItemForm } from '@/components/admin/ItemForm';
 import { toast } from '@/components/admin/toast';
 import type { AdminDish } from '@/lib/admin-types';
+import { format } from '@/lib/i18n';
 import { groupByCategory } from '@/lib/ordering';
 
 const opposite = { up: 'down', down: 'up' } as const;
@@ -43,6 +45,7 @@ export function missingDescription(dish: AdminDish): boolean {
  * made against a partial view.
  */
 export function AdminMenu({ dishes, categories }: { dishes: AdminDish[]; categories: string[] }) {
+  const t = useT();
   const [filter, setFilter] = useState<Filter>('all');
   const [query, setQuery] = useState('');
   const [openId, setOpenId] = useState<number | null>(null);
@@ -59,14 +62,14 @@ export function AdminMenu({ dishes, categories }: { dishes: AdminDish[]; categor
       toast({
         ok: result.ok,
         message: result.message,
-        action: result.ok && result.message.includes('moved') ? { label: 'Undo', run: () => void moveCategoryOnce(category, opposite[direction]) } : undefined,
+        action: result.ok && result.moved ? { label: t.toast.undo, run: () => void moveCategoryOnce(category, opposite[direction]) } : undefined,
       });
     } catch {
-      toast({ ok: false, message: 'Something went wrong. Check the connection and try again.' });
+      toast({ ok: false, message: t.toast.generic });
     } finally {
       setCategoryPending(false);
     }
-  }, [categoryPending]);
+  }, [categoryPending, t]);
 
   const counts = useMemo(
     () => ({
@@ -114,11 +117,11 @@ export function AdminMenu({ dishes, categories }: { dishes: AdminDish[]; categor
   }, []);
 
   const filters: { key: Filter; label: string; tone?: 'alert' }[] = [
-    { key: 'all', label: 'All dishes' },
-    { key: 'unavailable', label: 'Unavailable', tone: 'alert' },
-    { key: 'translations', label: 'Missing translations', tone: 'alert' },
-    { key: 'photos', label: 'No photos', tone: 'alert' },
-    { key: 'descriptions', label: 'No description', tone: 'alert' },
+    { key: 'all', label: t.menu.filterAll },
+    { key: 'unavailable', label: t.menu.filterUnavailable, tone: 'alert' },
+    { key: 'translations', label: t.menu.filterTranslations, tone: 'alert' },
+    { key: 'photos', label: t.menu.filterPhotos, tone: 'alert' },
+    { key: 'descriptions', label: t.menu.filterDescriptions, tone: 'alert' },
   ];
 
   return (
@@ -130,13 +133,13 @@ export function AdminMenu({ dishes, categories }: { dishes: AdminDish[]; categor
         className="flex min-h-[3.25rem] w-full items-center justify-center gap-3 rounded-hair bg-anor px-6 text-label-lg font-medium uppercase text-paper transition-colors hover:bg-anor-hover sm:w-auto"
       >
         <span aria-hidden="true" className="text-lg leading-none">{adding ? '×' : '+'}</span>
-        {adding ? 'Close' : 'Add a new dish'}
+        {adding ? t.menu.close : t.menu.addDish}
       </button>
 
       {adding ? (
         <section aria-labelledby="new-dish" className="mt-4 border-l-2 border-anor bg-surface p-4 md:p-6">
-          <h2 id="new-dish" className="font-display text-display-sm text-ink">New dish</h2>
-          <p className="mt-1 text-body-sm text-ink-secondary">It goes to the end of its category. You can add photos right after saving.</p>
+          <h2 id="new-dish" className="font-display text-display-sm text-ink">{t.menu.newDish}</h2>
+          <p className="mt-1 text-body-sm text-ink-secondary">{t.menu.newDishHint}</p>
           <div className="mt-6">
             <ItemForm categories={categories} onCreated={onCreated} />
           </div>
@@ -144,7 +147,7 @@ export function AdminMenu({ dishes, categories }: { dishes: AdminDish[]; categor
       ) : null}
 
       {/* What needs attention — each count is also a filter. */}
-      <div className="mt-8 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]" role="group" aria-label="Show">
+      <div className="mt-8 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]" role="group" aria-label={t.menu.show}>
         {filters.map((item) => {
           const active = filter === item.key;
           const count = counts[item.key];
@@ -172,27 +175,27 @@ export function AdminMenu({ dishes, categories }: { dishes: AdminDish[]; categor
       </div>
 
       <label className="mt-4 block">
-        <span className="sr-only">Search dishes</span>
+        <span className="sr-only">{t.menu.searchLabel}</span>
         <input
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by name or category, in any language"
+          placeholder={t.menu.searchPlaceholder}
           className="field border-line-strong"
         />
       </label>
 
       {!reorderable && dishes.length > 0 ? (
-        <p className="mt-3 text-micro text-ink-muted">Reordering is available when showing all dishes without a search.</p>
+        <p className="mt-3 text-micro text-ink-muted">{t.menu.reorderHint}</p>
       ) : null}
 
       {dishes.length === 0 ? (
         <div className="mt-10 border-t border-line pt-8">
-          <h2 className="font-display text-display-sm text-ink">The menu is empty.</h2>
-          <p className="mt-2 max-w-measure text-body-sm text-ink-secondary">Add the first dish with the button above. It appears on the website as soon as you save it.</p>
+          <h2 className="font-display text-display-sm text-ink">{t.menu.emptyTitle}</h2>
+          <p className="mt-2 max-w-measure text-body-sm text-ink-secondary">{t.menu.emptyBody}</p>
         </div>
       ) : visible.length === 0 ? (
-        <p className="mt-10 border-t border-line pt-8 text-body-sm text-ink-secondary">Nothing matches. Try another search or filter.</p>
+        <p className="mt-10 border-t border-line pt-8 text-body-sm text-ink-secondary">{t.menu.noMatch}</p>
       ) : null}
 
       <div className="mt-8 space-y-10">
@@ -213,7 +216,7 @@ export function AdminMenu({ dishes, categories }: { dishes: AdminDish[]; categor
                         type="button"
                         disabled={categoryPending || (direction === 'up' ? fullIndex === 0 : fullIndex === allGroups.length - 1)}
                         onClick={() => void moveCategoryWithUndo(group.name, direction)}
-                        aria-label={`Move category ${group.name} ${direction}`}
+                        aria-label={format(t.menu.moveCategory, { category: group.name, direction: direction === 'up' ? t.menu.up : t.menu.down })}
                         className="inline-flex min-h-[2.75rem] w-11 items-center justify-center rounded-hair border border-line bg-surface text-ink-secondary transition-colors hover:border-ink hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         <Chevron direction={direction} />

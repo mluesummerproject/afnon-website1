@@ -3,20 +3,23 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import { useT } from '@/components/admin/AdminLangProvider';
+
 /** Six destinations, scrollable on a phone so every tab stays a single thumb-height row. */
 export function AdminNav({ unread }: { unread: number }) {
   const pathname = usePathname();
+  const t = useT();
   const tabs = [
-    { href: '/admin', label: 'Menu', active: pathname === '/admin' },
-    { href: '/admin/videos', label: 'Films', active: pathname.startsWith('/admin/videos') },
-    { href: '/admin/banners', label: 'Banners', active: pathname.startsWith('/admin/banners') },
-    { href: '/admin/categories', label: 'Categories', active: pathname.startsWith('/admin/categories') },
-    { href: '/admin/settings', label: 'Settings', active: pathname.startsWith('/admin/settings') },
-    { href: '/admin/inbox', label: 'Inbox', active: pathname.startsWith('/admin/inbox'), badge: unread },
+    { href: '/admin', label: t.nav.menu, active: pathname === '/admin' },
+    { href: '/admin/videos', label: t.nav.films, active: pathname.startsWith('/admin/videos') },
+    { href: '/admin/banners', label: t.nav.banners, active: pathname.startsWith('/admin/banners') },
+    { href: '/admin/categories', label: t.nav.categories, active: pathname.startsWith('/admin/categories') },
+    { href: '/admin/settings', label: t.nav.settings, active: pathname.startsWith('/admin/settings') },
+    { href: '/admin/inbox', label: t.nav.inbox, active: pathname.startsWith('/admin/inbox'), badge: unread },
   ];
 
   return (
-    <nav aria-label="Admin sections" className="shell">
+    <nav aria-label={t.nav.sections} className="shell">
       <ul className="flex gap-1 overflow-x-auto [scrollbar-width:none] md:gap-2 [&::-webkit-scrollbar]:hidden">
         {tabs.map((tab) => (
           <li key={tab.href} className="shrink-0">
@@ -32,7 +35,7 @@ export function AdminNav({ unread }: { unread: number }) {
                 <span className="figures inline-flex min-w-[1.4rem] items-center justify-center rounded-pill bg-anor px-1.5 py-0.5 text-[0.6875rem] font-semibold tracking-normal text-paper">
                   <span className="sr-only">, </span>
                   {tab.badge}
-                  <span className="sr-only"> unread</span>
+                  <span className="sr-only"> {t.nav.unread}</span>
                 </span>
               ) : null}
               <span

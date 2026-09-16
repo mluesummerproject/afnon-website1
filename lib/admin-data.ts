@@ -8,12 +8,14 @@ import { MENU_ITEM_COLUMNS, type Banner, type CategoryLabelRow, type Message, ty
 
 export type { AdminDish } from '@/lib/admin-types';
 import type { AdminDish } from '@/lib/admin-types';
+import { getAdminDict } from '@/lib/admin-locale';
+import { format } from '@/lib/i18n';
 
-const MISSING_KEY = 'SUPABASE_SERVICE_ROLE_KEY is not set on the server, so this cannot be read or edited here.';
+const t = () => getAdminDict();
 
 /** Every dish with its photos, in exactly the order guests see. */
 export async function getAdminMenu(): Promise<{ dishes: AdminDish[]; error?: string }> {
-  if (!isAdminSupabaseConfigured) return { dishes: [], error: MISSING_KEY };
+  if (!isAdminSupabaseConfigured) return { dishes: [], error: t().toast.missingKey };
 
   try {
     const supabase = getSupabaseAdmin();
@@ -27,7 +29,7 @@ export async function getAdminMenu(): Promise<{ dishes: AdminDish[]; error?: str
       supabase.from('category_labels').select('category, name_uz, name_ru, name_en, sort_order'),
     ]);
 
-    if (items.error) return { dishes: [], error: `Could not load the menu: ${items.error.message}` };
+    if (items.error) return { dishes: [], error: format(t().toast.loadMenu, { reason: items.error.message }) };
 
     const byDish = new Map<number, MenuImage[]>();
     for (const image of (images.data ?? []) as MenuImage[]) {
@@ -43,14 +45,14 @@ export async function getAdminMenu(): Promise<{ dishes: AdminDish[]; error?: str
       images: byDish.get(item.id) ?? [],
     }));
 
-    return { dishes, error: images.error ? `Photos could not be loaded: ${images.error.message}` : undefined };
+    return { dishes, error: images.error ? format(t().toast.loadPhotos, { reason: images.error.message }) : undefined };
   } catch {
-    return { dishes: [], error: 'Could not reach Supabase with the admin credentials.' };
+    return { dishes: [], error: t().toast.noAdminConnection };
   }
 }
 
 export async function getAdminVideos(): Promise<{ videos: PromoVideo[]; error?: string }> {
-  if (!isAdminSupabaseConfigured) return { videos: [], error: MISSING_KEY };
+  if (!isAdminSupabaseConfigured) return { videos: [], error: t().toast.missingKey };
 
   const { data, error } = await getSupabaseAdmin()
     .from('promo_videos')
@@ -58,7 +60,7 @@ export async function getAdminVideos(): Promise<{ videos: PromoVideo[]; error?: 
     .order('sort_order', { ascending: true, nullsFirst: false })
     .order('id', { ascending: true });
 
-  if (error) return { videos: [], error: `Could not load films: ${error.message}` };
+  if (error) return { videos: [], error: format(t().toast.loadFilms, { reason: error.message }) };
   return { videos: (data ?? []) as PromoVideo[] };
 }
 
@@ -68,7 +70,7 @@ export async function getMessages(
   filter: 'all' | 'unread',
   page: number,
 ): Promise<{ messages: Message[]; total: number; error?: string }> {
-  if (!isAdminSupabaseConfigured) return { messages: [], total: 0, error: MISSING_KEY };
+  if (!isAdminSupabaseConfigured) return { messages: [], total: 0, error: t().toast.missingKey };
 
   const from = (Math.max(1, page) - 1) * MESSAGES_PAGE_SIZE;
   let query = getSupabaseAdmin()
@@ -81,7 +83,7 @@ export async function getMessages(
   if (filter === 'unread') query = query.or('is_read.is.null,is_read.eq.false');
 
   const { data, error, count } = await query;
-  if (error) return { messages: [], total: 0, error: `Could not load messages: ${error.message}` };
+  if (error) return { messages: [], total: 0, error: format(t().toast.loadMessages, { reason: error.message }) };
   return { messages: (data ?? []) as Message[], total: count ?? 0 };
 }
 
@@ -98,13 +100,13 @@ export type CategoryOverview = { category: string; label: CategoryLabelRow | nul
 
 /** Every category that has dishes or a label row, in public display order. */
 export async function getCategoryOverview(): Promise<{ categories: CategoryOverview[]; error?: string }> {
-  if (!isAdminSupabaseConfigured) return { categories: [], error: MISSING_KEY };
+  if (!isAdminSupabaseConfigured) return { categories: [], error: t().toast.missingKey };
   const supabase = getSupabaseAdmin();
   const [items, labels] = await Promise.all([
     supabase.from('menu_items').select('id, category, sort_order'),
     supabase.from('category_labels').select('category, name_uz, name_ru, name_en, sort_order'),
   ]);
-  if (items.error || labels.error) return { categories: [], error: `Could not load categories: ${(items.error ?? labels.error)?.message}` };
+  if (items.error || labels.error) return { categories: [], error: format(t().toast.loadCategories, { reason: (items.error ?? labels.error)?.message ?? '—' }) };
 
   const labelMap = labelsByCategory((labels.data ?? []) as CategoryLabelRow[]);
   const groups = orderCategoryGroups(groupByCategory(sortForAdmin((items.data ?? []) as { id: number; category: string | null; sort_order: number | null }[])), labelMap);
@@ -120,20 +122,20 @@ export async function getCategoryOverview(): Promise<{ categories: CategoryOverv
 }
 
 export async function getAdminBanners(): Promise<{ banners: Banner[]; error?: string }> {
-  if (!isAdminSupabaseConfigured) return { banners: [], error: MISSING_KEY };
+  if (!isAdminSupabaseConfigured) return { banners: [], error: t().toast.missingKey };
   const { data, error } = await getSupabaseAdmin()
     .from('banners')
     .select('id, image_url, title, sort_order, is_active')
     .order('sort_order', { ascending: true, nullsFirst: false })
     .order('id', { ascending: true });
-  if (error) return { banners: [], error: `Could not load banners: ${error.message}` };
+  if (error) return { banners: [], error: format(t().toast.loadBanners, { reason: error.message }) };
   return { banners: (data ?? []) as Banner[] };
 }
 
 export async function getStoredSettings(): Promise<{ settings: StoredSettings; error?: string }> {
-  if (!isAdminSupabaseConfigured) return { settings: {}, error: MISSING_KEY };
+  if (!isAdminSupabaseConfigured) return { settings: {}, error: t().toast.missingKey };
   const { data, error } = await getSupabaseAdmin().from('site_settings').select('key, value');
-  if (error) return { settings: {}, error: `Could not load settings: ${error.message}` };
+  if (error) return { settings: {}, error: format(t().toast.loadSettings, { reason: error.message }) };
   return { settings: rowsToStored(data ?? []) };
 }
 

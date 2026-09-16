@@ -6,7 +6,15 @@ import { IMAGE_MAX_EDGE, isImageMime, MAX_IMAGE_BYTES } from '@/lib/media';
  * becomes 300–900 KB — a big difference on mobile data — and re-encoding also
  * strips EXIF metadata such as the GPS location of the kitchen.
  */
-export async function prepareImage(file: File): Promise<Blob> {
+export type UploadMessages = {
+  photoFormat: string;
+  connectionDropped: string;
+  uploadTimedOut: string;
+  uploadFailedStatus: string;
+  uploadFailedReason: string;
+};
+
+export async function prepareImage(file: File, messages: Pick<UploadMessages, 'photoFormat'>): Promise<Blob> {
   try {
     const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' } as ImageBitmapOptions);
     const scale = Math.min(1, IMAGE_MAX_EDGE / Math.max(bitmap.width, bitmap.height));
@@ -30,11 +38,17 @@ export async function prepareImage(file: File): Promise<Blob> {
   }
 
   if (isImageMime(file.type) && file.size <= MAX_IMAGE_BYTES) return file;
-  throw new Error('This photo format cannot be used. Please choose a JPEG or PNG photo.');
+  throw new Error(messages.photoFormat);
 }
 
 /** Sends a file to a signed Storage URL with real upload progress (fetch cannot report it). */
-export function uploadToSignedUrl(url: string, blob: Blob, filename: string, onProgress: (fraction: number) => void): Promise<void> {
+export function uploadToSignedUrl(
+  url: string,
+  blob: Blob,
+  filename: string,
+  onProgress: (fraction: number) => void,
+  messages: Omit<UploadMessages, 'photoFormat'>,
+): Promise<void> {
   return new Promise((resolve, reject) => {
     const request = new XMLHttpRequest();
     request.open('PUT', url);
@@ -50,17 +64,17 @@ export function uploadToSignedUrl(url: string, blob: Blob, filename: string, onP
         resolve();
         return;
       }
-      let message = `Upload failed (${request.status}).`;
+      let message = messages.uploadFailedStatus.replace('{status}', String(request.status));
       try {
         const body = JSON.parse(request.responseText) as { message?: string };
-        if (body.message) message = `Upload failed: ${body.message}`;
+        if (body.message) message = messages.uploadFailedReason.replace('{reason}', body.message);
       } catch {
         /* keep the generic message */
       }
       reject(new Error(message));
     };
-    request.onerror = () => reject(new Error('The connection dropped during upload. Please try again.'));
-    request.ontimeout = () => reject(new Error('The upload took too long. Please try again on a stronger connection.'));
+    request.onerror = () => reject(new Error(messages.connectionDropped));
+    request.ontimeout = () => reject(new Error(messages.uploadTimedOut));
 
     const form = new FormData();
     form.append('cacheControl', '31536000');

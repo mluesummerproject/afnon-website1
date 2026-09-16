@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
+import { useT } from '@/components/admin/AdminLangProvider';
 import { TOAST_EVENT, type ToastDetail } from '@/components/admin/toast';
 
 type Item = ToastDetail & { id: number };
@@ -12,6 +13,7 @@ type Item = ToastDetail & { id: number };
  * longer and are announced assertively.
  */
 export function Toaster() {
+  const t = useT();
   const [items, setItems] = useState<Item[]>([]);
 
   useEffect(() => {
@@ -40,7 +42,7 @@ export function Toaster() {
             item.ok ? 'border-positive' : 'border-critical'
           }`}
         >
-          <span className={`label mt-0.5 shrink-0 ${item.ok ? 'text-gold-soft' : 'text-anor-light'}`}>{item.ok ? 'Done' : 'Failed'}</span>
+          <span className={`label mt-0.5 shrink-0 ${item.ok ? 'text-gold-soft' : 'text-anor-light'}`}>{item.ok ? t.toast.done : t.toast.failed}</span>
           <span className="flex-1">{item.message}</span>
           {item.action ? (
             <button
@@ -58,7 +60,7 @@ export function Toaster() {
             type="button"
             onClick={() => setItems((list) => list.filter((entry) => entry.id !== item.id))}
             className="-my-2 -mr-2 flex h-9 w-9 shrink-0 items-center justify-center text-paper/70 hover:text-paper"
-            aria-label="Dismiss"
+            aria-label={t.toast.dismiss}
           >
             <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path d="M1 1L11 11M11 1L1 11" stroke="currentColor" strokeWidth="1.3" />

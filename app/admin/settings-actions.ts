@@ -1,6 +1,8 @@
 'use server';
 
 import { fail, refreshSite, requireAdmin, succeed, type ActionResult } from '@/lib/admin';
+import { getAdminDict } from '@/lib/admin-locale';
+import { format } from '@/lib/i18n';
 import { SETTING_KEYS, validateSetting } from '@/lib/settings-core';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
@@ -12,6 +14,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin';
 export async function saveSettings(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   requireAdmin();
 
+  const t = getAdminDict();
   const upserts: { key: string; value: string }[] = [];
   const deletes: string[] = [];
   const problems: string[] = [];
@@ -29,13 +32,13 @@ export async function saveSettings(_prev: ActionResult, formData: FormData): Pro
   const supabase = getSupabaseAdmin();
   if (upserts.length > 0) {
     const { error } = await supabase.from('site_settings').upsert(upserts, { onConflict: 'key' });
-    if (error) return fail(`Could not save settings: ${error.message}`);
+    if (error) return fail(format(t.actions.settingsFailed, { reason: error.message }));
   }
   if (deletes.length > 0) {
     const { error } = await supabase.from('site_settings').delete().in('key', deletes);
-    if (error) return fail(`Could not clear settings: ${error.message}`);
+    if (error) return fail(format(t.actions.settingsClearFailed, { reason: error.message }));
   }
 
   refreshSite();
-  return succeed('Settings saved. The website now shows the new details.');
+  return succeed(t.actions.settingsSaved);
 }

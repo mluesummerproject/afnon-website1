@@ -4,9 +4,11 @@ import { useState } from 'react';
 
 import { deleteCategoryLabel, moveCategoryFromTab, saveCategoryLabel } from '@/app/admin/category-actions';
 import { ActionForm } from '@/components/admin/ActionForm';
+import { useT } from '@/components/admin/AdminLangProvider';
 import { Chevron } from '@/components/admin/AdminMenu';
 import { SubmitButton } from '@/components/admin/SubmitButton';
 import type { CategoryOverview } from '@/lib/admin-data';
+import { format } from '@/lib/i18n';
 
 /**
  * One row per category, in the exact order guests see on the website. Renaming
@@ -14,10 +16,11 @@ import type { CategoryOverview } from '@/lib/admin-data';
  * that ties dishes together never changes here.
  */
 export function CategoryManager({ categories }: { categories: CategoryOverview[] }) {
+  const t = useT();
   return (
     <div className="mt-6">
       {categories.length === 0 ? (
-        <p className="mt-6 text-body-sm text-ink-secondary">No categories yet — add a dish from the Menu tab and its category appears here.</p>
+        <p className="mt-6 text-body-sm text-ink-secondary">{t.categories.empty}</p>
       ) : (
         <ul className="mt-2 divide-y divide-line border-t border-line-strong">
           {categories.map((entry, index) => (
@@ -30,6 +33,7 @@ export function CategoryManager({ categories }: { categories: CategoryOverview[]
 }
 
 function CategoryRow({ entry, index, isFirst, isLast }: { entry: CategoryOverview; index: number; isFirst: boolean; isLast: boolean }) {
+  const t = useT();
   const [confirming, setConfirming] = useState(false);
   const sortOrder = entry.label?.sort_order ?? (index + 1) * 10;
 
@@ -40,21 +44,21 @@ function CategoryRow({ entry, index, isFirst, isLast }: { entry: CategoryOvervie
           <span className="figures label w-5 shrink-0 text-ink-muted">{index + 1}</span>
           <h2 className="font-display text-display-sm text-ink">{entry.category}</h2>
           <span className="label figures rounded-pill bg-paper-alt px-1.5 text-micro font-semibold text-ink-secondary">
-            {entry.dishCount} dish{entry.dishCount === 1 ? '' : 'es'}
+            {entry.dishCount === 1 ? t.categories.oneDish : format(t.categories.dishes, { count: entry.dishCount })}
           </span>
         </div>
         <div className="flex gap-1.5">
           <ActionForm action={moveCategoryFromTab}>
             <input type="hidden" name="category" value={entry.category} />
             <input type="hidden" name="direction" value="up" />
-            <SubmitButton variant="icon" disabled={isFirst} aria-label={`Move ${entry.category} up`}>
+            <SubmitButton variant="icon" disabled={isFirst} aria-label={format(t.categories.moveUp, { category: entry.category })}>
               <Chevron direction="up" />
             </SubmitButton>
           </ActionForm>
           <ActionForm action={moveCategoryFromTab}>
             <input type="hidden" name="category" value={entry.category} />
             <input type="hidden" name="direction" value="down" />
-            <SubmitButton variant="icon" disabled={isLast} aria-label={`Move ${entry.category} down`}>
+            <SubmitButton variant="icon" disabled={isLast} aria-label={format(t.categories.moveDown, { category: entry.category })}>
               <Chevron direction="down" />
             </SubmitButton>
           </ActionForm>
@@ -66,9 +70,9 @@ function CategoryRow({ entry, index, isFirst, isLast }: { entry: CategoryOvervie
         <input type="hidden" name="sort_order" value={sortOrder} />
         {(
           [
-            { key: 'name_uz', label: 'O‘zbekcha' },
-            { key: 'name_ru', label: 'Русский' },
-            { key: 'name_en', label: 'English' },
+            { key: 'name_uz', label: t.form.uz },
+            { key: 'name_ru', label: t.form.ru },
+            { key: 'name_en', label: t.form.en },
           ] as const
         ).map((language) => (
           <label key={language.key} className="block">
@@ -82,8 +86,8 @@ function CategoryRow({ entry, index, isFirst, isLast }: { entry: CategoryOvervie
             />
           </label>
         ))}
-        <SubmitButton variant="secondary" pendingLabel="Saving…" className="shrink-0">
-          Save names
+        <SubmitButton variant="secondary" pendingLabel={t.categories.saving} className="shrink-0">
+          {t.categories.saveNames}
         </SubmitButton>
       </ActionForm>
 
@@ -92,17 +96,17 @@ function CategoryRow({ entry, index, isFirst, isLast }: { entry: CategoryOvervie
           {confirming ? (
             <ActionForm action={deleteCategoryLabel} className="flex flex-wrap items-center gap-3">
               <input type="hidden" name="category" value={entry.category} />
-              <p className="text-micro text-ink">Remove “{entry.category}” — it has no dishes left?</p>
-              <SubmitButton variant="danger" pendingLabel="Removing…">
-                Yes, remove
+              <p className="text-micro text-ink">{format(t.categories.removeConfirm, { category: entry.category })}</p>
+              <SubmitButton variant="danger" pendingLabel={t.categories.removing}>
+                {t.categories.removeYes}
               </SubmitButton>
               <button type="button" onClick={() => setConfirming(false)} className="min-h-[2.75rem] px-3 text-label font-medium uppercase text-ink-secondary">
-                Keep
+                {t.categories.keep}
               </button>
             </ActionForm>
           ) : (
             <button type="button" onClick={() => setConfirming(true)} className="min-h-[2.75rem] text-label font-medium uppercase text-critical">
-              Remove this empty category…
+              {t.categories.removeEmpty}
             </button>
           )}
         </div>

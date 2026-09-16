@@ -3,6 +3,8 @@
 import { redirect } from 'next/navigation';
 
 import { fail, readText, refreshSite, requireAdmin, succeed, toId, type ActionResult } from '@/lib/admin';
+import { getAdminDict } from '@/lib/admin-locale';
+import { format } from '@/lib/i18n';
 import { createSession, destroySession, verifyPassword } from '@/lib/auth';
 import { menuImagePrefix, storagePathFromUrl } from '@/lib/media';
 import { labelsByCategory, orderCategoryGroups } from '@/lib/categories';
@@ -41,17 +43,16 @@ async function ensureCategoryLabel(category: string): Promise<void> {
 // ---------------------------------------------------------------- auth
 
 export async function login(_prev: FormState, formData: FormData): Promise<FormState> {
-  if (!process.env.ADMIN_PASSWORD) {
-    return { error: 'ADMIN_PASSWORD is not set on the server. Add it and restart the app.' };
-  }
+  const t = getAdminDict();
+  if (!process.env.ADMIN_PASSWORD) return { error: t.login.notConfigured };
 
   const password = readText(formData, 'password');
-  if (!password) return { error: 'Enter the password.' };
+  if (!password) return { error: t.login.enterPassword };
 
   // Small, constant delay blunts brute forcing without hurting a real login.
   await new Promise((resolve) => setTimeout(resolve, 400));
 
-  if (!verifyPassword(password)) return { error: 'That password is not correct.' };
+  if (!verifyPassword(password)) return { error: t.login.wrongPassword };
 
   createSession();
   redirect('/admin');
@@ -88,7 +89,7 @@ async function normalizeOrder(): Promise<void> {
 
 const LIMITS = { name: 120, description: 600, category: 80, price: 40, imageUrl: 500 };
 
-function parseDish(formData: FormData) {
+function parseDish(formData: FormData, t: ReturnType<typeof getAdminDict>) {
   const values = {
     category: readText(formData, 'category'),
     price: readText(formData, 'price'),
@@ -105,30 +106,30 @@ function parseDish(formData: FormData) {
   };
 
   if (!values.name_uz && !values.name_ru && !values.name_en) {
-    return { error: 'Give the dish a name — at least in Uzbek.' } as const;
+    return { error: t.actions.nameRequired } as const;
   }
-  if (!values.category) return { error: 'Choose or type a category.' } as const;
+  if (!values.category) return { error: t.actions.categoryRequired } as const;
   if ([values.name_uz, values.name_ru, values.name_en].some((name) => name.length > LIMITS.name)) {
-    return { error: `Dish names can be at most ${LIMITS.name} characters.` } as const;
+    return { error: format(t.actions.nameTooLong, { max: LIMITS.name }) } as const;
   }
   if ([values.description_uz, values.description_ru, values.description_en].some((d) => d.length > LIMITS.description)) {
-    return { error: `Descriptions can be at most ${LIMITS.description} characters.` } as const;
+    return { error: format(t.actions.descriptionTooLong, { max: LIMITS.description }) } as const;
   }
-  if (values.category.length > LIMITS.category) return { error: 'That category name is too long.' } as const;
-  if (values.price.length > LIMITS.price) return { error: 'That price is too long.' } as const;
+  if (values.category.length > LIMITS.category) return { error: t.actions.categoryTooLong } as const;
+  if (values.price.length > LIMITS.price) return { error: t.actions.priceTooLong } as const;
   if (values.image_url && (!/^(https:\/\/|\/(?!\/))/.test(values.image_url) || values.image_url.length > LIMITS.imageUrl)) {
-    return { error: 'The image link must start with https:// or /.' } as const;
+    return { error: t.actions.imageLinkInvalid } as const;
   }
 
   let oldPrice: number | null = null;
   if (values.old_price) {
     const normalized = values.old_price.replace(/\s/g, '').replace(',', '.');
     if (!/^\d{1,9}(\.\d{1,2})?$/.test(normalized)) {
-      return { error: 'The old price must be a plain number, like 65000.' } as const;
+      return { error: t.actions.oldPriceInvalid } as const;
     }
     oldPrice = Number(normalized);
   }
-  if (values.badge.length > 16) return { error: 'Keep the badge short — 16 characters at most (e.g. “Yangi”, “Hit”).' } as const;
+  if (values.badge.length > 16) return { error: format(t.actions.badgeTooLong, { max: 16 }) } as const;
 
   const nullIfEmpty = (value: string) => (value ? value : null);
 
@@ -158,12 +159,13 @@ function parseDish(formData: FormData) {
 export async function saveItem(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   requireAdmin();
 
-  const parsed = parseDish(formData);
-  if ('error' in parsed) return fail(parsed.error ?? 'Please check the form.');
+  const t = getAdminDict();
+  const parsed = parseDish(formData, t);
+  if ('error' in parsed) return fail(parsed.error ?? t.actions.checkForm);
 
   const rawId = readText(formData, 'id');
   const id = rawId ? toId(rawId) : null;
-  if (rawId && id === null) return fail('That dish could not be identified.');
+  if (rawId && id === null) return fail(t.actions.dishNotIdentified);
 
   try {
     const supabase = getSupabaseAdmin();
@@ -175,16 +177,16 @@ export async function saveItem(_prev: ActionResult, formData: FormData): Promise
         .insert({ ...parsed.row, sort_order: endOfCategory(rows, parsed.row.category) })
         .select('id')
         .single();
-      if (error || !data) return fail(`Could not add the dish: ${error?.message ?? 'unknown error'}`);
+      if (error || !data) return fail(format(t.actions.addFailed, { reason: error?.message ?? '—' }));
 
       await normalizeOrder();
       await ensureCategoryLabel(parsed.row.category);
       refreshSite();
-      return succeed(`“${parsed.row.name}” added. Open it below to add photos.`, data.id as number);
+      return succeed(format(t.actions.added, { name: parsed.row.name }), data.id as number);
     }
 
     const current = rows.find((row) => row.id === id);
-    if (!current) return fail('That dish no longer exists — it may have been deleted.');
+    if (!current) return fail(t.actions.dishGone);
 
     const categoryChanged = (current.category ?? '').trim() !== parsed.row.category;
     const { error } = await supabase
@@ -194,27 +196,28 @@ export async function saveItem(_prev: ActionResult, formData: FormData): Promise
         ...(categoryChanged ? { sort_order: endOfCategory(rows, parsed.row.category, id) } : {}),
       })
       .eq('id', id);
-    if (error) return fail(`Could not save: ${error.message}`);
+    if (error) return fail(format(t.actions.saveFailed, { reason: error.message }));
 
     if (categoryChanged) await normalizeOrder();
     await ensureCategoryLabel(parsed.row.category);
     refreshSite();
-    return succeed(categoryChanged ? `Saved and moved to “${parsed.row.category}”.` : 'Changes saved.', id);
+    return succeed(categoryChanged ? format(t.actions.savedMoved, { category: parsed.row.category }) : t.actions.saved, id);
   } catch (error) {
-    return fail(error instanceof Error ? `Could not save: ${error.message}` : 'Could not save.');
+    return fail(format(t.actions.saveFailed, { reason: error instanceof Error ? error.message : '—' }));
   }
 }
 
 export async function deleteItem(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   requireAdmin();
 
+  const t = getAdminDict();
   const id = toId(formData.get('id'));
-  if (id === null) return fail('That dish could not be identified.');
+  if (id === null) return fail(t.actions.dishNotIdentified);
 
   try {
     const supabase = getSupabaseAdmin();
     const { data: item } = await supabase.from('menu_items').select('id, name').eq('id', id).maybeSingle();
-    if (!item) return fail('That dish no longer exists.');
+    if (!item) return fail(t.actions.dishGoneShort);
 
     // Photos first: remove their rows, then their files, then the dish itself.
     const { data: images } = await supabase.from('menu_item_images').select('id, image_url').eq('menu_item_id', id);
@@ -225,27 +228,35 @@ export async function deleteItem(_prev: ActionResult, formData: FormData): Promi
 
     if (images?.length) {
       const { error: imageError } = await supabase.from('menu_item_images').delete().eq('menu_item_id', id);
-      if (imageError) return fail(`Could not remove the dish’s photos: ${imageError.message}`);
+      if (imageError) return fail(format(t.actions.deletedPhotosFailed, { reason: imageError.message }));
     }
 
     const { error } = await supabase.from('menu_items').delete().eq('id', id);
-    if (error) return fail(`Could not delete: ${error.message}`);
+    if (error) return fail(format(t.actions.deleteFailed, { reason: error.message }));
 
     await removeObjects(paths);
     await sweepOrphans(prefix, new Set(), 0);
     await normalizeOrder();
     refreshSite();
-    return succeed(`“${item.name}” deleted${paths.length ? `, with ${paths.length} photo${paths.length === 1 ? '' : 's'}` : ''}.`);
+    const name = String(item.name ?? '');
+    return succeed(
+      paths.length === 0
+        ? format(t.actions.deleted, { name })
+        : paths.length === 1
+          ? format(t.actions.deletedWithOnePhoto, { name })
+          : format(t.actions.deletedWithPhotos, { name, count: paths.length }),
+    );
   } catch (error) {
-    return fail(error instanceof Error ? `Could not delete: ${error.message}` : 'Could not delete.');
+    return fail(format(t.actions.deleteFailed, { reason: error instanceof Error ? error.message : '—' }));
   }
 }
 
 export async function toggleAvailability(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   requireAdmin();
 
+  const t = getAdminDict();
   const id = toId(formData.get('id'));
-  if (id === null) return fail('That dish could not be identified.');
+  if (id === null) return fail(t.actions.dishNotIdentified);
   const available = formData.get('next') === 'true';
 
   const { data, error } = await getSupabaseAdmin()
@@ -255,45 +266,47 @@ export async function toggleAvailability(_prev: ActionResult, formData: FormData
     .select('name')
     .maybeSingle();
 
-  if (error) return fail(`Could not update: ${error.message}`);
-  if (!data) return fail('That dish no longer exists.');
+  if (error) return fail(format(t.actions.updateFailed, { reason: error.message }));
+  if (!data) return fail(t.actions.dishGoneShort);
 
   refreshSite();
-  return succeed(available ? `“${data.name}” is available again.` : `“${data.name}” marked unavailable.`, id);
+  return succeed(format(available ? t.actions.nowAvailable : t.actions.nowUnavailable, { name: String(data.name ?? '') }), id);
 }
 
 export async function moveItem(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   requireAdmin();
 
+  const t = getAdminDict();
   const id = toId(formData.get('id'));
-  if (id === null) return fail('That dish could not be identified.');
+  if (id === null) return fail(t.actions.dishNotIdentified);
   const direction = formData.get('direction') === 'up' ? 'up' : 'down';
 
   try {
     const writes = planItemMove(await loadOrderRows(), id, direction);
-    if (writes === null) return succeed(direction === 'up' ? 'Already first in its category.' : 'Already last in its category.', id);
+    if (writes === null) return succeed(direction === 'up' ? t.actions.alreadyFirst : t.actions.alreadyLast, id);
     await applyOrder(writes);
     refreshSite();
-    return succeed('Order updated.', id);
+    return succeed(t.actions.orderUpdated, id);
   } catch (error) {
-    return fail(error instanceof Error ? `Could not reorder: ${error.message}` : 'Could not reorder.');
+    return fail(format(t.actions.reorderFailed, { reason: error instanceof Error ? error.message : '—' }));
   }
 }
 
 export async function moveCategory(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   requireAdmin();
 
+  const t = getAdminDict();
   const category = readText(formData, 'category');
-  if (!category) return fail('That category could not be identified.');
+  if (!category) return fail(t.actions.categoryNotIdentified);
   const direction = formData.get('direction') === 'up' ? 'up' : 'down';
 
   try {
     const result = await moveCategoryLabel(category, direction);
-    if (result === 'noop') return succeed(`“${category}” is already ${direction === 'up' ? 'first' : 'last'}.`);
+    if (result === 'noop') return succeed(format(direction === 'up' ? t.actions.categoryAlreadyFirst : t.actions.categoryAlreadyLast, { category }));
     refreshSite();
-    return succeed(`“${category}” moved ${direction}.`);
+    return succeed(format(direction === 'up' ? t.actions.categoryMovedUp : t.actions.categoryMovedDown, { category }), undefined, { moved: true });
   } catch (error) {
-    return fail(error instanceof Error ? `Could not reorder: ${error.message}` : 'Could not reorder.');
+    return fail(format(t.actions.reorderFailed, { reason: error instanceof Error ? error.message : '—' }));
   }
 }
 

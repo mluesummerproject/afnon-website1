@@ -4,11 +4,13 @@ import { useState } from 'react';
 
 import { deleteVideo, finalizeVideoUpload, moveVideo, requestVideoUpload, setVideoActive, updateVideoTitle } from '@/app/admin/media-actions';
 import { ActionForm } from '@/components/admin/ActionForm';
+import { useT } from '@/components/admin/AdminLangProvider';
 import { Chevron } from '@/components/admin/AdminMenu';
 import { SubmitButton } from '@/components/admin/SubmitButton';
 import { toast } from '@/components/admin/toast';
 import { uploadToSignedUrl } from '@/components/admin/upload';
 import { useAdminAction } from '@/components/admin/useAdminAction';
+import { format } from '@/lib/i18n';
 import { formatBytes, isVideoMime, MAX_VIDEO_BYTES, VIDEO_TYPES } from '@/lib/media';
 import type { PromoVideo } from '@/lib/types';
 
@@ -23,6 +25,14 @@ function videoMime(file: File): string {
 type Upload = { name: string; size: number; stage: 'uploading' | 'checking' | 'failed'; progress: number; error?: string };
 
 export function VideoManager({ videos, maxActive }: { videos: PromoVideo[]; maxActive: number }) {
+  const t = useT();
+  const uploadMessages = {
+    photoFormat: t.toast.photoFormat,
+    connectionDropped: t.toast.connectionDropped,
+    uploadTimedOut: t.toast.uploadTimedOut,
+    uploadFailedStatus: t.toast.uploadFailedStatus,
+    uploadFailedReason: t.toast.uploadFailedReason,
+  };
   const [title, setTitle] = useState('');
   const [upload, setUpload] = useState<Upload | null>(null);
   const [confirmId, setConfirmId] = useState<number | null>(null);
@@ -37,11 +47,11 @@ export function VideoManager({ videos, maxActive }: { videos: PromoVideo[]; maxA
 
     const mime = videoMime(file);
     if (!isVideoMime(mime)) {
-      toast({ ok: false, message: 'That is not a supported film. Use MP4 (best), WebM or MOV.' });
+      toast({ ok: false, message: t.films.notSupported });
       return;
     }
     if (file.size > MAX_VIDEO_BYTES) {
-      toast({ ok: false, message: `That film is ${formatBytes(file.size)} — the limit is 50 MB. Trim it or export a smaller file.` });
+      toast({ ok: false, message: format(t.films.tooLarge, { size: formatBytes(file.size), max: formatBytes(MAX_VIDEO_BYTES) }) });
       return;
     }
 
@@ -51,23 +61,27 @@ export function VideoManager({ videos, maxActive }: { videos: PromoVideo[]; maxA
       if (!ticket.ok) throw new Error(ticket.message);
 
       const blob = file.type === mime ? file : new Blob([file], { type: mime });
-      await uploadToSignedUrl(ticket.url, blob, ticket.path.split('/').pop() ?? 'film.mp4', (progress) =>
-        setUpload((current) => (current ? { ...current, progress } : current)),
+      await uploadToSignedUrl(
+        ticket.url,
+        blob,
+        ticket.path.split('/').pop() ?? 'film.mp4',
+        (progress) => setUpload((current) => (current ? { ...current, progress } : current)),
+        uploadMessages,
       );
 
       setUpload((current) => (current ? { ...current, stage: 'checking', progress: 1 } : current));
       const result = await finalizeVideoUpload(ticket.path, title);
-      if (!result?.ok) throw new Error(result?.message ?? 'The film could not be saved.');
+      if (!result?.ok) throw new Error(result?.message ?? t.films.couldNotSave);
 
       toast({ ok: true, message: result.message });
       if (mime === 'video/quicktime') {
-        toast({ ok: true, message: 'Tip: MOV films from iPhones may not play on every phone. If it does not play on the website, export it as MP4.' });
+        toast({ ok: true, message: t.films.movTip });
       }
       setTitle('');
       setUpload(null);
     } catch (error) {
       setUpload((current) =>
-        current ? { ...current, stage: 'failed', error: error instanceof Error ? error.message : 'Upload failed.' } : current,
+        current ? { ...current, stage: 'failed', error: error instanceof Error ? error.message : t.films.uploadFailed } : current,
       );
     }
   };
@@ -75,11 +89,11 @@ export function VideoManager({ videos, maxActive }: { videos: PromoVideo[]; maxA
   return (
     <div className="mt-6 space-y-10">
       <section aria-labelledby="add-film" className="border-l-2 border-anor bg-surface p-4 md:p-6">
-        <h2 id="add-film" className="font-display text-display-sm text-ink">Add a film</h2>
+        <h2 id="add-film" className="font-display text-display-sm text-ink">{t.films.addHeading}</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
           <div>
             <label htmlFor="film-title" className="text-body-sm font-medium text-ink">
-              Title <span className="label text-ink-muted">optional</span>
+              {t.films.filmTitle} <span className="label text-ink-muted">{t.films.titleOptional}</span>
             </label>
             <input
               id="film-title"
@@ -87,7 +101,7 @@ export function VideoManager({ videos, maxActive }: { videos: PromoVideo[]; maxA
               onChange={(event) => setTitle(event.target.value)}
               maxLength={120}
               disabled={busy}
-              placeholder="e.g. Morning in the kitchen"
+              placeholder={t.films.titlePlaceholder}
               className="field mt-2 border-line-strong"
             />
           </div>
@@ -100,7 +114,7 @@ export function VideoManager({ videos, maxActive }: { videos: PromoVideo[]; maxA
               <rect x="1" y="1" width="13" height="12" />
               <path d="M14 5L19 2V12L14 9" />
             </svg>
-            {busy ? 'Uploading…' : 'Choose film'}
+            {busy ? t.films.uploading : t.films.chooseVideo}
             <input type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.mov,.webm,.m4v" onChange={onPick} disabled={busy} className="sr-only" />
           </label>
         </div>
@@ -110,7 +124,7 @@ export function VideoManager({ videos, maxActive }: { videos: PromoVideo[]; maxA
             <div className="flex items-center justify-between gap-3 text-micro">
               <span className="min-w-0 truncate text-ink">{upload.name}</span>
               <span className={`shrink-0 font-medium ${upload.stage === 'failed' ? 'text-critical' : 'text-ink-secondary'}`}>
-                {upload.stage === 'uploading' ? `Uploading ${Math.round(upload.progress * 100)}%` : upload.stage === 'checking' ? 'Checking' : 'Failed'}
+                {upload.stage === 'uploading' ? `${t.films.uploading.replace('…', '')} ${Math.round(upload.progress * 100)}%` : upload.stage === 'checking' ? t.films.checking : t.films.failed}
                 {' · '}
                 {formatBytes(upload.size)}
               </span>
@@ -119,7 +133,7 @@ export function VideoManager({ videos, maxActive }: { videos: PromoVideo[]; maxA
               <div className="mt-2 flex items-center justify-between gap-3">
                 <p className="text-micro text-critical">{upload.error}</p>
                 <button type="button" onClick={() => setUpload(null)} className="min-h-[2.75rem] shrink-0 px-3 text-label font-medium uppercase text-anor">
-                  Dismiss
+                  {t.films.dismiss}
                 </button>
               </div>
             ) : (
@@ -127,21 +141,19 @@ export function VideoManager({ videos, maxActive }: { videos: PromoVideo[]; maxA
                 <div className="h-full origin-left bg-anor transition-transform duration-200" style={{ transform: `scaleX(${upload.progress})` }} />
               </div>
             )}
-            {upload.stage === 'uploading' ? <p className="mt-2 text-micro text-ink-muted">Keep this screen open until it finishes.</p> : null}
+            {upload.stage === 'uploading' ? <p className="mt-2 text-micro text-ink-muted">{t.films.keepOpen}</p> : null}
           </div>
         ) : null}
       </section>
 
       <section aria-labelledby="film-list">
         <div className="flex items-baseline justify-between gap-3 border-b border-line-strong pb-3">
-          <h2 id="film-list" className="font-display text-display-sm text-ink">All films</h2>
-          <p className="label figures text-ink-muted">
-            {activeCount} of {maxActive} showing
-          </p>
+          <h2 id="film-list" className="font-display text-display-sm text-ink">{t.films.listHeading}</h2>
+          <p className="label figures text-ink-muted">{format(t.films.showingOf, { count: activeCount, max: maxActive })}</p>
         </div>
 
         {videos.length === 0 ? (
-          <p className="mt-6 text-body-sm text-ink-secondary">No films yet. The films section stays hidden on the website until one is added.</p>
+          <p className="mt-6 text-body-sm text-ink-secondary">{t.films.empty}</p>
         ) : (
           <ul>
             {videos.map((video, index) => {
@@ -162,23 +174,23 @@ export function VideoManager({ videos, maxActive }: { videos: PromoVideo[]; maxA
                       <span
                         className={`label inline-flex rounded-hair px-2 py-1 ${active ? 'bg-positive/15 text-positive' : 'bg-paper-alt text-ink-muted'}`}
                       >
-                        {active ? 'Showing on website' : 'Hidden'}
+                        {active ? t.films.showing : t.films.hidden}
                       </span>
                       <ActionForm action={updateVideoTitle} className="flex flex-col gap-2 sm:flex-row">
                         <input type="hidden" name="id" value={video.id} />
                         <label className="sr-only" htmlFor={`title-${video.id}`}>
-                          Title
+                          {t.films.filmTitle}
                         </label>
                         <input
                           id={`title-${video.id}`}
                           name="title"
                           defaultValue={video.title ?? ''}
                           maxLength={120}
-                          placeholder="No title"
+                          placeholder={t.films.noTitle}
                           className="field border-line-strong"
                         />
-                        <SubmitButton variant="secondary" pendingLabel="Saving…" className="shrink-0">
-                          Save title
+                        <SubmitButton variant="secondary" pendingLabel={t.films.saving} className="shrink-0">
+                          {t.films.saveTitle}
                         </SubmitButton>
                       </ActionForm>
                     </div>
@@ -193,14 +205,14 @@ export function VideoManager({ videos, maxActive }: { videos: PromoVideo[]; maxA
                         active ? 'border-line-strong bg-surface text-ink' : 'border-anor bg-anor text-paper'
                       }`}
                     >
-                      {active ? 'Hide' : 'Show'}
+                      {active ? t.films.hide : t.films.show}
                     </button>
                     <div className="flex gap-2">
                       <button
                         type="button"
                         disabled={pending || index === 0}
                         onClick={() => void run(() => moveVideo(video.id, 'up'))}
-                        aria-label="Move film up"
+                        aria-label={t.films.moveUp}
                         className="flex h-11 w-11 items-center justify-center rounded-hair border border-line bg-surface text-ink-secondary disabled:opacity-30"
                       >
                         <Chevron direction="up" />
@@ -209,7 +221,7 @@ export function VideoManager({ videos, maxActive }: { videos: PromoVideo[]; maxA
                         type="button"
                         disabled={pending || index === videos.length - 1}
                         onClick={() => void run(() => moveVideo(video.id, 'down'))}
-                        aria-label="Move film down"
+                        aria-label={t.films.moveDown}
                         className="flex h-11 w-11 items-center justify-center rounded-hair border border-line bg-surface text-ink-secondary disabled:opacity-30"
                       >
                         <Chevron direction="down" />
@@ -223,15 +235,15 @@ export function VideoManager({ videos, maxActive }: { videos: PromoVideo[]; maxA
                           onClick={() => void run(() => deleteVideo(video.id)).then(() => setConfirmId(null))}
                           className="min-h-[2.75rem] rounded-hair bg-critical px-4 text-label-lg font-medium uppercase text-paper disabled:opacity-50"
                         >
-                          {pending ? 'Removing…' : 'Yes, remove'}
+                          {pending ? t.films.removing : t.films.removeYes}
                         </button>
                         <button type="button" onClick={() => setConfirmId(null)} className="min-h-[2.75rem] text-label-lg font-medium uppercase text-ink-secondary">
-                          Keep
+                          {t.films.keep}
                         </button>
                       </div>
                     ) : (
                       <button type="button" onClick={() => setConfirmId(video.id)} className="min-h-[2.75rem] px-2 text-label-lg font-medium uppercase text-critical">
-                        Remove…
+                        {t.films.remove}
                       </button>
                     )}
                   </div>

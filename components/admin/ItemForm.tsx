@@ -4,6 +4,7 @@ import { useCallback, useRef } from 'react';
 
 import { saveItem } from '@/app/admin/actions';
 import { ActionForm } from '@/components/admin/ActionForm';
+import { useT } from '@/components/admin/AdminLangProvider';
 import { SubmitButton } from '@/components/admin/SubmitButton';
 import type { ActionResult } from '@/lib/admin-types';
 import type { MenuItem } from '@/lib/types';
@@ -14,12 +15,6 @@ type ItemFormProps = {
   categories: string[];
   onCreated?: (id: number) => void;
 };
-
-const languages = [
-  { code: 'uz', label: 'O‘zbekcha', note: 'main' },
-  { code: 'ru', label: 'Русский', note: '' },
-  { code: 'en', label: 'English', note: '' },
-] as const;
 
 function Label({ htmlFor, children, note }: { htmlFor: string; children: React.ReactNode; note?: string }) {
   return (
@@ -35,6 +30,12 @@ function Label({ htmlFor, children, note }: { htmlFor: string; children: React.R
  * (no zoom on focus), languages clearly labelled, one big save button.
  */
 export function ItemForm({ item, categories, onCreated }: ItemFormProps) {
+  const t = useT();
+  const languages = [
+    { code: 'uz', label: t.form.uz, note: t.form.main },
+    { code: 'ru', label: t.form.ru, note: '' },
+    { code: 'en', label: t.form.en, note: '' },
+  ] as const;
   const formRef = useRef<HTMLFormElement>(null);
   const uid = item ? `dish-${item.id}` : 'dish-new';
 
@@ -64,7 +65,7 @@ export function ItemForm({ item, categories, onCreated }: ItemFormProps) {
       {item ? <input type="hidden" name="id" value={item.id} /> : null}
 
       <fieldset className="space-y-4">
-        <legend className="label mb-1 text-ink-muted">Dish name</legend>
+        <legend className="label mb-1 text-ink-muted">{t.form.nameLegend}</legend>
         <div className="grid gap-4 md:grid-cols-3">
           {languages.map((language) => (
             <div key={language.code}>
@@ -83,12 +84,12 @@ export function ItemForm({ item, categories, onCreated }: ItemFormProps) {
             </div>
           ))}
         </div>
-        <p className="text-micro text-ink-muted">Fill at least the Uzbek name. Visitors who choose Russian or English see Uzbek wherever a translation is empty.</p>
+        <p className="text-micro text-ink-muted">{t.form.nameHint}</p>
       </fieldset>
 
       <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <Label htmlFor={`${uid}-category`}>Category</Label>
+          <Label htmlFor={`${uid}-category`}>{t.form.category}</Label>
           <input
             id={`${uid}-category`}
             name="category"
@@ -103,10 +104,10 @@ export function ItemForm({ item, categories, onCreated }: ItemFormProps) {
               <option key={category} value={category} />
             ))}
           </datalist>
-          <p className="mt-1.5 text-micro text-ink-muted">Pick one, or type a new name to create it.</p>
+          <p className="mt-1.5 text-micro text-ink-muted">{t.form.categoryHint}</p>
         </div>
         <div>
-          <Label htmlFor={`${uid}-price`}>Price</Label>
+          <Label htmlFor={`${uid}-price`}>{t.form.price}</Label>
           <input
             id={`${uid}-price`}
             name="price"
@@ -117,42 +118,42 @@ export function ItemForm({ item, categories, onCreated }: ItemFormProps) {
             className="field figures mt-2 border-line-strong"
             autoComplete="off"
           />
-          <p className="mt-1.5 text-micro text-ink-muted">Numbers only is best — the website adds spacing and the currency.</p>
+          <p className="mt-1.5 text-micro text-ink-muted">{t.form.priceHint}</p>
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <Label htmlFor={`${uid}-old-price`}>Old price</Label>
+          <Label htmlFor={`${uid}-old-price`}>{t.form.oldPrice}</Label>
           <input
             id={`${uid}-old-price`}
             name="old_price"
             inputMode="numeric"
             maxLength={40}
             defaultValue={item?.old_price ?? ''}
-            placeholder="e.g. 65000"
+            placeholder={t.form.oldPricePlaceholder}
             className="field figures mt-2 border-line-strong"
             autoComplete="off"
           />
-          <p className="mt-1.5 text-micro text-ink-muted">Leave empty for no discount. Only shown, struck through, when it is genuinely higher than the price above.</p>
+          <p className="mt-1.5 text-micro text-ink-muted">{t.form.oldPriceHint}</p>
         </div>
         <div>
-          <Label htmlFor={`${uid}-badge`}>Badge</Label>
+          <Label htmlFor={`${uid}-badge`}>{t.form.badge}</Label>
           <input
             id={`${uid}-badge`}
             name="badge"
             maxLength={16}
             defaultValue={item?.badge ?? ''}
-            placeholder="e.g. Yangi, Hit"
+            placeholder={t.form.badgePlaceholder}
             className="field mt-2 border-line-strong"
             autoComplete="off"
           />
-          <p className="mt-1.5 text-micro text-ink-muted">A short word shown as a small ribbon on the dish. Leave empty for none.</p>
+          <p className="mt-1.5 text-micro text-ink-muted">{t.form.badgeHint}</p>
         </div>
       </div>
 
       <fieldset className="space-y-4">
-        <legend className="label mb-1 text-ink-muted">Description (optional)</legend>
+        <legend className="label mb-1 text-ink-muted">{t.form.descriptionLegend}</legend>
         <div className="grid gap-4 md:grid-cols-3">
           {languages.map((language) => (
             <div key={language.code}>
@@ -178,15 +179,15 @@ export function ItemForm({ item, categories, onCreated }: ItemFormProps) {
           defaultChecked={item ? item.is_available !== false : true}
           className="h-6 w-6 accent-[rgb(var(--anor))]"
         />
-        Available today
+        {t.form.available}
       </label>
 
       <details className="group rounded-hair border border-line">
         <summary className="flex min-h-[2.75rem] cursor-pointer list-none items-center px-4 text-body-sm text-ink-secondary [&::-webkit-details-marker]:hidden">
-          Advanced — outside image link
+          {t.form.advanced}
         </summary>
         <div className="px-4 pb-4">
-          <Label htmlFor={`${uid}-image`}>Image link</Label>
+          <Label htmlFor={`${uid}-image`}>{t.form.imageLink}</Label>
           <input
             id={`${uid}-image`}
             name="image_url"
@@ -196,12 +197,12 @@ export function ItemForm({ item, categories, onCreated }: ItemFormProps) {
             placeholder="https://…"
             className="field mt-2 border-line-strong"
           />
-          <p className="mt-1.5 text-micro text-ink-muted">Only used when the dish has no uploaded photos. Uploading below is easier.</p>
+          <p className="mt-1.5 text-micro text-ink-muted">{t.form.imageHint}</p>
         </div>
       </details>
 
-      <SubmitButton pendingLabel="Saving…" className="min-h-[3.25rem] w-full md:w-auto">
-        {item ? 'Save changes' : 'Add dish to menu'}
+      <SubmitButton pendingLabel={t.form.saving} className="min-h-[3.25rem] w-full md:w-auto">
+        {item ? t.form.save : t.form.add}
       </SubmitButton>
     </ActionForm>
   );

@@ -5,11 +5,13 @@ import { useState } from 'react';
 
 import { deleteItem, moveItem, toggleAvailability } from '@/app/admin/actions';
 import { ActionForm } from '@/components/admin/ActionForm';
+import { useT } from '@/components/admin/AdminLangProvider';
 import { Chevron } from '@/components/admin/AdminMenu';
 import { ImageManager } from '@/components/admin/ImageManager';
 import { ItemForm } from '@/components/admin/ItemForm';
 import { SubmitButton } from '@/components/admin/SubmitButton';
 import type { AdminDish } from '@/lib/admin-types';
+import { format } from '@/lib/i18n';
 import { formatAmount } from '@/lib/menu-format';
 import { discountPercent, toAmount } from '@/lib/pricing';
 
@@ -27,10 +29,11 @@ type DishRowProps = {
 };
 
 export function DishRow({ dish, position, isFirst, isLast, reorderable, open, onToggle, categories, missing, noDescription }: DishRowProps) {
+  const t = useT();
   const unavailable = dish.is_available === false;
   const cover = dish.images[0]?.image_url ?? (dish.image_url?.startsWith('https://') ? dish.image_url : null);
   const photoCount = dish.images.length;
-  const name = dish.name_uz?.trim() || dish.name?.trim() || dish.name_ru?.trim() || dish.name_en?.trim() || 'Untitled dish';
+  const name = dish.name_uz?.trim() || dish.name?.trim() || dish.name_ru?.trim() || dish.name_en?.trim() || t.dish.untitled;
   const percent = discountPercent(toAmount(dish.price), toAmount(dish.old_price));
 
   return (
@@ -48,25 +51,25 @@ export function DishRow({ dish, position, isFirst, isLast, reorderable, open, on
           <div className="min-w-0 flex-1">
             <p className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
               <span className={`font-display text-[1.25rem] leading-tight ${unavailable ? 'text-ink-muted' : 'text-ink'}`}>{name}</span>
-              {unavailable ? <span className="label rounded-hair bg-critical/10 px-2 py-1 text-critical">Unavailable</span> : null}
+              {unavailable ? <span className="label rounded-hair bg-critical/10 px-2 py-1 text-critical">{t.dish.unavailable}</span> : null}
               {dish.badge?.trim() ? <span className="label rounded-hair bg-anor-tint px-2 py-1 text-anor">{dish.badge.trim()}</span> : null}
               {percent !== null ? <span className="label figures rounded-hair bg-positive/15 px-2 py-1 text-positive">−{percent}%</span> : null}
             </p>
             <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-micro text-ink-secondary">
               <span className="figures">
-                {dish.price?.trim() || <span className="text-critical">No price</span>}
+                {dish.price?.trim() || <span className="text-critical">{t.dish.noPrice}</span>}
                 {percent !== null && dish.old_price ? (
                   <span className="ml-1.5 text-ink-muted line-through">{formatAmount(toAmount(dish.old_price) ?? 0, '')}</span>
                 ) : null}
               </span>
               <span aria-hidden="true" className="text-line-strong">·</span>
               <span className={photoCount === 0 ? 'text-ink-muted' : ''}>
-                {photoCount === 0 ? 'No photos' : `${photoCount} photo${photoCount === 1 ? '' : 's'}`}
+                {photoCount === 0 ? t.dish.noPhotos : photoCount === 1 ? t.dish.onePhoto : format(t.dish.photos, { count: photoCount })}
               </span>
               <span aria-hidden="true" className="text-line-strong">·</span>
-              <span className={noDescription ? 'text-ink-muted' : ''}>{noDescription ? 'No description' : 'Has description'}</span>
+              <span className={noDescription ? 'text-ink-muted' : ''}>{noDescription ? t.dish.noDescription : t.dish.hasDescription}</span>
               <span aria-hidden="true" className="text-line-strong">·</span>
-              <span className="flex gap-1.5" aria-label={missing.length ? `Missing: ${missing.join(', ')}` : 'All languages filled'}>
+              <span className="flex gap-1.5" aria-label={missing.length ? format(t.dish.missing, { languages: missing.join(', ') }) : t.dish.allLanguages}>
                 {['UZ', 'RU', 'EN'].map((code) => (
                   <span key={code} aria-hidden="true" className={missing.includes(code) ? 'text-ink-muted line-through' : 'font-medium text-positive'}>
                     {code}
@@ -83,14 +86,14 @@ export function DishRow({ dish, position, isFirst, isLast, reorderable, open, on
               <ActionForm action={moveItem}>
                 <input type="hidden" name="id" value={dish.id} />
                 <input type="hidden" name="direction" value="up" />
-                <SubmitButton variant="icon" disabled={isFirst} aria-label={`Move ${name} up`}>
+                <SubmitButton variant="icon" disabled={isFirst} aria-label={format(t.dish.moveUp, { name })}>
                   <Chevron direction="up" />
                 </SubmitButton>
               </ActionForm>
               <ActionForm action={moveItem}>
                 <input type="hidden" name="id" value={dish.id} />
                 <input type="hidden" name="direction" value="down" />
-                <SubmitButton variant="icon" disabled={isLast} aria-label={`Move ${name} down`}>
+                <SubmitButton variant="icon" disabled={isLast} aria-label={format(t.dish.moveDown, { name })}>
                   <Chevron direction="down" />
                 </SubmitButton>
               </ActionForm>
@@ -100,8 +103,8 @@ export function DishRow({ dish, position, isFirst, isLast, reorderable, open, on
           <ActionForm action={toggleAvailability} className="min-w-0 flex-1 md:flex-none">
             <input type="hidden" name="id" value={dish.id} />
             <input type="hidden" name="next" value={unavailable ? 'true' : 'false'} />
-            <SubmitButton variant="ghost" pendingLabel="Saving…" className="w-full px-2 text-label sm:px-4 sm:text-label-lg">
-              {unavailable ? 'Make available' : 'Mark unavailable'}
+            <SubmitButton variant="ghost" pendingLabel={t.dish.saving} className="w-full px-2 text-label sm:px-4 sm:text-label-lg">
+              {unavailable ? t.dish.makeAvailable : t.dish.markUnavailable}
             </SubmitButton>
           </ActionForm>
 
@@ -114,7 +117,7 @@ export function DishRow({ dish, position, isFirst, isLast, reorderable, open, on
               open ? 'border-ink bg-ink text-paper' : 'border-line-strong bg-surface text-ink hover:border-ink'
             }`}
           >
-            {open ? 'Close' : 'Edit'}
+            {open ? t.dish.close : t.dish.edit}
           </button>
         </div>
       </div>
@@ -131,6 +134,7 @@ export function DishRow({ dish, position, isFirst, isLast, reorderable, open, on
 }
 
 function DeleteDish({ id, name, photoCount }: { id: number; name: string; photoCount: number }) {
+  const t = useT();
   const [confirming, setConfirming] = useState(false);
 
   return (
@@ -139,25 +143,27 @@ function DeleteDish({ id, name, photoCount }: { id: number; name: string; photoC
         <ActionForm action={deleteItem} className="space-y-4">
           <input type="hidden" name="id" value={id} />
           <p className="text-body-sm text-ink">
-            Delete <strong>{name}</strong>
-            {photoCount ? ` and its ${photoCount} photo${photoCount === 1 ? '' : 's'}` : ''}? This cannot be undone.
+            {format(photoCount === 0 ? t.dish.deleteConfirm : photoCount === 1 ? t.dish.deleteConfirmOnePhoto : t.dish.deleteConfirmPhotos, {
+              name,
+              count: photoCount,
+            })}
           </p>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <SubmitButton variant="danger" pendingLabel="Deleting…" className="min-h-[3rem]">
-              Yes, delete permanently
+            <SubmitButton variant="danger" pendingLabel={t.dish.deleting} className="min-h-[3rem]">
+              {t.dish.deleteYes}
             </SubmitButton>
             <button
               type="button"
               onClick={() => setConfirming(false)}
               className="min-h-[3rem] rounded-hair border border-line-strong px-5 text-label-lg font-medium uppercase text-ink"
             >
-              Keep it
+              {t.dish.deleteKeep}
             </button>
           </div>
         </ActionForm>
       ) : (
         <button type="button" onClick={() => setConfirming(true)} className="min-h-[2.75rem] text-label-lg font-medium uppercase text-critical">
-          Delete this dish…
+          {t.dish.deleteDish}
         </button>
       )}
     </div>

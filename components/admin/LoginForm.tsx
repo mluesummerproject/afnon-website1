@@ -7,7 +7,7 @@ import { login, type FormState } from '@/app/admin/actions';
 
 const initialState: FormState = null;
 
-export function LoginForm({ notice }: { notice?: string }) {
+export function LoginForm({ notice, labels }: { notice?: string; labels: { password: string; signIn: string; checking: string } }) {
   const [state, formAction] = useFormState(login, initialState);
 
   return (
@@ -19,7 +19,7 @@ export function LoginForm({ notice }: { notice?: string }) {
       ) : null}
 
       <label htmlFor="password" className="label block text-ink-muted">
-        Password
+        {labels.password}
       </label>
       <input
         id="password"
@@ -38,8 +38,8 @@ export function LoginForm({ notice }: { notice?: string }) {
         </p>
       ) : null}
 
-      <SubmitButton pendingLabel="Checking…" className="mt-6 w-full">
-        Sign in
+      <SubmitButton pendingLabel={labels.checking} className="mt-6 w-full">
+        {labels.signIn}
       </SubmitButton>
     </form>
   );
