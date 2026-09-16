@@ -199,7 +199,11 @@ const en = {
       summary: 'Please check the highlighted fields.',
     },
   },
-  footer: { contact: 'Contact', menu: 'Menu', staff: 'Staff' },
+  footer: {
+    contact: 'Contact',
+    menu: 'Menu',
+    privacy: 'Your phone number and address are used only to confirm and deliver your order, and are never shared.',
+  },
   notFound: { title: 'This page could not be found.', body: 'The link may be out of date.', back: 'Back to the menu' },
 };
 
@@ -371,7 +375,11 @@ const uz: Dictionary = {
       summary: 'Iltimos, belgilangan maydonlarni tekshiring.',
     },
   },
-  footer: { contact: 'Aloqa', menu: 'Menyu', staff: 'Xodimlar uchun' },
+  footer: {
+    contact: 'Aloqa',
+    menu: 'Menyu',
+    privacy: 'Telefon raqamingiz va manzilingiz faqat buyurtmani tasdiqlash va yetkazib berish uchun ishlatiladi va hech kimga berilmaydi.',
+  },
   notFound: { title: 'Bu sahifa topilmadi.', body: 'Havola eskirgan boʻlishi mumkin.', back: 'Menyuga qaytish' },
 };
 
@@ -541,7 +549,11 @@ const ru: Dictionary = {
       summary: 'Пожалуйста, проверьте отмеченные поля.',
     },
   },
-  footer: { contact: 'Контакты', menu: 'Меню', staff: 'Для персонала' },
+  footer: {
+    contact: 'Контакты',
+    menu: 'Меню',
+    privacy: 'Ваш телефон и адрес используются только для подтверждения и доставки заказа и никому не передаются.',
+  },
   notFound: { title: 'Страница не найдена.', body: 'Возможно, ссылка устарела.', back: 'Вернуться к меню' },
 };
 

@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 import { AnorMark } from '@/components/ui/AnorMark';
 import type { Dictionary } from '@/lib/i18n';
 import type { ResolvedSettings } from '@/lib/settings-core';
@@ -43,8 +41,8 @@ export function SiteFooter({ dict, settings }: { dict: Dictionary; settings: Res
           </div>
         ) : null}
 
-        <div>
-          {settings.social.length > 0 ? (
+        {settings.social.length > 0 ? (
+          <div>
             <ul>
               {settings.social.map((item) => (
                 <li key={item.href}>
@@ -54,15 +52,15 @@ export function SiteFooter({ dict, settings }: { dict: Dictionary; settings: Res
                 </li>
               ))}
             </ul>
-          ) : null}
-          <Link href="/admin" className={`${link} text-ink/60`}>
-            {dict.footer.staff}
-          </Link>
-        </div>
+          </div>
+        ) : null}
       </div>
-      <p className="shell mt-4 text-[12px] text-ink/60">
-        © {year} {brand.name}
-      </p>
+      <div className="shell mt-4 space-y-1.5 text-[12px] text-ink/60">
+        <p className="max-w-[40rem]">{dict.footer.privacy}</p>
+        <p>
+          © {year} {brand.name}
+        </p>
+      </div>
     </footer>
   );
 }
