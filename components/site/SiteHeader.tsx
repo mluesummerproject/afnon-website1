@@ -10,6 +10,7 @@ import { AnorMark } from '@/components/ui/AnorMark';
 import { BasketIcon, PhoneIcon } from '@/components/ui/icons';
 import { HEADER_HEIGHT, scrollToElement, scrollToY } from '@/lib/client-scroll';
 import type { Dictionary, Locale } from '@/lib/i18n';
+import { CORE_SECTION_IDS, type SectionId } from '@/lib/sections';
 
 type SiteHeaderProps = {
   locale: Locale;
@@ -17,13 +18,15 @@ type SiteHeaderProps = {
   phoneHref: string | null;
   nav: Dictionary['nav'];
   labels: { home: string; cta: string; basket: string; call: string; language: string; switchTo: string; siteNav: string };
+  /** The sections this page actually renders, in scroll order. */
+  sections?: SectionId[];
 };
 
 /**
  * 56px header: wordmark left; language, call and one solid accent CTA right.
  * Past 80px of scroll it settles into a slim white bar with a hairline, over 200ms.
  */
-export function SiteHeader({ locale, brandName, phoneHref, nav, labels }: SiteHeaderProps) {
+export function SiteHeader({ locale, brandName, phoneHref, nav, labels, sections = CORE_SECTION_IDS }: SiteHeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   const { count, openBasket } = useBasket();
 
@@ -65,9 +68,9 @@ export function SiteHeader({ locale, brandName, phoneHref, nav, labels }: SiteHe
           </span>
         </a>
 
-        <SiteNav nav={nav} ariaLabel={labels.siteNav} />
+        <SiteNav nav={nav} ariaLabel={labels.siteNav} sections={sections} />
 
-        <MobileNavControl nav={nav} openLabel={nav.openMenu} closeLabel={nav.closeMenu} />
+        <MobileNavControl nav={nav} openLabel={nav.openMenu} closeLabel={nav.closeMenu} sections={sections} />
 
         <LanguageMenu locale={locale} label={labels.language} switchTo={labels.switchTo} />
 

@@ -1,11 +1,12 @@
 'use client';
 
-import { SECTION_IDS, useActiveSection, useSectionLabels } from '@/components/site/SiteNav';
+import { useActiveSection, useSectionLabels } from '@/components/site/SiteNav';
 import { ChatIcon, InfoIcon, MenuGridIcon, PinIcon, TagIcon } from '@/components/ui/icons';
 import { HEADER_HEIGHT, scrollToElement } from '@/lib/client-scroll';
 import type { Dictionary } from '@/lib/i18n';
+import { CORE_SECTION_IDS, type SectionId } from '@/lib/sections';
 
-const ICONS: Record<(typeof SECTION_IDS)[number], typeof MenuGridIcon> = {
+const ICONS: Partial<Record<SectionId, typeof MenuGridIcon>> = {
   menu: MenuGridIcon,
   promotions: TagIcon,
   about: InfoIcon,
@@ -13,12 +14,17 @@ const ICONS: Record<(typeof SECTION_IDS)[number], typeof MenuGridIcon> = {
   contact: ChatIcon,
 };
 
-/** Phone-only bottom navigation: the five sections, in scroll order, plus safe-area padding. */
+/**
+ * Phone-only bottom navigation: the five permanent sections, in scroll order,
+ * plus safe-area padding. Videos deliberately stays out of this bar — five
+ * thumb-sized targets is what fits on a 360px phone, and Videos is reachable
+ * from the menu panel and by scrolling.
+ */
 export function BottomNav({ nav, label }: { nav: Dictionary['nav']; label: string }) {
   const active = useActiveSection();
   const labels = useSectionLabels(nav);
 
-  const go = (id: (typeof SECTION_IDS)[number]) => {
+  const go = (id: SectionId) => {
     const target = document.getElementById(id);
     if (target) scrollToElement(target, HEADER_HEIGHT);
   };
@@ -26,8 +32,8 @@ export function BottomNav({ nav, label }: { nav: Dictionary['nav']; label: strin
   return (
     <nav aria-label={label} className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-card pb-[env(safe-area-inset-bottom)] md:hidden">
       <ul className="grid h-14 grid-cols-5">
-        {SECTION_IDS.map((id) => {
-          const Icon = ICONS[id];
+        {CORE_SECTION_IDS.map((id) => {
+          const Icon = ICONS[id]!;
           return (
             <li key={id}>
               <button

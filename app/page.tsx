@@ -18,6 +18,7 @@ import { issueFormToken } from '@/lib/antispam';
 import { getActiveBanners } from '@/lib/banners';
 import { getLocaleAndDictionary } from '@/lib/locale';
 import { getMenu } from '@/lib/menu';
+import { sectionsFor } from '@/lib/sections';
 import { getSiteSettings } from '@/lib/settings';
 import { brand } from '@/lib/site';
 import { getActiveVideos } from '@/lib/videos';
@@ -29,6 +30,9 @@ import { getActiveVideos } from '@/lib/videos';
 export default async function HomePage() {
   const { locale, dict } = getLocaleAndDictionary();
   const [menu, videos, banners, settings] = await Promise.all([getMenu(locale, dict), getActiveVideos(), getActiveBanners(), getSiteSettings()]);
+
+  // Videos are only a destination when staff have actually uploaded one.
+  const sections = sectionsFor(videos.length > 0);
 
   const allDishes = menu.categories.flatMap((category) => category.dishes);
   const discountedDishes = allDishes.filter((dish) => dish.discountPercent !== null);
@@ -64,6 +68,7 @@ export default async function HomePage() {
         brandName={brand.name}
         phoneHref={phoneHref}
         nav={dict.nav}
+        sections={sections}
         labels={{
           home: dict.a11y.siteNav,
           cta: dict.header.cta,

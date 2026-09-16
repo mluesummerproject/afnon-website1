@@ -5,19 +5,19 @@ import { useEffect, useState } from 'react';
 
 import { HEADER_HEIGHT, scrollToElement } from '@/lib/client-scroll';
 import type { Dictionary } from '@/lib/i18n';
-
-export const SECTION_IDS = ['menu', 'promotions', 'about', 'visit', 'contact'] as const;
-export type SectionId = (typeof SECTION_IDS)[number];
+import { CORE_SECTION_IDS, type SectionId } from '@/lib/sections';
 
 /** Which section is current: the last one whose top has reached the sticky header. */
-export function useActiveSection(): SectionId {
+export function useActiveSection(sections: SectionId[] = CORE_SECTION_IDS): SectionId {
   const [active, setActive] = useState<SectionId>('menu');
+  const key = sections.join(',');
   useEffect(() => {
     let frame = 0;
+    const ids = key.split(',') as SectionId[];
     const update = () => {
       frame = 0;
       let current: SectionId = 'menu';
-      for (const id of SECTION_IDS) {
+      for (const id of ids) {
         const el = document.getElementById(id);
         if (el && el.getBoundingClientRect().top <= HEADER_HEIGHT + 24) current = id;
       }
@@ -34,17 +34,17 @@ export function useActiveSection(): SectionId {
       window.removeEventListener('resize', onScroll);
       cancelAnimationFrame(frame);
     };
-  }, []);
+  }, [key]);
   return active;
 }
 
 export function useSectionLabels(nav: Dictionary['nav']): Record<SectionId, string> {
-  return { menu: nav.menu, promotions: nav.promotions, about: nav.about, visit: nav.visit, contact: nav.contact };
+  return { menu: nav.menu, films: nav.films, promotions: nav.promotions, about: nav.about, visit: nav.visit, contact: nav.contact };
 }
 
 /** Desktop-only horizontal nav with one shared sliding indicator under the active link. */
-export function SiteNav({ nav, ariaLabel }: { nav: Dictionary['nav']; ariaLabel: string }) {
-  const active = useActiveSection();
+export function SiteNav({ nav, ariaLabel, sections = CORE_SECTION_IDS }: { nav: Dictionary['nav']; ariaLabel: string; sections?: SectionId[] }) {
+  const active = useActiveSection(sections);
   const labels = useSectionLabels(nav);
 
   const go = (id: SectionId) => {
@@ -55,7 +55,7 @@ export function SiteNav({ nav, ariaLabel }: { nav: Dictionary['nav']; ariaLabel:
   return (
     <nav aria-label={ariaLabel} className="hidden items-center gap-1 md:flex">
       <LayoutGroup id="site-nav">
-        {SECTION_IDS.map((id) => {
+        {sections.map((id) => {
           const isActive = active === id;
           return (
             <button
@@ -77,10 +77,20 @@ export function SiteNav({ nav, ariaLabel }: { nav: Dictionary['nav']; ariaLabel:
   );
 }
 
-/** Mobile "menu control": a compact hamburger that opens a slide-down panel with the same five links. */
-export function MobileNavControl({ nav, openLabel, closeLabel }: { nav: Dictionary['nav']; openLabel: string; closeLabel: string }) {
+/** Mobile "menu control": a compact hamburger that opens a slide-down panel with the same links. */
+export function MobileNavControl({
+  nav,
+  openLabel,
+  closeLabel,
+  sections = CORE_SECTION_IDS,
+}: {
+  nav: Dictionary['nav'];
+  openLabel: string;
+  closeLabel: string;
+  sections?: SectionId[];
+}) {
   const [open, setOpen] = useState(false);
-  const active = useActiveSection();
+  const active = useActiveSection(sections);
   const labels = useSectionLabels(nav);
 
   const go = (id: SectionId) => {
@@ -117,7 +127,7 @@ export function MobileNavControl({ nav, openLabel, closeLabel }: { nav: Dictiona
             className="fixed inset-x-0 top-14 z-40 border-b border-line bg-card px-4 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
           >
             <ul className="space-y-1">
-              {SECTION_IDS.map((id) => (
+              {sections.map((id) => (
                 <li key={id}>
                   <button
                     type="button"
