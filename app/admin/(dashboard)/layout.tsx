@@ -5,12 +5,13 @@ import { logout } from '@/app/admin/actions';
 import { AdminLangProvider } from '@/components/admin/AdminLangProvider';
 import { AdminLanguageSwitch } from '@/components/admin/AdminLanguageSwitch';
 import { AdminNav } from '@/components/admin/AdminNav';
+import { HomeScreenHint } from '@/components/admin/HomeScreenHint';
 import { SubmitButton } from '@/components/admin/SubmitButton';
 import { Toaster } from '@/components/admin/Toaster';
 import { AnorMark } from '@/components/ui/AnorMark';
 import { getAdminLocaleAndDict } from '@/lib/admin-locale';
 import { getUnreadCount } from '@/lib/admin-data';
-import { isAuthenticated } from '@/lib/auth';
+import { hasSessionCookie, isAuthenticated } from '@/lib/auth';
 import { brand } from '@/lib/site';
 
 /**
@@ -19,7 +20,7 @@ import { brand } from '@/lib/site';
  * and every Server Action behind every control checks the session again.
  */
 export default async function ProtectedAdminLayout({ children }: { children: React.ReactNode }) {
-  if (!isAuthenticated()) redirect('/admin/login?m=required');
+  if (!isAuthenticated()) redirect(`/admin/login?m=${hasSessionCookie() ? 'expired' : 'required'}`);
   const unread = await getUnreadCount();
   const { locale, dict } = getAdminLocaleAndDict();
 
@@ -49,6 +50,14 @@ export default async function ProtectedAdminLayout({ children }: { children: Rea
             <AdminNav unread={unread} />
           </div>
         </header>
+        <HomeScreenHint
+          labels={{
+            title: dict.homeScreen.title,
+            ios: dict.homeScreen.ios,
+            android: dict.homeScreen.android,
+            dismiss: dict.homeScreen.dismiss,
+          }}
+        />
         {children}
         <Toaster />
       </div>

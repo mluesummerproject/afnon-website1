@@ -14,7 +14,12 @@ import { cookies } from 'next/headers';
  */
 
 const COOKIE_NAME = 'afnon_admin_session';
-const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8; // one shift
+/**
+ * A week on the device that signed in. Staff open the panel many times a shift
+ * on a phone; "Sign out" ends it at once, and changing ADMIN_PASSWORD ends
+ * every session everywhere.
+ */
+const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 
 export const adminPasswordConfigured = Boolean(process.env.ADMIN_PASSWORD);
 
@@ -69,6 +74,11 @@ export function destroySession(): void {
     path: '/',
     maxAge: 0,
   });
+}
+
+/** True when the browser still carries a session cookie, valid or not — to tell "expired" from "never signed in". */
+export function hasSessionCookie(): boolean {
+  return Boolean(cookies().get(COOKIE_NAME)?.value);
 }
 
 /** True only for a cookie this server signed, that has not expired. */

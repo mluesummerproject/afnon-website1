@@ -39,6 +39,13 @@ const en = {
     signingOut: '…',
     language: 'Panel language',
     switchTo: 'Switch the panel to {language}',
+    appName: 'Afnon Staff',
+  },
+  homeScreen: {
+    title: 'Open the panel in one tap',
+    ios: 'In Safari, tap Share, then “Add to Home Screen”. You stay signed in on this phone for 7 days.',
+    android: 'In Chrome, tap ⋮, then “Add to Home screen”. You stay signed in on this phone for 7 days.',
+    dismiss: 'Hide this tip',
   },
   nav: {
     sections: 'Admin sections',
@@ -508,6 +515,13 @@ const uz: AdminDictionary = {
     signingOut: '…',
     language: 'Panel tili',
     switchTo: 'Panelni {language} tiliga oʻtkazish',
+    appName: 'Afnon Panel',
+  },
+  homeScreen: {
+    title: 'Panelni bir bosishda oching',
+    ios: 'Safari’da “Ulashish” tugmasini, soʻng “Bosh ekranga qoʻshish”ni bosing. Bu telefonda 7 kun davomida tizimda qolasiz.',
+    android: 'Chrome’da ⋮ tugmasini, soʻng “Bosh ekranga qoʻshish”ni bosing. Bu telefonda 7 kun davomida tizimda qolasiz.',
+    dismiss: 'Maslahatni yashirish',
   },
   nav: {
     sections: 'Panel boʻlimlari',
@@ -970,6 +984,13 @@ const ru: AdminDictionary = {
     signingOut: '…',
     language: 'Язык панели',
     switchTo: 'Переключить панель на {language}',
+    appName: 'Afnon Панель',
+  },
+  homeScreen: {
+    title: 'Панель в одно касание',
+    ios: 'В Safari нажмите «Поделиться», затем «На экран „Домой“». На этом телефоне вход сохраняется 7 дней.',
+    android: 'В Chrome нажмите ⋮, затем «Добавить на главный экран». На этом телефоне вход сохраняется 7 дней.',
+    dismiss: 'Скрыть подсказку',
   },
   nav: {
     sections: 'Разделы панели',
