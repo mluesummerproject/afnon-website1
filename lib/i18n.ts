@@ -203,6 +203,7 @@ const en = {
   footer: {
     contact: 'Contact',
     menu: 'Menu',
+    staff: 'For staff',
     privacy: 'Your phone number and address are used only to confirm and deliver your order, and are never shared.',
   },
   notFound: { title: 'This page could not be found.', body: 'The link may be out of date.', back: 'Back to the menu' },
@@ -380,6 +381,7 @@ const uz: Dictionary = {
   footer: {
     contact: 'Aloqa',
     menu: 'Menyu',
+    staff: 'Xodimlar uchun',
     privacy: 'Telefon raqamingiz va manzilingiz faqat buyurtmani tasdiqlash va yetkazib berish uchun ishlatiladi va hech kimga berilmaydi.',
   },
   notFound: { title: 'Bu sahifa topilmadi.', body: 'Havola eskirgan boʻlishi mumkin.', back: 'Menyuga qaytish' },
@@ -555,6 +557,7 @@ const ru: Dictionary = {
   footer: {
     contact: 'Контакты',
     menu: 'Меню',
+    staff: 'Для персонала',
     privacy: 'Ваш телефон и адрес используются только для подтверждения и доставки заказа и никому не передаются.',
   },
   notFound: { title: 'Страница не найдена.', body: 'Возможно, ссылка устарела.', back: 'Вернуться к меню' },

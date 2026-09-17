@@ -37,7 +37,7 @@ function Seed({ index, side }: { index: number; side: 0 | 1 }) {
   // Depth drives the rest: near seeds are small, dark and quicker; far ones large, faint and slow.
   const depth = n(1) ** 1.6; // skewed toward near
   const size = 5 + depth * 11 + n(2) * 3; // ~5–19px
-  const opacity = 0.78 - depth * 0.56 + (n(3) - 0.5) * 0.12; // ~0.16–0.84
+  const opacity = 0.41 - depth * 0.27 + (n(3) - 0.5) * 0.06; // ~0.12–0.44: texture, never objects
   const duration = 38 + depth * 70 + n(4) * 30; // 38–138s to cross the screen
   const swayDuration = 6 + n(5) * 12; // 6–18s per side-to-side
   const sway = 5 + n(6) * 17; // 5–22px either way

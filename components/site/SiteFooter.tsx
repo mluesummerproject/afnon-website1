@@ -1,4 +1,7 @@
+import Link from 'next/link';
+
 import { AnorMark } from '@/components/ui/AnorMark';
+import { LockIcon } from '@/components/ui/icons';
 import type { Dictionary } from '@/lib/i18n';
 import type { ResolvedSettings } from '@/lib/settings-core';
 import { brand } from '@/lib/site';
@@ -60,6 +63,16 @@ export function SiteFooter({ dict, settings }: { dict: Dictionary; settings: Res
         <p>
           © {year} {brand.name}
         </p>
+        {/* The staff door: last, smallest and greyest thing on the page, so it never pulls a customer's eye. */}
+        <Link
+          href="/admin"
+          rel="nofollow"
+          prefetch={false}
+          className="tap -ml-1 inline-flex min-h-[44px] items-center gap-1.5 px-1 text-[11px] text-ink/60 transition-colors hover:text-accent"
+        >
+          <LockIcon size={12} />
+          {dict.footer.staff}
+        </Link>
       </div>
     </footer>
   );

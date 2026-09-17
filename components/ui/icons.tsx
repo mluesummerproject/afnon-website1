@@ -67,6 +67,9 @@ export const ArrowUpIcon = ({ className, size = 22 }: IconProps) => (
 export const GlobeIcon = ({ className, size = 18 }: IconProps) => (
   <svg {...base(size)} className={className}><circle cx="12" cy="12" r="8.5" /><path d="M3.5 12h17M12 3.5c2.4 2.4 3.5 5.2 3.5 8.5s-1.1 6.1-3.5 8.5c-2.4-2.4-3.5-5.2-3.5-8.5s1.1-6.1 3.5-8.5Z" /></svg>
 );
+export const LockIcon = ({ className, size = 14 }: IconProps) => (
+  <svg {...base(size)} className={className}><rect x="5" y="10.5" width="14" height="10" rx="2.2" /><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3" /></svg>
+);
 export const TrashIcon = ({ className, size = 20 }: IconProps) => (
   <svg {...base(size)} className={className}><path d="M4.5 7h15M9.5 7V5h5v2M6.5 7l.8 12h9.4l.8-12" /></svg>
 );

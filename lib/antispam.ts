@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import { headers } from 'next/headers';
 
 /**
@@ -39,12 +39,36 @@ export function readFormToken(token: unknown): number | null {
   return Number.isFinite(time) ? time : null;
 }
 
-/** A hashed visitor key — the raw IP is never stored or logged. */
-export function visitorKey(): string {
+/**
+ * The connecting client's IP, from the header the host itself sets.
+ *
+ * Netlify writes `x-nf-client-connection-ip` from the real TCP connection, so a
+ * visitor cannot choose it. The leftmost `x-forwarded-for` entry, by contrast,
+ * is whatever the client sent — trusting it first let anyone reset their own
+ * rate limit by inventing a new address on every request. It stays only as a
+ * last resort for hosts that set nothing better (and for local development).
+ */
+function clientIp(): string {
   const list = headers();
-  const ip = list.get('x-forwarded-for')?.split(',')[0]?.trim() || list.get('x-real-ip') || 'unknown';
-  const agent = list.get('user-agent') ?? '';
-  return createHash('sha256').update(`${ip}|${agent}`).digest('base64url').slice(0, 24);
+  return (
+    list.get('x-nf-client-connection-ip')?.trim() ||
+    list.get('x-real-ip')?.trim() ||
+    list.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    'unknown'
+  );
+}
+
+/**
+ * A keyed hash of the client IP. The raw IP is never stored or logged, and
+ * because the hash is keyed with a server secret, a stored value cannot be
+ * turned back into an address by hashing every IPv4 address and comparing.
+ *
+ * Deliberately not mixed with the user agent: that is another header the
+ * client writes, so including it would hand out a fresh limit per invented
+ * browser string.
+ */
+export function visitorKey(): string {
+  return createHmac('sha256', secret()).update(`visitor|${clientIp()}`).digest('base64url').slice(0, 32);
 }
 
 const hits = new Map<string, number[]>();
