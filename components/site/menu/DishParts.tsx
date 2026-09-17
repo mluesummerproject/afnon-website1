@@ -162,13 +162,13 @@ export function PriceText({ dish, labels, size = 'card' }: { dish: Dish; labels:
   const [priceRef, shownPrice] = useCountUpOnView(dish.priceValue ?? 0, size === 'card' && dish.priceValue !== null);
 
   if (dish.priceValue === null) {
-    return dish.price ? <p className="line-clamp-2 text-[13px] font-semibold leading-tight text-accent">{dish.price}</p> : null;
+    return dish.price ? <p className="line-clamp-2 text-[13px] font-semibold leading-tight text-accent-ink">{dish.price}</p> : null;
   }
   const big = size === 'sheet' ? 'text-[22px] font-bold' : 'text-price';
   return (
     <p ref={priceRef} className="flex flex-wrap items-baseline gap-x-1 leading-tight">
-      <span className={`whitespace-nowrap tabular-nums text-accent ${big}`}>{formatAmount(size === 'card' ? shownPrice : dish.priceValue, '')}</span>
-      <span className={`font-semibold text-accent ${size === 'sheet' ? 'text-[15px]' : 'text-[12px]'}`}>{labels.currency}</span>
+      <span className={`whitespace-nowrap tabular-nums text-accent-ink ${big}`}>{formatAmount(size === 'card' ? shownPrice : dish.priceValue, '')}</span>
+      <span className={`font-semibold text-accent-ink ${size === 'sheet' ? 'text-[15px]' : 'text-[12px]'}`}>{labels.currency}</span>
       {dish.oldPriceValue !== null ? (
         <s className={`whitespace-nowrap font-medium tabular-nums text-ink/60 ${size === 'sheet' ? 'ml-1 text-[15px]' : 'text-[12px]'}`}>
           <span className="sr-only">{format(labels.oldPrice, { price: formatAmount(dish.oldPriceValue, labels.currency) })}</span>
@@ -207,11 +207,11 @@ export function FavoriteButton({ dish, labels }: { dish: Dish; labels: CardLabel
       onClick={() => {
         if (toggle()) setBurst((value) => value + 1);
       }}
-      className="tap hit-44 absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/80"
+      className="tap hit-44 absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-card/80"
     >
       {burst > 0 ? <span key={burst} className="heart-pulse" aria-hidden="true" /> : null}
       <span key={`heart-${burst}`} className={`relative ${burst > 0 ? 'heart-burst' : ''}`}>
-        <HeartIcon filled={active} size={20} className={active ? 'text-accent' : 'text-ink/70'} />
+        <HeartIcon filled={active} size={20} className={active ? 'text-accent-ink' : 'text-ink/70'} />
       </span>
     </button>
   );

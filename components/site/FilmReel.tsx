@@ -215,7 +215,7 @@ export function FilmReel({ films, labels }: { films: Film[]; labels: Labels }) {
                   aria-label={format(labels.select, { index: position + 1, title: item.title })}
                   className="tap group relative flex min-h-[3.5rem] w-full items-center gap-3 px-4 py-3 text-left"
                 >
-                  <span className={`text-[13px] font-semibold tabular-nums ${current ? 'text-accent' : 'text-ink/60'}`}>
+                  <span className={`text-[13px] font-semibold tabular-nums ${current ? 'text-accent-ink' : 'text-ink/60'}`}>
                     {String(position + 1).padStart(2, '0')}
                   </span>
                   <span

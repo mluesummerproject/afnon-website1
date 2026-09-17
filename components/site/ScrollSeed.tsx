@@ -67,7 +67,7 @@ export function ScrollSeed() {
           />
         </div>
       ) : (
-        <svg width="10" height="13" viewBox="0 0 10 13" className="text-accent/70 transition-transform duration-200" style={{ transform: `rotate(${rotate}deg)` }}>
+        <svg width="10" height="13" viewBox="0 0 10 13" className="text-accent-ink/70 transition-transform duration-200" style={{ transform: `rotate(${rotate}deg)` }}>
           <path d="M5 0C7 3.5 9 6.5 9 9a4 4 0 0 1-8 0C1 6.5 3 3.5 5 0Z" fill="currentColor" />
         </svg>
       )}

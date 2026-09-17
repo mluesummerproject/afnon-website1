@@ -51,7 +51,7 @@ export function DishImage({ photo, sizes, priority = false, rounded = 'rounded-[
 export function PlaceholderTile({ rounded = 'rounded-[10px]' }: { rounded?: string }) {
   return (
     <span aria-hidden="true" className={`flex aspect-square w-full items-center justify-center bg-accent/[0.07] ${rounded}`}>
-      <AnorMark className="h-[36%] w-auto text-accent/25" />
+      <AnorMark className="h-[36%] w-auto text-accent-ink/25" />
     </span>
   );
 }

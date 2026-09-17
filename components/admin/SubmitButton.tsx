@@ -13,7 +13,7 @@ type SubmitButtonProps = {
 };
 
 const variants = {
-  primary: 'bg-anor px-5 text-paper hover:bg-anor-hover active:bg-anor-deep',
+  primary: 'bg-anor px-5 text-on-anor hover:bg-anor-hover active:bg-anor-deep',
   secondary: 'border border-line-strong bg-surface px-4 text-ink hover:border-ink',
   danger: 'bg-critical px-5 text-paper hover:brightness-90',
   ghost: 'border border-line px-4 text-ink-secondary hover:border-ink hover:text-ink',

@@ -29,7 +29,7 @@ export function LoginForm({ notice, labels }: { notice?: string; labels: { passw
         required
         autoFocus
         aria-describedby={state?.error ? 'password-error' : undefined}
-        className="mt-3 min-h-[3rem] w-full rounded-hair border border-line-strong bg-surface px-4 text-body text-ink outline-none transition-colors duration-quick focus:border-anor"
+        className="mt-3 min-h-[3rem] w-full rounded-hair border border-line-strong bg-surface px-4 text-body text-ink outline-none transition-colors duration-quick focus:border-anor-ink"
       />
 
       {state?.error ? (

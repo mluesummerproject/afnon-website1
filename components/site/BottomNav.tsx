@@ -40,7 +40,7 @@ export function BottomNav({ nav, label }: { nav: Dictionary['nav']; label: strin
                 type="button"
                 onClick={() => go(id)}
                 aria-current={active === id ? 'page' : undefined}
-                className={`tap flex h-full w-full flex-col items-center justify-center gap-1 transition-colors duration-150 ${active === id ? 'text-accent' : 'text-ink/60'}`}
+                className={`tap flex h-full w-full flex-col items-center justify-center gap-1 transition-colors duration-150 ${active === id ? 'text-accent-ink' : 'text-ink/60'}`}
               >
                 <Icon size={20} />
                 <span className="text-nav-label">{labels[id]}</span>

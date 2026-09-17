@@ -64,7 +64,7 @@ export function SiteNav({ nav, ariaLabel, sections = CORE_SECTION_IDS }: { nav: 
               onClick={() => go(id)}
               aria-current={isActive ? 'page' : undefined}
               className={`relative flex h-9 items-center whitespace-nowrap rounded-full px-3.5 text-[14px] font-medium transition-colors duration-150 ${
-                isActive ? 'text-accent' : 'text-ink/65 hover:text-ink'
+                isActive ? 'text-accent-ink' : 'text-ink/65 hover:text-ink'
               }`}
             >
               {isActive ? <motion.span layoutId="site-nav-indicator" className="absolute inset-0 rounded-full bg-accent/[0.08]" transition={{ duration: 0.25, ease: 'easeOut' }} /> : null}
@@ -134,7 +134,7 @@ export function MobileNavControl({
                     onClick={() => go(id)}
                     aria-current={active === id ? 'page' : undefined}
                     className={`tap flex h-11 w-full items-center rounded-[10px] px-3 text-[15px] font-medium ${
-                      active === id ? 'bg-accent/[0.08] text-accent' : 'text-ink/80'
+                      active === id ? 'bg-accent/[0.08] text-accent-ink' : 'text-ink/80'
                     }`}
                   >
                     {labels[id]}

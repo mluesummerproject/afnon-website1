@@ -77,11 +77,11 @@ export default async function InboxPage({ searchParams }: { searchParams?: { fil
             <li key={message.id}>
               <article
                 aria-label={format(isUnread ? t.inbox.unreadFrom : t.inbox.messageFrom, { name: message.name })}
-                className={`rounded-hair border bg-surface p-4 md:p-5 ${isUnread ? 'border-anor/40 border-l-4 border-l-anor' : 'border-line'}`}
+                className={`rounded-hair border bg-surface p-4 md:p-5 ${isUnread ? 'border-anor-ink/40 border-l-4 border-l-anor-ink' : 'border-line'}`}
               >
                 <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                   <h2 className="flex items-baseline gap-2.5">
-                    {isUnread ? <span className="label rounded-hair bg-anor px-1.5 py-1 text-paper">{t.inbox.new}</span> : null}
+                    {isUnread ? <span className="label rounded-hair bg-anor px-1.5 py-1 text-on-anor">{t.inbox.new}</span> : null}
                     <span className={`font-display text-[1.3rem] leading-tight ${isUnread ? 'text-ink' : 'text-ink-secondary'}`}>{message.name}</span>
                   </h2>
                   <time dateTime={message.created_at} className="figures text-micro text-ink-muted">
@@ -98,7 +98,7 @@ export default async function InboxPage({ searchParams }: { searchParams?: { fil
                     <a
                       href={reply.href}
                       {...(reply.kind === 'telegram' ? { target: '_blank', rel: 'noreferrer noopener' } : {})}
-                      className="inline-flex min-h-[2.75rem] items-center justify-center rounded-hair bg-anor px-5 text-label-lg font-medium uppercase text-paper hover:bg-anor-hover"
+                      className="inline-flex min-h-[2.75rem] items-center justify-center rounded-hair bg-anor px-5 text-label-lg font-medium uppercase text-on-anor hover:bg-anor-hover"
                     >
                       {replyLabels[reply.kind]}
                     </a>

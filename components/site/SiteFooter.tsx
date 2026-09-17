@@ -13,14 +13,14 @@ export function SiteFooter({ dict, settings }: { dict: Dictionary; settings: Res
     settings.email ? { label: settings.email.display, href: settings.email.href } : null,
   ].filter(Boolean) as { label: string; href: string; external?: boolean }[];
 
-  const link = 'inline-flex min-h-[44px] items-center text-[14px] text-ink hover:text-accent';
+  const link = 'inline-flex min-h-[44px] items-center text-[14px] text-ink hover:text-accent-ink';
 
   return (
     <footer className="mt-12 border-t border-line bg-card pb-[calc(var(--bottom-nav-h)+env(safe-area-inset-bottom)+88px)] pt-8 md:pb-10">
       <div className="shell grid gap-6 md:grid-cols-3">
         <div>
           <p className="flex items-center gap-2">
-            <AnorMark className="h-6 w-auto text-accent" />
+            <AnorMark className="h-6 w-auto text-accent-ink" />
             <span className="font-wordmark text-[26px] leading-none">{brand.name}</span>
           </p>
           <p className="mt-2 text-[13px] text-ink/60">{dict.brand.descriptor}</p>

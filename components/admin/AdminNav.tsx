@@ -27,12 +27,12 @@ export function AdminNav({ unread }: { unread: number }) {
               href={tab.href}
               aria-current={tab.active ? 'page' : undefined}
               className={`relative flex min-h-[3rem] items-center justify-center gap-2 whitespace-nowrap px-3.5 text-label-lg font-medium uppercase transition-colors duration-quick md:px-4 ${
-                tab.active ? 'text-anor' : 'text-ink-secondary hover:text-ink'
+                tab.active ? 'text-anor-ink' : 'text-ink-secondary hover:text-ink'
               }`}
             >
               {tab.label}
               {tab.badge ? (
-                <span className="figures inline-flex min-w-[1.4rem] items-center justify-center rounded-pill bg-anor px-1.5 py-0.5 text-[0.6875rem] font-semibold tracking-normal text-paper">
+                <span className="figures inline-flex min-w-[1.4rem] items-center justify-center rounded-pill bg-anor px-1.5 py-0.5 text-[0.6875rem] font-semibold tracking-normal text-on-anor">
                   <span className="sr-only">, </span>
                   {tab.badge}
                   <span className="sr-only"> {t.nav.unread}</span>

@@ -114,7 +114,7 @@ export function MenuExplorer({ status, categories, locale, search, picksHeading,
               if (event.key === 'Enter') (event.target as HTMLInputElement).blur();
             }}
             placeholder={search.placeholder}
-            className="h-11 w-full rounded-[12px] bg-fill pl-11 pr-11 text-[16px] text-ink outline-none placeholder:text-ink/60 focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-search-cancel-button]:appearance-none"
+            className="h-11 w-full rounded-[12px] bg-fill pl-11 pr-11 text-[16px] text-ink outline-none placeholder:text-ink/60 focus-visible:ring-2 focus-visible:ring-accent-ink [&::-webkit-search-cancel-button]:appearance-none"
           />
           {rawQuery ? (
             <button
@@ -166,7 +166,7 @@ export function MenuExplorer({ status, categories, locale, search, picksHeading,
                         onClick={() => jump(category.slug)}
                         aria-current={isActive ? 'true' : undefined}
                         className={`block w-full rounded-[8px] px-3 py-2 text-left text-[14px] font-medium transition-colors duration-150 ${
-                          isActive ? 'bg-accent/[0.08] text-accent' : 'text-ink/65 hover:bg-fill hover:text-ink'
+                          isActive ? 'bg-accent/[0.08] text-accent-ink' : 'text-ink/65 hover:bg-fill hover:text-ink'
                         }`}
                       >
                         {category.label}
@@ -205,7 +205,7 @@ export function MenuExplorer({ status, categories, locale, search, picksHeading,
                         observeReveal(element);
                       } else headings.current.delete(category.slug);
                     }}
-                    className="reveal-heading scroll-mt-[108px] text-section outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                    className="reveal-heading scroll-mt-[108px] text-section outline-none focus-visible:ring-2 focus-visible:ring-accent-ink"
                   >
                     {category.label}
                   </h2>

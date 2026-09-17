@@ -112,7 +112,7 @@ export function ImageManager({ dishId, dishName, images }: { dishId: number; dis
       if (await processOne(item)) added += 1;
     }
     setBusy(false);
-    if (added > 0) toast({ ok: true, message: `${added} photo${added === 1 ? '' : 's'} added to ${dishName}.` });
+    if (added > 0) toast({ ok: true, message: format(added === 1 ? t.photos.addedOne : t.photos.addedMany, { count: added, name: dishName }) });
     if (added < items.length) toast({ ok: false, message: t.photos.someFailed });
     window.setTimeout(() => setQueue((list) => list.filter((entry) => entry.stage !== 'done')), 2500);
   };
@@ -124,7 +124,7 @@ export function ImageManager({ dishId, dishName, images }: { dishId: number; dis
 
     const items: QueueItem[] = files.slice(0, 12).map((file, index) => ({
       key: `${Date.now()}-${index}-${file.name}`,
-      name: file.name || `Photo ${index + 1}`,
+      name: file.name || format(t.photos.photoOf, { index: index + 1, total: files.length }),
       stage: 'waiting',
       progress: 0,
       file,
@@ -198,7 +198,7 @@ export function ImageManager({ dishId, dishName, images }: { dishId: number; dis
 
       <label
         className={`mt-4 flex min-h-[3.5rem] w-full cursor-pointer items-center justify-center gap-3 rounded-hair border-2 border-dashed px-5 text-label-lg font-medium uppercase transition-colors md:w-auto md:justify-start ${
-          busy ? 'cursor-wait border-line text-ink-muted' : 'border-anor/40 text-anor hover:border-anor hover:bg-anor-tint'
+          busy ? 'cursor-wait border-line text-ink-muted' : 'border-anor-ink/40 text-anor-ink hover:border-anor-ink hover:bg-anor-tint'
         }`}
       >
         <svg aria-hidden="true" width="20" height="18" viewBox="0 0 20 18" fill="none" stroke="currentColor" strokeWidth="1.4">
@@ -231,7 +231,7 @@ export function ImageManager({ dishId, dishName, images }: { dishId: number; dis
               ) : (
                 <div className="mt-2 flex items-center justify-between gap-3">
                   <p className="text-micro text-critical">{item.error}</p>
-                  <button type="button" onClick={() => retry(item)} disabled={busy} className="min-h-[2.75rem] shrink-0 px-3 text-label font-medium uppercase text-anor disabled:opacity-40">
+                  <button type="button" onClick={() => retry(item)} disabled={busy} className="min-h-[2.75rem] shrink-0 px-3 text-label font-medium uppercase text-anor-ink disabled:opacity-40">
                     Retry
                   </button>
                 </div>
@@ -274,18 +274,18 @@ export function ImageManager({ dishId, dishName, images }: { dishId: number; dis
                       unoptimized={!/supabase\.co|unsplash\.com/.test(image.image_url)}
                     />
                     <span
-                      className={`label absolute left-2 top-2 rounded-hair px-1.5 py-1 ${isCover ? 'bg-anor text-paper' : 'bg-ink/80 text-paper'}`}
+                      className={`label absolute left-2 top-2 rounded-hair px-1.5 py-1 ${isCover ? 'bg-anor text-on-anor' : 'bg-night/80 text-on-night'}`}
                     >
                       {isCover ? t.photos.cover : index + 1}
                     </span>
                     <span
                       aria-hidden="true"
-                      className="absolute right-2 top-2 hidden h-7 w-7 cursor-grab items-center justify-center rounded-hair bg-ink/60 text-paper sm:flex"
+                      className="absolute right-2 top-2 hidden h-7 w-7 cursor-grab items-center justify-center rounded-hair bg-night/60 text-on-night sm:flex"
                     >
                       <DragIcon size={15} />
                     </span>
                     {replacing ? (
-                      <div className="absolute inset-0 flex items-center justify-center bg-ink/60 text-micro font-medium text-paper">{t.photos.replacing}</div>
+                      <div className="absolute inset-0 flex items-center justify-center bg-night/60 text-micro font-medium text-on-night">{t.photos.replacing}</div>
                     ) : null}
                   </div>
 

@@ -4,10 +4,12 @@ import { AdminLangProvider } from '@/components/admin/AdminLangProvider';
 import { AdminLanguageSwitch } from '@/components/admin/AdminLanguageSwitch';
 import { LoginForm } from '@/components/admin/LoginForm';
 import { AnorMark } from '@/components/ui/AnorMark';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { getAdminLocaleAndDict } from '@/lib/admin-locale';
 import { adminPasswordConfigured, isAuthenticated } from '@/lib/auth';
 import { format } from '@/lib/i18n';
 import { brand } from '@/lib/site';
+import { getTheme } from '@/lib/theme-server';
 
 export default function AdminLoginPage({
   searchParams,
@@ -29,8 +31,15 @@ export default function AdminLoginPage({
       <main className="flex min-h-[100svh] items-center justify-center px-gutter py-16">
         <div className="w-full max-w-[24rem]">
           <div className="flex items-start justify-between gap-4">
-            <AnorMark className="h-8 w-auto text-anor" />
-            <AdminLanguageSwitch />
+            <AnorMark className="h-8 w-auto text-anor-ink" />
+            <div className="flex items-center gap-2">
+              <AdminLanguageSwitch />
+              <ThemeToggle
+                initial={getTheme()}
+                labels={{ toMidnight: dict.shell.toMidnight, toClassic: dict.shell.toClassic }}
+                className="flex min-h-[2.75rem] w-11 shrink-0 items-center justify-center rounded-hair border border-line-strong bg-surface text-ink-secondary transition-colors duration-quick hover:border-ink hover:text-ink"
+              />
+            </div>
           </div>
           <h1 className="mt-7 font-display text-display-md text-ink">{brand.name}</h1>
           <p className="label mt-2 text-ink-muted">{dict.login.subtitle}</p>

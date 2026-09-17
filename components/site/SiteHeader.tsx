@@ -7,10 +7,12 @@ import { useBasket } from '@/components/site/basket/BasketProvider';
 import { LanguageMenu } from '@/components/site/LanguageMenu';
 import { MobileNavControl, SiteNav } from '@/components/site/SiteNav';
 import { AnorMark } from '@/components/ui/AnorMark';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { BasketIcon, PhoneIcon } from '@/components/ui/icons';
 import { HEADER_HEIGHT, scrollToElement, scrollToY } from '@/lib/client-scroll';
 import type { Dictionary, Locale } from '@/lib/i18n';
 import { CORE_SECTION_IDS, type SectionId } from '@/lib/sections';
+import type { Theme } from '@/lib/theme';
 
 type SiteHeaderProps = {
   locale: Locale;
@@ -20,13 +22,15 @@ type SiteHeaderProps = {
   labels: { home: string; cta: string; basket: string; call: string; language: string; switchTo: string; siteNav: string };
   /** The sections this page actually renders, in scroll order. */
   sections?: SectionId[];
+  theme: Theme;
+  themeLabels: Dictionary['theme'];
 };
 
 /**
  * 56px header: wordmark left; language, call and one solid accent CTA right.
  * Past 80px of scroll it settles into a slim white bar with a hairline, over 200ms.
  */
-export function SiteHeader({ locale, brandName, phoneHref, nav, labels, sections = CORE_SECTION_IDS }: SiteHeaderProps) {
+export function SiteHeader({ locale, brandName, phoneHref, nav, labels, sections = CORE_SECTION_IDS, theme, themeLabels }: SiteHeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   const { count, openBasket } = useBasket();
 
@@ -62,7 +66,7 @@ export function SiteHeader({ locale, brandName, phoneHref, nav, labels, sections
           }}
           className="mr-auto flex h-11 min-w-0 items-center gap-2 pr-1"
         >
-          <AnorMark className="h-6 w-auto shrink-0 text-accent" pulse />
+          <AnorMark className="h-6 w-auto shrink-0 text-accent-ink" pulse />
           <span className={`origin-left font-wordmark text-[26px] leading-none text-ink transition-transform duration-200 ${scrolled ? 'scale-[0.92]' : ''}`}>
             {brandName}
           </span>
@@ -73,6 +77,12 @@ export function SiteHeader({ locale, brandName, phoneHref, nav, labels, sections
         <MobileNavControl nav={nav} openLabel={nav.openMenu} closeLabel={nav.closeMenu} sections={sections} />
 
         <LanguageMenu locale={locale} label={labels.language} switchTo={labels.switchTo} />
+
+        <ThemeToggle
+          initial={theme}
+          labels={themeLabels}
+          className="tap flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink hover:bg-fill"
+        />
 
         {phoneHref ? (
           <a

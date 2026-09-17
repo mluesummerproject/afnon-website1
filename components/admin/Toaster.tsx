@@ -38,7 +38,7 @@ export function Toaster() {
         <div
           key={item.id}
           role={item.ok ? 'status' : 'alert'}
-          className={`pointer-events-auto flex w-full max-w-md animate-fade-rise items-start gap-3 rounded-hair border-l-4 bg-ink px-4 py-3.5 text-body-sm text-paper shadow-panel ${
+          className={`pointer-events-auto flex w-full max-w-md animate-fade-rise items-start gap-3 rounded-hair border-l-4 bg-night px-4 py-3.5 text-body-sm text-on-night shadow-panel ${
             item.ok ? 'border-positive' : 'border-critical'
           }`}
         >
@@ -51,7 +51,7 @@ export function Toaster() {
                 item.action?.run();
                 setItems((list) => list.filter((entry) => entry.id !== item.id));
               }}
-              className="label -my-2 shrink-0 px-2 font-medium uppercase text-gold-soft underline underline-offset-2 hover:text-paper"
+              className="label -my-2 shrink-0 px-2 font-medium uppercase text-gold-soft underline underline-offset-2 hover:text-on-night"
             >
               {item.action.label}
             </button>
@@ -59,7 +59,7 @@ export function Toaster() {
           <button
             type="button"
             onClick={() => setItems((list) => list.filter((entry) => entry.id !== item.id))}
-            className="-my-2 -mr-2 flex h-9 w-9 shrink-0 items-center justify-center text-paper/70 hover:text-paper"
+            className="-my-2 -mr-2 flex h-9 w-9 shrink-0 items-center justify-center text-on-night/70 hover:text-on-night"
             aria-label={t.toast.dismiss}
           >
             <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none">

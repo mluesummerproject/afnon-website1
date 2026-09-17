@@ -130,14 +130,14 @@ export function AdminMenu({ dishes, categories }: { dishes: AdminDish[]; categor
         type="button"
         onClick={() => setAdding((value) => !value)}
         aria-expanded={adding}
-        className="flex min-h-[3.25rem] w-full items-center justify-center gap-3 rounded-hair bg-anor px-6 text-label-lg font-medium uppercase text-paper transition-colors hover:bg-anor-hover sm:w-auto"
+        className="flex min-h-[3.25rem] w-full items-center justify-center gap-3 rounded-hair bg-anor px-6 text-label-lg font-medium uppercase text-on-anor transition-colors hover:bg-anor-hover sm:w-auto"
       >
         <span aria-hidden="true" className="text-lg leading-none">{adding ? '×' : '+'}</span>
         {adding ? t.menu.close : t.menu.addDish}
       </button>
 
       {adding ? (
-        <section aria-labelledby="new-dish" className="mt-4 border-l-2 border-anor bg-surface p-4 md:p-6">
+        <section aria-labelledby="new-dish" className="mt-4 border-l-2 border-anor-ink bg-surface p-4 md:p-6">
           <h2 id="new-dish" className="font-display text-display-sm text-ink">{t.menu.newDish}</h2>
           <p className="mt-1 text-body-sm text-ink-secondary">{t.menu.newDishHint}</p>
           <div className="mt-6">
@@ -164,7 +164,7 @@ export function AdminMenu({ dishes, categories }: { dishes: AdminDish[]; categor
               {item.label}
               <span
                 className={`figures rounded-pill px-1.5 text-micro font-semibold ${
-                  active ? 'bg-paper/20' : item.tone === 'alert' && count > 0 ? 'bg-anor-tint text-anor' : 'bg-paper-alt text-ink-secondary'
+                  active ? 'bg-paper/20' : item.tone === 'alert' && count > 0 ? 'bg-anor-tint text-anor-ink' : 'bg-paper-alt text-ink-secondary'
                 }`}
               >
                 {count}

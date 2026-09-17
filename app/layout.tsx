@@ -6,6 +6,8 @@ import { MotionProvider } from '@/components/ui/MotionProvider';
 import { localeMeta, locales } from '@/lib/i18n';
 import { getLocaleAndDictionary } from '@/lib/locale';
 import { brand, siteUrl } from '@/lib/site';
+import { themeColor } from '@/lib/theme';
+import { getTheme } from '@/lib/theme-server';
 
 import './globals.css';
 
@@ -70,16 +72,20 @@ export function generateMetadata(): Metadata {
   };
 }
 
-export const viewport: Viewport = {
-  themeColor: '#FAFAF8',
-  colorScheme: 'light',
-  viewportFit: 'cover',
-};
+/** Browser chrome follows the chosen theme, so a phone's address bar matches the page. */
+export function generateViewport(): Viewport {
+  const theme = getTheme();
+  return {
+    themeColor: themeColor[theme],
+    colorScheme: theme === 'midnight' ? 'dark' : 'light',
+    viewportFit: 'cover',
+  };
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const { locale } = getLocaleAndDictionary();
   return (
-    <html lang={localeMeta[locale].htmlLang} className={`${sans.variable} ${wordmark.variable}`}>
+    <html lang={localeMeta[locale].htmlLang} data-theme={getTheme()} className={`${sans.variable} ${wordmark.variable}`}>
       <body>
         <noscript>
           <style dangerouslySetInnerHTML={{ __html: '.reveal,.reveal-heading{opacity:1!important;transform:none!important}.dish-img{opacity:1!important}' }} />

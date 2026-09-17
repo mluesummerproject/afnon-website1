@@ -146,3 +146,15 @@ export const FilmIcon = ({ className, size = 22 }: IconProps) => (
     <path d="M7.5 5v14M16.5 5v14M3 12h18" />
   </svg>
 );
+
+export const SunIcon = ({ className, size = 20 }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2.8v2.1M12 19.1v2.1M2.8 12h2.1M19.1 12h2.1M5.5 5.5 7 7M17 17l1.5 1.5M5.5 18.5 7 17M17 7l1.5-1.5" />
+  </svg>
+);
+export const MoonIcon = ({ className, size = 20 }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <path d="M20 14.2A8.2 8.2 0 1 1 9.8 4a6.6 6.6 0 0 0 10.2 10.2Z" />
+  </svg>
+);

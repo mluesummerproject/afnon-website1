@@ -3,6 +3,9 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
+/** The brand seed colour, following the theme (Classic value as fallback). */
+const INK = 'rgb(var(--anor-ink, 92 18 30))';
+
 const SEEN_KEY = 'afnon_intro_seen';
 const SEED_COUNT_WIDE = 16;
 const SEED_COUNT_NARROW = 10;
@@ -143,7 +146,9 @@ export function IntroOverlay() {
         overlay is the very first thing painted, before any stylesheet is
         guaranteed to have applied, and it isn't nested in anything that would
         legitimately set its color — inheriting was fragile for no reason.
-        `#5C121E` is the literal --anor value (see :root in globals.css).
+        The colour is the --anor-ink token with its Classic value as the
+        fallback, so Midnight gets a seed that reads on a dark page and a
+        stylesheet that has not landed yet still paints #5C121E.
       */}
       <motion.svg
         viewBox="0 0 24 28"
@@ -156,7 +161,7 @@ export function IntroOverlay() {
       >
         <motion.path
           d="M1.5 27V12.4C1.5 6.6 6 1.9 12 0.8c6 1.1 10.5 5.8 10.5 11.6V27"
-          stroke="#5C121E"
+          style={{ stroke: INK }}
           strokeWidth="1.1"
           fill="none"
           initial={{ pathLength: 0 }}
@@ -165,7 +170,7 @@ export function IntroOverlay() {
         />
         <motion.path
           d="M6.5 27V13.1c0-3.4 2.4-6.2 5.5-6.9 3.1.7 5.5 3.5 5.5 6.9V27"
-          stroke="#5C121E"
+          style={{ stroke: INK }}
           strokeWidth="1.1"
           fill="none"
           opacity="0.45"
@@ -177,7 +182,7 @@ export function IntroOverlay() {
           cx="12"
           cy="15.4"
           r="1.6"
-          fill="#5C121E"
+          style={{ fill: INK }}
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.18, ease: 'easeOut', delay: 0.22 }}
@@ -220,7 +225,7 @@ export function IntroOverlay() {
                     : { duration: 0.85, delay: seed.delay / 1000, ease: [0.22, 1, 0.36, 1] }
                 }
               >
-                <path d="M5 0C7 3.5 9 6.5 9 9a4 4 0 0 1-8 0C1 6.5 3 3.5 5 0Z" fill="#5C121E" />
+                <path d="M5 0C7 3.5 9 6.5 9 9a4 4 0 0 1-8 0C1 6.5 3 3.5 5 0Z" style={{ fill: INK }} />
               </motion.svg>
             );
           })}

@@ -18,6 +18,8 @@ const config: Config = {
         fill: 'rgb(var(--fill) / <alpha-value>)',
         placeholder: 'rgb(var(--placeholder) / <alpha-value>)',
         accent: 'rgb(var(--anor) / <alpha-value>)',
+        // The accent as text or a line; lighter than the fill in Midnight.
+        'accent-ink': 'rgb(var(--anor-ink) / <alpha-value>)',
 
         // Backgrounds
         paper: 'rgb(var(--paper) / <alpha-value>)',
@@ -44,6 +46,8 @@ const config: Config = {
         'anor-deep': 'rgb(var(--anor-deep) / <alpha-value>)',
         'anor-light': 'rgb(var(--anor-light) / <alpha-value>)',
         'anor-tint': 'rgb(var(--anor-tint) / <alpha-value>)',
+        'anor-ink': 'rgb(var(--anor-ink) / <alpha-value>)',
+        'on-anor': 'rgb(var(--on-anor) / <alpha-value>)',
         gold: 'rgb(var(--gold) / <alpha-value>)',
         'gold-soft': 'rgb(var(--gold-soft) / <alpha-value>)',
         scrim: 'rgb(var(--scrim) / <alpha-value>)',
@@ -116,7 +120,7 @@ const config: Config = {
       boxShadow: {
         card: '0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)',
         sheet: '0 -8px 32px rgba(0,0,0,0.12)',
-        panel: '0 18px 48px -24px rgb(var(--ink) / 0.28)',
+        panel: '0 18px 48px -24px rgb(var(--night) / 0.28)',
       },
       keyframes: {
         'fade-rise': {

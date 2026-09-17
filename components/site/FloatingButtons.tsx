@@ -140,7 +140,7 @@ export function ContactFab({
                 const inner = (
                   <>
                     <span>{label}</span>
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/10 text-accent">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/10 text-accent-ink">
                       <Icon size={20} />
                     </span>
                   </>
@@ -194,7 +194,7 @@ export function ContactFab({
           aria-controls="contact-fab-panel"
           aria-label={open ? labels.close : labels.open}
           onClick={() => (open ? close() : setOpen(true))}
-          className="tap flex h-14 w-14 items-center justify-center rounded-full bg-accent text-white shadow-[0_6px_20px_rgba(92,18,30,0.35)]"
+          className="tap flex h-14 w-14 items-center justify-center rounded-full bg-accent text-white shadow-[0_6px_20px_rgb(var(--anor)/0.35)]"
         >
           <motion.span
             key={open ? 'close' : 'chat'}

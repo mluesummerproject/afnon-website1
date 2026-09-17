@@ -60,6 +60,7 @@ const en = {
     siteNav: 'Main navigation',
   },
   header: { cta: 'Order', basket: 'Basket', call: 'Call the restaurant' },
+  theme: { toMidnight: 'Switch to Midnight mode', toClassic: 'Switch to Classic mode' },
   nav: {
     home: 'Home',
     menu: 'Menu',
@@ -229,6 +230,7 @@ const uz: Dictionary = {
     backToTop: 'Yuqoriga qaytish',
     siteNav: 'Asosiy navigatsiya',
   },
+  theme: { toMidnight: 'Tungi rejimga oʻtish', toClassic: 'Klassik rejimga oʻtish' },
   header: { cta: 'Buyurtma', basket: 'Savat', call: 'Restoranga qoʻngʻiroq' },
   nav: {
     home: 'Bosh sahifa',
@@ -404,6 +406,7 @@ const ru: Dictionary = {
     backToTop: 'Наверх',
     siteNav: 'Основная навигация',
   },
+  theme: { toMidnight: 'Включить ночной режим', toClassic: 'Включить классический режим' },
   header: { cta: 'Заказать', basket: 'Корзина', call: 'Позвонить в ресторан' },
   nav: {
     home: 'Главная',

@@ -208,7 +208,7 @@ export function BasketProvider({ dishes, templates, currency, telegramUsername, 
             key={flight.key}
             aria-hidden="true"
             viewBox="0 0 10 13"
-            className="pointer-events-none fixed z-[90] block h-4 w-3.5 text-accent drop-shadow-[0_2px_6px_rgba(92,18,30,0.45)]"
+            className="pointer-events-none fixed z-[90] block h-4 w-3.5 text-accent-ink drop-shadow-[0_2px_6px_rgb(var(--anor)/0.45)]"
             style={{ left: flight.from.x - 7, top: flight.from.y - 8 }}
             initial={{ x: 0, y: 0, scale: 1, rotate: 0 }}
             animate={{ x: [0, dx * 0.5, dx], y: [0, lift, dy], scale: [1, 1.15, 0.65], rotate: [0, 260, 560] }}

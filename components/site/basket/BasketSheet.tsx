@@ -36,7 +36,7 @@ export function BasketSheet({ locale, basket, menu, onBrowse }: BasketSheetProps
         {total.amount > 0 ? (
           <div className="flex items-baseline justify-between gap-3">
             <span className="text-[15px] font-semibold">{total.complete ? basket.total : basket.totalPartial}</span>
-            <span className="text-price text-accent tabular-nums">{formatAmount(total.amount, menu.currency)}</span>
+            <span className="text-price text-accent-ink tabular-nums">{formatAmount(total.amount, menu.currency)}</span>
           </div>
         ) : null}
         {checkoutUrl ? (
@@ -96,7 +96,7 @@ export function BasketSheet({ locale, basket, menu, onBrowse }: BasketSheetProps
                 <div className="min-w-0 flex-1">
                   <p className="line-clamp-2 text-dish-name">{dish.name}</p>
                   {dish.priceValue !== null ? (
-                    <p className="mt-0.5 text-[14px] font-bold text-accent tabular-nums">{formatAmount(dish.priceValue * line.qty, menu.currency)}</p>
+                    <p className="mt-0.5 text-[14px] font-bold text-accent-ink tabular-nums">{formatAmount(dish.priceValue * line.qty, menu.currency)}</p>
                   ) : null}
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1.5">
@@ -112,7 +112,7 @@ export function BasketSheet({ locale, basket, menu, onBrowse }: BasketSheetProps
                     type="button"
                     onClick={() => remove(line.id)}
                     aria-label={format(basket.remove, { dish: dish.name })}
-                    className="tap -mr-2 flex h-11 w-11 items-center justify-center text-ink/50 hover:text-accent"
+                    className="tap -mr-2 flex h-11 w-11 items-center justify-center text-ink/50 hover:text-accent-ink"
                   >
                     <TrashIcon size={18} />
                   </button>

@@ -48,7 +48,7 @@ export function DishCard({ dish, locale, labels, onOpen, index = 0, variant = 'g
             />
           </span>
           {!dish.available ? (
-            <span className="absolute inset-x-2 bottom-2 rounded-[8px] bg-ink/80 px-2 py-1 text-center text-[11px] font-semibold leading-tight text-white">
+            <span className="absolute inset-x-2 bottom-2 rounded-[8px] bg-night/80 px-2 py-1 text-center text-[11px] font-semibold leading-tight text-on-night">
               {labels.unavailable}
             </span>
           ) : null}

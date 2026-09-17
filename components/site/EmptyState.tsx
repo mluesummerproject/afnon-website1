@@ -6,7 +6,7 @@ type Kind = 'basket' | 'search' | 'menu';
 export function EmptyState({ kind, text, children }: { kind: Kind; text: string; children?: ReactNode }) {
   return (
     <div className="flex flex-col items-center px-6 py-10 text-center">
-      <svg aria-hidden="true" width="96" height="72" viewBox="0 0 96 72" fill="none" className="text-accent">
+      <svg aria-hidden="true" width="96" height="72" viewBox="0 0 96 72" fill="none" className="text-accent-ink">
         <ellipse cx="48" cy="62" rx="30" ry="5" fill="currentColor" opacity="0.06" />
         {kind === 'basket' ? (
           <>

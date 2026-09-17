@@ -112,7 +112,7 @@ export function PhotoSheet({ dish, onClose, labels }: PhotoSheetProps) {
           <Ribbons dish={shown} />
           <FavoriteButton dish={shown} labels={labels} />
           {photos.length > 1 ? (
-            <span className="absolute bottom-2 right-2 rounded-full bg-ink/70 px-2.5 py-1 text-[12px] font-semibold tabular-nums text-white">
+            <span className="absolute bottom-2 right-2 rounded-full bg-night/70 px-2.5 py-1 text-[12px] font-semibold tabular-nums text-on-night">
               {format(labels.photoPosition, { index: index + 1, total: photos.length })}
             </span>
           ) : null}
@@ -136,7 +136,7 @@ export function PhotoSheet({ dish, onClose, labels }: PhotoSheetProps) {
                 aria-label={format(labels.showPhoto, { index: position + 1 })}
                 aria-current={position === index ? 'true' : undefined}
                 onClick={() => rail.current?.scrollTo({ left: position * rail.current.clientWidth, behavior: 'smooth' })}
-                className={`tap relative h-14 w-14 shrink-0 overflow-hidden rounded-[10px] ring-2 ring-offset-1 ${position === index ? 'ring-accent' : 'ring-transparent'}`}
+                className={`tap relative h-14 w-14 shrink-0 overflow-hidden rounded-[10px] ring-2 ring-offset-1 ${position === index ? 'ring-accent-ink' : 'ring-transparent'}`}
               >
                 <DishImage photo={photo} sizes="56px" />
               </button>

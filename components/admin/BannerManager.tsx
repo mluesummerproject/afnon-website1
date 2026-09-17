@@ -144,7 +144,7 @@ export function BannerManager({ banners, categories, linksReady }: { banners: Ba
 
   return (
     <div className="mt-6 space-y-10">
-      <section aria-labelledby="add-banner" className="border-l-2 border-anor bg-surface p-4 md:p-6">
+      <section aria-labelledby="add-banner" className="border-l-2 border-anor-ink bg-surface p-4 md:p-6">
         <h2 id="add-banner" className="font-display text-display-sm text-ink">{t.banners.addHeading}</h2>
         <p className="mt-1 text-body-sm text-ink-secondary">{t.banners.addHint}</p>
         <div className="mt-4 grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
@@ -164,7 +164,7 @@ export function BannerManager({ banners, categories, linksReady }: { banners: Ba
           </div>
           <label
             className={`flex min-h-[3.5rem] cursor-pointer items-center justify-center gap-3 rounded-hair px-6 text-label-lg font-medium uppercase transition-colors ${
-              busy ? 'cursor-wait bg-line text-ink-muted' : 'bg-anor text-paper hover:bg-anor-hover'
+              busy ? 'cursor-wait bg-line text-ink-muted' : 'bg-anor text-on-anor hover:bg-anor-hover'
             }`}
           >
             <svg aria-hidden="true" width="20" height="18" viewBox="0 0 20 18" fill="none" stroke="currentColor" strokeWidth="1.4">
@@ -189,7 +189,7 @@ export function BannerManager({ banners, categories, linksReady }: { banners: Ba
             {upload.stage === 'failed' ? (
               <div className="mt-2 flex items-center justify-between gap-3">
                 <p className="text-micro text-critical">{upload.error}</p>
-                <button type="button" onClick={() => setUpload(null)} className="min-h-[2.75rem] shrink-0 px-3 text-label font-medium uppercase text-anor">
+                <button type="button" onClick={() => setUpload(null)} className="min-h-[2.75rem] shrink-0 px-3 text-label font-medium uppercase text-anor-ink">
                   {t.banners.dismiss}
                 </button>
               </div>
@@ -262,7 +262,7 @@ export function BannerManager({ banners, categories, linksReady }: { banners: Ba
                       disabled={pending}
                       onClick={() => void run(() => setBannerActive(banner.id, !active))}
                       className={`min-h-[2.75rem] flex-1 rounded-hair border px-4 text-label-lg font-medium uppercase disabled:opacity-50 ${
-                        active ? 'border-line-strong bg-surface text-ink' : 'border-anor bg-anor text-paper'
+                        active ? 'border-line-strong bg-surface text-ink' : 'border-anor bg-anor text-on-anor'
                       }`}
                     >
                       {active ? t.banners.hide : t.banners.show}

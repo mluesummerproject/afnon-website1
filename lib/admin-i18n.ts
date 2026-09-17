@@ -39,6 +39,8 @@ const en = {
     signingOut: '…',
     language: 'Panel language',
     switchTo: 'Switch the panel to {language}',
+    toMidnight: 'Switch to Midnight mode',
+    toClassic: 'Switch to Classic mode',
   },
   nav: {
     sections: 'Admin sections',
@@ -183,6 +185,8 @@ const en = {
     tooMany: 'Up to {max} photos at a time — the first {max} were taken.',
     couldNotSave: 'The photo could not be saved.',
     couldNotReplace: 'The photo could not be replaced.',
+    addedOne: '1 photo added to {name}.',
+    addedMany: '{count} photos added to {name}.',
   },
   banners: {
     title: 'Banners',
@@ -505,6 +509,8 @@ const uz: AdminDictionary = {
     signingOut: '…',
     language: 'Panel tili',
     switchTo: 'Panelni {language} tiliga oʻtkazish',
+    toMidnight: 'Tungi rejimga oʻtish',
+    toClassic: 'Klassik rejimga oʻtish',
   },
   nav: {
     sections: 'Panel boʻlimlari',
@@ -649,6 +655,8 @@ const uz: AdminDictionary = {
     tooMany: 'Bir vaqtda {max} tagacha rasm — birinchi {max} tasi olindi.',
     couldNotSave: 'Rasmni saqlab boʻlmadi.',
     couldNotReplace: 'Rasmni almashtirib boʻlmadi.',
+    addedOne: '{name} ga 1 ta rasm qoʻshildi.',
+    addedMany: '{name} ga {count} ta rasm qoʻshildi.',
   },
   banners: {
     title: 'Bannerlar',
@@ -964,6 +972,8 @@ const ru: AdminDictionary = {
     signingOut: '…',
     language: 'Язык панели',
     switchTo: 'Переключить панель на {language}',
+    toMidnight: 'Включить ночной режим',
+    toClassic: 'Включить классический режим',
   },
   nav: {
     sections: 'Разделы панели',
@@ -1108,6 +1118,8 @@ const ru: AdminDictionary = {
     tooMany: 'До {max} фото за раз — взяты первые {max}.',
     couldNotSave: 'Не удалось сохранить фото.',
     couldNotReplace: 'Не удалось заменить фото.',
+    addedOne: 'К блюду «{name}» добавлено 1 фото.',
+    addedMany: 'К блюду «{name}» добавлено фото: {count}.',
   },
   banners: {
     title: 'Баннеры',

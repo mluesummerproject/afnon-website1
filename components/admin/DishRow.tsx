@@ -52,7 +52,7 @@ export function DishRow({ dish, position, isFirst, isLast, reorderable, open, on
             <p className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
               <span className={`font-display text-[1.25rem] leading-tight ${unavailable ? 'text-ink-muted' : 'text-ink'}`}>{name}</span>
               {unavailable ? <span className="label rounded-hair bg-critical/10 px-2 py-1 text-critical">{t.dish.unavailable}</span> : null}
-              {dish.badge?.trim() ? <span className="label rounded-hair bg-anor-tint px-2 py-1 text-anor">{dish.badge.trim()}</span> : null}
+              {dish.badge?.trim() ? <span className="label rounded-hair bg-anor-tint px-2 py-1 text-anor-ink">{dish.badge.trim()}</span> : null}
               {percent !== null ? <span className="label figures rounded-hair bg-positive/15 px-2 py-1 text-positive">−{percent}%</span> : null}
             </p>
             <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-micro text-ink-secondary">
@@ -123,7 +123,7 @@ export function DishRow({ dish, position, isFirst, isLast, reorderable, open, on
       </div>
 
       {open ? (
-        <div id={`editor-${dish.id}`} className="mb-6 space-y-8 border-l-2 border-anor bg-surface p-4 md:p-6">
+        <div id={`editor-${dish.id}`} className="mb-6 space-y-8 border-l-2 border-anor-ink bg-surface p-4 md:p-6">
           <ItemForm item={dish} categories={categories} />
           <ImageManager dishId={dish.id} dishName={name} images={dish.images} />
           <DeleteDish id={dish.id} name={name} photoCount={photoCount} />

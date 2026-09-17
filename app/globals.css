@@ -30,6 +30,10 @@
   --anor-hover: 122 28 42;
   --anor-deep: 70 12 22;
   --anor-tint: 242 236 237;     /* accent at ~8% on white */
+  --anor-ink: 92 18 30;         /* accent used AS text or a line (prices, active tab, rules) */
+  --on-anor: 250 250 248;       /* text sitting on a solid accent fill */
+  --seed: 70 12 22;             /* the ambient drifting seeds */
+  --glint-alpha: 0.65;          /* light sweep across a loading photo */
 
   /* Legacy names used by the staff panel, mapped onto the new system */
   --paper: var(--page);
@@ -64,6 +68,53 @@
   }
 }
 
+/* ==========================================================================
+   Midnight — the same system, re-valued for night. Every colour in the site
+   and the staff panel reads these channels, so this block is the whole theme.
+
+   · Warm charcoal, never blue-black: food photographed in warm light turns
+     grey and flat on a cool dark surface. Cards sit a step lighter than the
+     page so a dish photo has a warm frame rather than a void around it.
+   · The brand red splits into its two jobs. As a FILL (buttons, ribbons,
+     badges) it stays a deep wine that white text still clears 8.8:1 on. As
+     TEXT or a line (prices, the active tab, heading rules) it becomes
+     --anor-ink, a lit pomegranate that clears AA on page, card and fill.
+     In Classic both are the same #5C121E, so Classic is unchanged.
+   · Every text pairing below was checked for WCAG AA (≥4.5:1): ink 14.3,
+     ink-secondary 9.3, ink-muted 6.9, anor-ink 6.7, critical 5.9 — on cards.
+   ========================================================================== */
+:root[data-theme='midnight'] {
+  color-scheme: dark;
+
+  --page: 23 20 19;
+  --card: 36 32 30;
+  --fill: 48 43 40;
+  --placeholder: 46 41 38;
+
+  --ink: 245 240 234;
+  --ink-secondary: 203 195 187;
+  --ink-muted: 176 168 160;
+
+  --line: 54 49 46;
+  --line-strong: 76 70 66;
+
+  --anor: 142 32 48;
+  --anor-hover: 166 42 58;
+  --anor-deep: 104 22 34;
+  --anor-tint: 62 34 38;
+  --anor-ink: 240 138 148;
+  --anor-light: 240 150 158;
+  --on-anor: 255 255 255;
+  --seed: 214 104 116;
+  --glint-alpha: 0.06;
+
+  --night: 18 16 15;
+  --night-soft: 38 34 32;
+  --line-night: 70 64 60;
+  --positive: 118 204 146;
+  --critical: 242 120 118;
+}
+
 @layer base {
   * {
     @apply border-line;
@@ -89,7 +140,7 @@
   }
 
   :focus-visible {
-    outline: 2px solid rgb(var(--anor));
+    outline: 2px solid rgb(var(--anor-ink));
     outline-offset: 2px;
     border-radius: 6px;
   }
@@ -125,7 +176,7 @@
     line-height: 1.4;
   }
   .field:focus {
-    border-color: rgb(var(--anor));
+    border-color: rgb(var(--anor-ink));
   }
   textarea.field {
     @apply py-3;
@@ -282,7 +333,7 @@
   position: absolute;
   inset: -6px;
   border-radius: 999px;
-  background: radial-gradient(circle, rgb(var(--anor) / 0.35) 0%, rgb(var(--anor) / 0) 70%);
+  background: radial-gradient(circle, rgb(var(--anor-ink) / 0.35) 0%, rgb(var(--anor-ink) / 0) 70%);
   pointer-events: none;
   animation: heart-pulse 300ms var(--ease-out) forwards;
 }
@@ -308,7 +359,7 @@
 /* Image: shimmer on the placeholder, 200ms fade to the photo, no layout shift. */
 .shimmer {
   background-color: rgb(var(--placeholder));
-  background-image: linear-gradient(100deg, transparent 20%, rgb(255 255 255 / 0.65) 50%, transparent 80%);
+  background-image: linear-gradient(100deg, transparent 20%, rgb(255 255 255 / var(--glint-alpha)) 50%, transparent 80%);
   background-size: 200% 100%;
   animation: shimmer 1.3s linear infinite;
 }
@@ -393,7 +444,7 @@
   height: 2px;
   width: 40px;
   margin-top: 10px;
-  background: rgb(var(--anor));
+  background: rgb(var(--anor-ink));
   transform-origin: left center;
   transform: scaleX(0);
   transition: transform 400ms var(--ease-out) 120ms;
@@ -534,7 +585,7 @@ dialog::backdrop {
   display: block;
   width: var(--size);
   height: calc(var(--size) * 1.3);
-  color: rgb(var(--anor-deep));
+  color: rgb(var(--seed));
   animation: seed-spin var(--dur) linear var(--delay) infinite;
 }
 @keyframes seed-spin {
@@ -547,3 +598,16 @@ dialog::backdrop {
      does not freeze mid-fade as a row of specks. */
   .seed-gutter { display: none; }
 }
+
+/* ==========================================================================
+   Theme switch — the new theme spreads from the sun/moon button as a growing
+   circle (ThemeToggle drives the clip-path). The browser's default
+   cross-fade is switched off so only the circle is seen.
+   ========================================================================== */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) { z-index: 1; }
+::view-transition-new(root) { z-index: 2; }

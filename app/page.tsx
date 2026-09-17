@@ -20,6 +20,7 @@ import { getActiveBanners, heroSlides } from '@/lib/banners';
 import { getLocaleAndDictionary } from '@/lib/locale';
 import { getMenu } from '@/lib/menu';
 import { sectionsFor } from '@/lib/sections';
+import { getTheme } from '@/lib/theme-server';
 import { getSiteSettings } from '@/lib/settings';
 import { brand } from '@/lib/site';
 import { getActiveVideos } from '@/lib/videos';
@@ -74,6 +75,8 @@ export default async function HomePage() {
         phoneHref={phoneHref}
         nav={dict.nav}
         sections={sections}
+        theme={getTheme()}
+        themeLabels={dict.theme}
         labels={{
           home: dict.a11y.siteNav,
           cta: dict.header.cta,

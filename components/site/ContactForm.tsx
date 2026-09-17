@@ -46,7 +46,7 @@ function ContactFormInstance({ token, copy, callHref, callLabel, onReset }: Cont
     // even if the animation never runs (e.g. a hydration hiccup).
     return (
       <motion.div role="status" initial={{ y: 12 }} animate={{ y: 0 }} transition={{ duration: 0.7, ease }}>
-        <p className="label flex items-center gap-3 text-anor">
+        <p className="label flex items-center gap-3 text-anor-ink">
           <motion.span
             aria-hidden="true"
             className="block h-px w-8 origin-left bg-anor"
@@ -64,7 +64,7 @@ function ContactFormInstance({ token, copy, callHref, callLabel, onReset }: Cont
           {callHref ? (
             <a
               href={callHref}
-              className="inline-flex min-h-[3.25rem] items-center justify-center rounded-hair bg-anor px-6 text-label-lg font-medium uppercase text-paper transition-colors duration-base ease-brand hover:bg-anor-hover"
+              className="inline-flex min-h-[3.25rem] items-center justify-center rounded-hair bg-anor px-6 text-label-lg font-medium uppercase text-on-anor transition-colors duration-base ease-brand hover:bg-anor-hover"
             >
               {callLabel}
             </a>
@@ -112,9 +112,9 @@ function ContactFormInstance({ token, copy, callHref, callLabel, onReset }: Cont
             role="alert"
             initial={{ y: -6 }}
             animate={{ y: 0 }}
-            className="flex gap-3 border-l-2 border-anor bg-anor-tint px-4 py-3 text-body-sm text-ink outline-none"
+            className="flex gap-3 border-l-2 border-anor-ink bg-anor-tint px-4 py-3 text-body-sm text-ink outline-none"
           >
-            <span aria-hidden="true" className="font-medium text-anor">!</span>
+            <span aria-hidden="true" className="font-medium text-anor-ink">!</span>
             {summary}
           </motion.p>
         ) : null}
@@ -183,7 +183,7 @@ function Field({
 }) {
   const id = `contact-${name}`;
   const describedBy = [hint ? `${id}-hint` : null, invalid ? `${id}-error` : null].filter(Boolean).join(' ') || undefined;
-  const classes = `field mt-2.5 border-transparent ${invalid ? 'ring-2 ring-anor' : ''}`;
+  const classes = `field mt-2.5 border-transparent ${invalid ? 'ring-2 ring-anor-ink' : ''}`;
 
   return (
     <div>
@@ -223,7 +223,7 @@ function Field({
         </p>
       ) : null}
       {invalid ? (
-        <p id={`${id}-error`} className="mt-2 flex gap-2 text-micro text-anor">
+        <p id={`${id}-error`} className="mt-2 flex gap-2 text-micro text-anor-ink">
           <span aria-hidden="true">!</span>
           {error}
         </p>
@@ -239,7 +239,7 @@ function Submit({ label, pendingLabel }: { label: string; pendingLabel: string }
       type="submit"
       disabled={pending}
       aria-busy={pending}
-      className="group inline-flex min-h-[3.25rem] w-full shrink-0 items-center justify-center gap-3 rounded-hair bg-anor px-8 text-label-lg font-medium uppercase text-paper transition-colors duration-base ease-brand hover:bg-anor-hover disabled:cursor-wait disabled:opacity-70 sm:w-auto"
+      className="group inline-flex min-h-[3.25rem] w-full shrink-0 items-center justify-center gap-3 rounded-hair bg-anor px-8 text-label-lg font-medium uppercase text-on-anor transition-colors duration-base ease-brand hover:bg-anor-hover disabled:cursor-wait disabled:opacity-70 sm:w-auto"
     >
       {pending ? pendingLabel : label}
       {!pending ? (

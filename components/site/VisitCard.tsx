@@ -48,7 +48,7 @@ export function VisitCard({ visit, settings }: { visit: Dictionary['visit']; set
     <section id="visit" aria-labelledby="visit-heading" className="shell scroll-mt-16 pt-10">
       <SectionHeading id="visit-heading">{visit.heading}</SectionHeading>
       <div className="reveal mt-3 rounded-[14px] bg-card p-4 shadow-card md:p-6">
-        <span className="inline-flex items-center gap-2 rounded-full bg-accent/[0.08] px-3 py-1.5 text-[13px] font-semibold text-accent">
+        <span className="inline-flex items-center gap-2 rounded-full bg-accent/[0.08] px-3 py-1.5 text-[13px] font-semibold text-accent-ink">
           <span className="pulse-dot relative block h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />
           {visit.badge}
         </span>
@@ -107,7 +107,7 @@ export function VisitCard({ visit, settings }: { visit: Dictionary['visit']; set
                     target="_blank"
                     rel="noreferrer noopener"
                     aria-label={format(visit.onPlatform, { platform: entry.label })}
-                    className="tap flex h-11 w-11 items-center justify-center rounded-full border border-line text-ink/70 transition-colors hover:border-accent hover:text-accent"
+                    className="tap flex h-11 w-11 items-center justify-center rounded-full border border-line text-ink/70 transition-colors hover:border-accent-ink hover:text-accent-ink"
                   >
                     <Icon size={20} />
                   </a>
