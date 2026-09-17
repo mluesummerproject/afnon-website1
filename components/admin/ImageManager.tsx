@@ -112,7 +112,7 @@ export function ImageManager({ dishId, dishName, images }: { dishId: number; dis
       if (await processOne(item)) added += 1;
     }
     setBusy(false);
-    if (added > 0) toast({ ok: true, message: `${added} photo${added === 1 ? '' : 's'} added to ${dishName}.` });
+    if (added > 0) toast({ ok: true, message: format(added === 1 ? t.photos.addedOne : t.photos.addedMany, { count: added, name: dishName }) });
     if (added < items.length) toast({ ok: false, message: t.photos.someFailed });
     window.setTimeout(() => setQueue((list) => list.filter((entry) => entry.stage !== 'done')), 2500);
   };
@@ -124,7 +124,7 @@ export function ImageManager({ dishId, dishName, images }: { dishId: number; dis
 
     const items: QueueItem[] = files.slice(0, 12).map((file, index) => ({
       key: `${Date.now()}-${index}-${file.name}`,
-      name: file.name || `Photo ${index + 1}`,
+      name: file.name || format(t.photos.photoOf, { index: index + 1, total: files.length }),
       stage: 'waiting',
       progress: 0,
       file,
@@ -232,7 +232,7 @@ export function ImageManager({ dishId, dishName, images }: { dishId: number; dis
                 <div className="mt-2 flex items-center justify-between gap-3">
                   <p className="text-micro text-critical">{item.error}</p>
                   <button type="button" onClick={() => retry(item)} disabled={busy} className="min-h-[2.75rem] shrink-0 px-3 text-label font-medium uppercase text-anor disabled:opacity-40">
-                    Retry
+                    {t.photos.retry}
                   </button>
                 </div>
               )}
