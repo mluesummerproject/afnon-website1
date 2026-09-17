@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { requireAdmin } from '@/lib/admin';
 import { labelsByCategory, orderCategoryGroups } from '@/lib/categories';
 import { groupByCategory, sortForAdmin } from '@/lib/ordering';
 import { rowsToStored, type StoredSettings } from '@/lib/settings-core';
@@ -13,8 +14,17 @@ import { format } from '@/lib/i18n';
 
 const t = () => getAdminDict();
 
+/**
+ * Every reader below starts with requireAdmin(). The dashboard layout also
+ * checks the session, but in the App Router a layout and its page render in
+ * parallel: a layout's redirect does not stop the page from running its own
+ * queries and streaming the result. The check therefore lives here, next to
+ * the data, so no staff-only row can ever be read for a signed-out request.
+ */
+
 /** Every dish with its photos, in exactly the order guests see. */
 export async function getAdminMenu(): Promise<{ dishes: AdminDish[]; error?: string }> {
+  requireAdmin();
   if (!isAdminSupabaseConfigured) return { dishes: [], error: t().toast.missingKey };
 
   try {
@@ -52,6 +62,7 @@ export async function getAdminMenu(): Promise<{ dishes: AdminDish[]; error?: str
 }
 
 export async function getAdminVideos(): Promise<{ videos: PromoVideo[]; error?: string }> {
+  requireAdmin();
   if (!isAdminSupabaseConfigured) return { videos: [], error: t().toast.missingKey };
 
   const { data, error } = await getSupabaseAdmin()
@@ -70,6 +81,7 @@ export async function getMessages(
   filter: 'all' | 'unread',
   page: number,
 ): Promise<{ messages: Message[]; total: number; error?: string }> {
+  requireAdmin();
   if (!isAdminSupabaseConfigured) return { messages: [], total: 0, error: t().toast.missingKey };
 
   const from = (Math.max(1, page) - 1) * MESSAGES_PAGE_SIZE;
@@ -88,6 +100,7 @@ export async function getMessages(
 }
 
 export async function getUnreadCount(): Promise<number> {
+  requireAdmin();
   if (!isAdminSupabaseConfigured) return 0;
   const { count } = await getSupabaseAdmin()
     .from('messages')
@@ -100,6 +113,7 @@ export type CategoryOverview = { category: string; label: CategoryLabelRow | nul
 
 /** Every category that has dishes or a label row, in public display order. */
 export async function getCategoryOverview(): Promise<{ categories: CategoryOverview[]; error?: string }> {
+  requireAdmin();
   if (!isAdminSupabaseConfigured) return { categories: [], error: t().toast.missingKey };
   const supabase = getSupabaseAdmin();
   const [items, labels] = await Promise.all([
@@ -127,12 +141,14 @@ export async function getCategoryOverview(): Promise<{ categories: CategoryOverv
  * a control that cannot save.
  */
 export async function bannerLinksAvailable(): Promise<boolean> {
+  requireAdmin();
   if (!isAdminSupabaseConfigured) return false;
   const { error } = await getSupabaseAdmin().from('banners').select('link_type').limit(1);
   return !error;
 }
 
 export async function getAdminBanners(): Promise<{ banners: Banner[]; error?: string }> {
+  requireAdmin();
   if (!isAdminSupabaseConfigured) return { banners: [], error: t().toast.missingKey };
   const { data, error } = await getSupabaseAdmin()
     .from('banners')
@@ -144,6 +160,7 @@ export async function getAdminBanners(): Promise<{ banners: Banner[]; error?: st
 }
 
 export async function getStoredSettings(): Promise<{ settings: StoredSettings; error?: string }> {
+  requireAdmin();
   if (!isAdminSupabaseConfigured) return { settings: {}, error: t().toast.missingKey };
   const { data, error } = await getSupabaseAdmin().from('site_settings').select('key, value');
   if (error) return { settings: {}, error: format(t().toast.loadSettings, { reason: error.message }) };
