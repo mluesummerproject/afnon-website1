@@ -116,6 +116,7 @@ const ORDER_COLUMNS =
 
 /** Orders newest first, optionally one status only. Read only here, with the service role. */
 export async function getOrders(filter: OrderStatus | 'all', page: number): Promise<{ orders: Order[]; total: number; error?: string }> {
+  requireAdmin();
   if (!isAdminSupabaseConfigured) return { orders: [], total: 0, error: t().toast.missingKey };
 
   const from = (Math.max(1, page) - 1) * ORDERS_PAGE_SIZE;
@@ -134,6 +135,7 @@ export async function getOrders(filter: OrderStatus | 'all', page: number): Prom
 
 /** How many orders sit in each status — real counts, zero included. */
 export async function getOrderCounts(): Promise<Record<OrderStatus, number>> {
+  requireAdmin();
   const zero = { new: 0, confirmed: 0, completed: 0, cancelled: 0 };
   if (!isAdminSupabaseConfigured) return zero;
   const supabase = getSupabaseAdmin();
@@ -145,6 +147,7 @@ export async function getOrderCounts(): Promise<Record<OrderStatus, number>> {
 
 /** Orders nobody has handled yet — the Orders tab badge. */
 export async function getNewOrderCount(): Promise<number> {
+  requireAdmin();
   if (!isAdminSupabaseConfigured) return 0;
   const { count } = await getSupabaseAdmin().from('orders').select('id', { count: 'exact', head: true }).eq('status', 'new');
   return count ?? 0;
