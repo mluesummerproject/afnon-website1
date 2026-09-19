@@ -26,20 +26,26 @@ export const getActiveBanners = cache(async (): Promise<Banner[]> => {
   return ((data ?? []) as Banner[]).filter((banner) => isRenderableImage(banner.image_url));
 });
 
+/** The "Oshpaz tanlovi" (Chef's picks) section of the menu — where a banner with no link of its own leads. */
+export const PICKS_ELEMENT_ID = 'picks';
+
 /**
  * Turns the banners staff saved into hero slides, resolving each link once,
  * on the server.
  *
- * A category link only survives if that category is actually on the page:
+ * A link staff configured (a category, or an external page) always wins. A
+ * category link only survives if that category is actually on the page:
  * pointing a guest at a heading that is not there (because every dish in it
- * was hidden, say) is worse than a banner that simply does not react.
+ * was hidden, say) falls back to the Chef's picks rather than a dead banner.
+ * A banner with no link at all leads to the Chef's picks too, so every tap on
+ * the hero goes somewhere.
  */
 export function heroSlides(banners: Banner[], categories: { key: string; slug: string }[]): HeroSlide[] {
   const slugByCategory = new Map(categories.map((category) => [category.key.trim(), category.slug]));
 
   return banners.map((banner) => {
     const value = banner.link_value?.trim();
-    let target: HeroSlide['target'] = null;
+    let target: HeroSlide['target'] = { kind: 'section', elementId: PICKS_ELEMENT_ID };
 
     if (banner.link_type === 'external' && value && /^https:\/\/\S+$/.test(value)) {
       target = { kind: 'external', href: value };

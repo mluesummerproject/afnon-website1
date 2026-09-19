@@ -4,7 +4,7 @@ import { useReducedMotion } from 'framer-motion';
 import Image from 'next/image';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { MENU_OFFSET, scrollToElement } from '@/lib/client-scroll';
+import { HEADER_HEIGHT, MENU_OFFSET, scrollToElement } from '@/lib/client-scroll';
 import { format, type Dictionary } from '@/lib/i18n';
 import { isOptimizableImage } from '@/lib/menu-format';
 
@@ -13,7 +13,7 @@ export type HeroSlide = {
   imageUrl: string;
   title: string | null;
   /** Resolved on the server; null when the banner is just a picture. */
-  target: { kind: 'category'; elementId: string } | { kind: 'external'; href: string } | null;
+  target: { kind: 'category'; elementId: string } | { kind: 'section'; elementId: string } | { kind: 'external'; href: string } | null;
 };
 
 /**
@@ -85,9 +85,11 @@ export function HeroCarousel({ slides, labels }: { slides: HeroSlide[]; labels: 
     lastInteraction.current = Date.now();
   };
 
-  const onCategory = (elementId: string) => {
-    const target = document.getElementById(elementId);
-    if (target) scrollToElement(target, MENU_OFFSET);
+  const onTarget = (kind: 'category' | 'section', elementId: string) => {
+    // A section (the Chef's picks) has no category strip above it; if it is not on the page right now
+    // (a search is filtering the menu, say) the menu itself is the next best place.
+    const target = document.getElementById(elementId) ?? (kind === 'section' ? document.getElementById('menu') : null);
+    if (target) scrollToElement(target, kind === 'section' ? HEADER_HEIGHT + 8 : MENU_OFFSET);
   };
 
   return (
@@ -148,8 +150,9 @@ export function HeroCarousel({ slides, labels }: { slides: HeroSlide[]; labels: 
               ) : (
                 <button
                   type="button"
-                  onClick={() => slide.target && slide.target.kind === 'category' && onCategory(slide.target.elementId)}
-                  className={`${frame} tap block text-left`}
+                  aria-label={slide.title ?? labels.viewPicks}
+                  onClick={() => slide.target && slide.target.kind !== 'external' && onTarget(slide.target.kind, slide.target.elementId)}
+                  className={`${frame} tap block cursor-pointer text-left`}
                 >
                   {media}
                 </button>

@@ -133,7 +133,7 @@ export function MenuExplorer({ status, categories, locale, search, picksHeading,
       </div>
 
       {status === 'ok' && !searching && picks.length > 0 ? (
-        <section aria-labelledby="picks-heading" className="pt-6">
+        <section id="picks" aria-labelledby="picks-heading" className="scroll-mt-14 pt-6">
           <h2 id="picks-heading" className="shell text-section">
             {picksHeading}
           </h2>
