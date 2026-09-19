@@ -547,3 +547,27 @@ dialog::backdrop {
      does not freeze mid-fade as a row of specks. */
   .seed-gutter { display: none; }
 }
+
+/* ==========================================================================
+   Staff panel — press feedback on every button, the same scale(0.97) the
+   customer site's .tap gives, without touching each button's own classes.
+   ========================================================================== */
+.admin-shell button,
+.admin-shell [role='button'] {
+  transition:
+    transform 100ms var(--ease-out),
+    color 180ms var(--ease-standard),
+    background-color 180ms var(--ease-standard),
+    border-color 180ms var(--ease-standard),
+    opacity 180ms var(--ease-standard);
+}
+.admin-shell button:not(:disabled):active,
+.admin-shell a[class*='rounded-hair']:active {
+  transform: scale(0.97);
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-shell button:not(:disabled):active,
+  .admin-shell a[class*='rounded-hair']:active {
+    transform: none;
+  }
+}

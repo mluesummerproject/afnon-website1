@@ -1,12 +1,15 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import { useState } from 'react';
 
 import { deleteCategoryLabel, moveCategoryFromTab, saveCategoryLabel } from '@/app/admin/category-actions';
 import { ActionForm } from '@/components/admin/ActionForm';
+import { AdminEmpty } from '@/components/admin/AdminEmpty';
 import { useT } from '@/components/admin/AdminLangProvider';
 import { Chevron } from '@/components/admin/AdminMenu';
 import { SubmitButton } from '@/components/admin/SubmitButton';
+import { useReorderList } from '@/components/admin/useReorderList';
 import type { CategoryOverview } from '@/lib/admin-data';
 import { format } from '@/lib/i18n';
 
@@ -17,14 +20,15 @@ import { format } from '@/lib/i18n';
  */
 export function CategoryManager({ categories }: { categories: CategoryOverview[] }) {
   const t = useT();
+  const { list, move, reset } = useReorderList(categories, (entry) => entry.category);
   return (
     <div className="mt-6">
-      {categories.length === 0 ? (
-        <p className="mt-6 text-body-sm text-ink-secondary">{t.categories.empty}</p>
+      {list.length === 0 ? (
+        <AdminEmpty>{t.categories.empty}</AdminEmpty>
       ) : (
         <ul className="mt-2 divide-y divide-line border-t border-line-strong">
-          {categories.map((entry, index) => (
-            <CategoryRow key={entry.category} entry={entry} index={index} isFirst={index === 0} isLast={index === categories.length - 1} />
+          {list.map((entry, index) => (
+            <CategoryRow key={entry.category} entry={entry} index={index} isFirst={index === 0} isLast={index === list.length - 1} onMove={move} onMoveFailed={reset} />
           ))}
         </ul>
       )}
@@ -32,13 +36,27 @@ export function CategoryManager({ categories }: { categories: CategoryOverview[]
   );
 }
 
-function CategoryRow({ entry, index, isFirst, isLast }: { entry: CategoryOverview; index: number; isFirst: boolean; isLast: boolean }) {
+function CategoryRow({
+  entry,
+  index,
+  isFirst,
+  isLast,
+  onMove,
+  onMoveFailed,
+}: {
+  entry: CategoryOverview;
+  index: number;
+  isFirst: boolean;
+  isLast: boolean;
+  onMove: (category: string, direction: 'up' | 'down') => void;
+  onMoveFailed: () => void;
+}) {
   const t = useT();
   const [confirming, setConfirming] = useState(false);
   const sortOrder = entry.label?.sort_order ?? (index + 1) * 10;
 
   return (
-    <li className="py-5">
+    <motion.li layout="position" transition={{ type: 'spring', stiffness: 420, damping: 38 }} className="-mx-3 rounded-hair px-3 py-5 transition-colors duration-quick hover:bg-surface">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="figures label w-5 shrink-0 text-ink-muted">{index + 1}</span>
@@ -48,17 +66,17 @@ function CategoryRow({ entry, index, isFirst, isLast }: { entry: CategoryOvervie
           </span>
         </div>
         <div className="flex gap-1.5">
-          <ActionForm action={moveCategoryFromTab}>
+          <ActionForm action={moveCategoryFromTab} onResult={(result) => (result.ok ? undefined : onMoveFailed())}>
             <input type="hidden" name="category" value={entry.category} />
             <input type="hidden" name="direction" value="up" />
-            <SubmitButton variant="icon" disabled={isFirst} aria-label={format(t.categories.moveUp, { category: entry.category })}>
+            <SubmitButton variant="icon" disabled={isFirst} onClick={() => onMove(entry.category, 'up')} aria-label={format(t.categories.moveUp, { category: entry.category })}>
               <Chevron direction="up" />
             </SubmitButton>
           </ActionForm>
-          <ActionForm action={moveCategoryFromTab}>
+          <ActionForm action={moveCategoryFromTab} onResult={(result) => (result.ok ? undefined : onMoveFailed())}>
             <input type="hidden" name="category" value={entry.category} />
             <input type="hidden" name="direction" value="down" />
-            <SubmitButton variant="icon" disabled={isLast} aria-label={format(t.categories.moveDown, { category: entry.category })}>
+            <SubmitButton variant="icon" disabled={isLast} onClick={() => onMove(entry.category, 'down')} aria-label={format(t.categories.moveDown, { category: entry.category })}>
               <Chevron direction="down" />
             </SubmitButton>
           </ActionForm>
@@ -86,7 +104,7 @@ function CategoryRow({ entry, index, isFirst, isLast }: { entry: CategoryOvervie
             />
           </label>
         ))}
-        <SubmitButton variant="secondary" pendingLabel={t.categories.saving} className="shrink-0">
+        <SubmitButton variant="secondary" pendingLabel={t.categories.saving} savedLabel={t.toast.savedShort} className="shrink-0">
           {t.categories.saveNames}
         </SubmitButton>
       </ActionForm>
@@ -111,6 +129,6 @@ function CategoryRow({ entry, index, isFirst, isLast }: { entry: CategoryOvervie
           )}
         </div>
       ) : null}
-    </li>
+    </motion.li>
   );
 }

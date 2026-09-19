@@ -1,10 +1,13 @@
 'use client';
 
-import { useCallback, useRef, type ReactNode, type RefObject } from 'react';
+import { createContext, useCallback, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useFormState } from 'react-dom';
 
 import { toast } from '@/components/admin/toast';
 import type { ActionResult } from '@/lib/admin-types';
+
+/** Timestamp of the last successful submit in the nearest ActionForm (0 = none yet). SubmitButton reads it to flash "Saved". */
+export const SavedContext = createContext(0);
 
 type ActionFormProps = {
   action: (previous: ActionResult, formData: FormData) => Promise<ActionResult>;
@@ -26,12 +29,14 @@ type ActionFormProps = {
 export function ActionForm({ action, children, className, formRef, onResult }: ActionFormProps) {
   const latest = useRef(onResult);
   latest.current = onResult;
+  const [savedAt, setSavedAt] = useState(0);
 
   const report = useCallback(
     async (previous: ActionResult, formData: FormData) => {
       const result = await action(previous, formData);
       if (result) {
         toast({ ok: result.ok, message: result.message });
+        if (result.ok) setSavedAt(Date.now());
         latest.current?.(result);
       }
       return result;
@@ -42,8 +47,10 @@ export function ActionForm({ action, children, className, formRef, onResult }: A
   const [, formAction] = useFormState(report, null);
 
   return (
-    <form ref={formRef} action={formAction} className={className}>
-      {children}
-    </form>
+    <SavedContext.Provider value={savedAt}>
+      <form ref={formRef} action={formAction} className={className}>
+        {children}
+      </form>
+    </SavedContext.Provider>
   );
 }

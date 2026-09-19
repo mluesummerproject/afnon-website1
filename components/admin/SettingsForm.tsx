@@ -167,7 +167,7 @@ export function SettingsForm({ settings }: { settings: StoredSettings }) {
         </div>
       </fieldset>
 
-      <SubmitButton pendingLabel={t.settings.saving} className="min-h-[3.25rem] w-full md:w-auto">
+      <SubmitButton pendingLabel={t.settings.saving} savedLabel={t.toast.savedShort} className="min-h-[3.25rem] w-full md:w-auto">
         {t.settings.save}
       </SubmitButton>
     </ActionForm>

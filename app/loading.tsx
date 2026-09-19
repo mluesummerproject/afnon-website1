@@ -1,8 +1,25 @@
-/** Streamed while the menu is read: same geometry as the real page, so nothing jumps. */
+import { AnorMark } from '@/components/ui/AnorMark';
+import { getLocaleAndDictionary } from '@/lib/locale';
+import { brand } from '@/lib/site';
+
+/**
+ * Streamed while the menu is read: same geometry as the real page, so nothing
+ * jumps — and carrying the house mark and wordmark in the header's own spot,
+ * so even a slow first paint is unmistakably Afnon.
+ */
 export default function Loading() {
+  const { dict } = getLocaleAndDictionary();
   return (
     <div aria-busy="true" className="min-h-[100svh]">
-      <div className="h-14" />
+      <span role="status" className="sr-only">
+        {dict.a11y.loading}
+      </span>
+      <div className="h-14 border-b border-transparent">
+        <div className="shell flex h-full items-center gap-2">
+          <AnorMark className="h-6 w-auto text-accent" />
+          <span className="font-wordmark text-[26px] leading-none text-ink">{brand.name}</span>
+        </div>
+      </div>
       <div className="shell pt-3">
         <div className="shimmer h-11 rounded-[12px]" />
         <div className="shimmer mt-6 h-5 w-40 rounded-md" />

@@ -34,8 +34,8 @@ export function AdminLanguageSwitch() {
             aria-pressed={active}
             aria-label={format(t.shell.switchTo, { language: localeMeta[code].name })}
             onClick={() => choose(code)}
-            className={`min-h-[2.25rem] min-w-[2.25rem] rounded-hair px-1.5 text-label font-medium uppercase transition-colors duration-quick ${
-              active ? 'bg-ink text-paper' : 'text-ink-secondary hover:text-ink'
+            className={`tap min-h-[2.25rem] min-w-[2.25rem] rounded-hair px-1.5 text-label font-medium uppercase transition-colors duration-quick ${
+              active ? 'bg-anor text-paper' : 'text-ink-secondary hover:bg-anor-tint/60 hover:text-ink'
             }`}
           >
             {localeMeta[code].short}

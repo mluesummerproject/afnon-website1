@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { deleteTable, setTableActive } from '@/app/admin/table-actions';
 import { useT } from '@/components/admin/AdminLangProvider';
@@ -14,7 +14,26 @@ export function TableRow({ table }: { table: RestaurantTable }) {
   const t = useT();
   const [pending, run] = useAdminAction();
   const [confirming, setConfirming] = useState(false);
+  const [highlighted, setHighlighted] = useState(false);
   const active = table.is_active !== false;
+
+  // Arriving from a feedback entry (/admin/tables#table-{id}) lights this row up for a moment. CSS :target
+  // does not update on Next's client-side navigations, so the URL hash is read here instead.
+  useEffect(() => {
+    let timer = 0;
+    const check = () => {
+      if (window.location.hash !== `#table-${table.id}`) return;
+      setHighlighted(true);
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => setHighlighted(false), 2600);
+    };
+    check();
+    window.addEventListener('hashchange', check);
+    return () => {
+      window.removeEventListener('hashchange', check);
+      window.clearTimeout(timer);
+    };
+  }, [table.id]);
 
   const copyLink = async () => {
     try {
@@ -26,7 +45,7 @@ export function TableRow({ table }: { table: RestaurantTable }) {
   };
 
   return (
-    <li className="flex flex-col gap-4 border-b border-line py-5 sm:flex-row sm:items-center">
+    <li id={`table-${table.id}`} className={`-mx-3 flex scroll-mt-40 flex-col gap-4 rounded-hair border-b border-line px-3 py-5 transition-colors duration-base ${highlighted ? 'bg-anor-tint' : 'hover:bg-surface'} sm:flex-row sm:items-center`}>
       <div className="flex shrink-0 items-center justify-center rounded-hair border border-line bg-paper p-2">
         <TableQr token={table.token} size={88} />
       </div>

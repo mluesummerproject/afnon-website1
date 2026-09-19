@@ -1,5 +1,6 @@
 'use client';
 
+import { LayoutGroup, motion } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -23,6 +24,7 @@ export function AdminNav({ unread, newOrders }: { unread: number; newOrders: num
   return (
     <nav aria-label={t.nav.sections} className="shell">
       <ul className="flex gap-1 overflow-x-auto [scrollbar-width:none] md:gap-2 [&::-webkit-scrollbar]:hidden">
+        <LayoutGroup id="admin-nav">
         {tabs.map((tab) => (
           <li key={tab.href} className="shrink-0">
             <Link
@@ -40,13 +42,29 @@ export function AdminNav({ unread, newOrders }: { unread: number; newOrders: num
                   <span className="sr-only"> {tab.badgeLabel}</span>
                 </span>
               ) : null}
-              <span
-                aria-hidden="true"
-                className={`absolute inset-x-3 bottom-0 h-0.5 bg-anor transition-opacity duration-quick ${tab.active ? 'opacity-100' : 'opacity-0'}`}
-              />
+              {tab.active ? (
+                // One shared underline slides between tabs — the same layoutId pattern as the site's own nav.
+                <motion.span
+                  layoutId="admin-nav-indicator"
+                  aria-hidden="true"
+                  className="absolute inset-x-3 bottom-0 h-0.5 bg-anor"
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                />
+              ) : null}
             </Link>
           </li>
         ))}
+        </LayoutGroup>
+        {/* The header's "view site" link is desktop-only; on a phone it lives at the end of the tab row. */}
+        <li className="shrink-0 lg:hidden">
+          <Link
+            href="/"
+            target="_blank"
+            className="tap flex min-h-[3rem] items-center justify-center gap-1.5 whitespace-nowrap px-3.5 text-label-lg font-medium uppercase text-ink-secondary hover:text-ink"
+          >
+            {t.shell.viewSite}
+          </Link>
+        </li>
       </ul>
     </nav>
   );

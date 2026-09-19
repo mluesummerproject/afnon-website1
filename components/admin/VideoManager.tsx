@@ -1,15 +1,18 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import { useState } from 'react';
 
 import { deleteVideo, finalizeVideoUpload, moveVideo, requestVideoUpload, setVideoActive, updateVideoTitle } from '@/app/admin/media-actions';
 import { ActionForm } from '@/components/admin/ActionForm';
+import { AdminEmpty } from '@/components/admin/AdminEmpty';
 import { useT } from '@/components/admin/AdminLangProvider';
 import { Chevron } from '@/components/admin/AdminMenu';
 import { SubmitButton } from '@/components/admin/SubmitButton';
 import { toast } from '@/components/admin/toast';
 import { uploadToSignedUrl } from '@/components/admin/upload';
 import { useAdminAction } from '@/components/admin/useAdminAction';
+import { useReorderList } from '@/components/admin/useReorderList';
 import { format } from '@/lib/i18n';
 import { formatBytes, isVideoMime, MAX_VIDEO_BYTES, VIDEO_TYPES } from '@/lib/media';
 import type { PromoVideo } from '@/lib/types';
@@ -37,6 +40,7 @@ export function VideoManager({ videos, maxActive }: { videos: PromoVideo[]; maxA
   const [upload, setUpload] = useState<Upload | null>(null);
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [pending, run] = useAdminAction();
+  const { list: ordered, move, reset } = useReorderList(videos, (video) => video.id);
   const busy = upload !== null && upload.stage !== 'failed';
   const activeCount = videos.filter((video) => video.is_active).length;
 
@@ -153,13 +157,13 @@ export function VideoManager({ videos, maxActive }: { videos: PromoVideo[]; maxA
         </div>
 
         {videos.length === 0 ? (
-          <p className="mt-6 text-body-sm text-ink-secondary">{t.films.empty}</p>
+          <AdminEmpty>{t.films.empty}</AdminEmpty>
         ) : (
           <ul>
-            {videos.map((video, index) => {
+            {ordered.map((video, index) => {
               const active = video.is_active !== false;
               return (
-                <li key={video.id} className="flex flex-col gap-4 border-b border-line py-5 sm:flex-row">
+                <motion.li key={video.id} layout="position" transition={{ type: 'spring', stiffness: 420, damping: 38 }} className="-mx-3 flex flex-col gap-4 rounded-hair border-b border-line px-3 py-5 transition-colors duration-quick hover:bg-surface sm:flex-row">
                   <div className="flex gap-4 sm:contents">
                     <span className="figures label w-5 shrink-0 pt-1 text-ink-muted">{index + 1}</span>
                     <video
@@ -189,7 +193,7 @@ export function VideoManager({ videos, maxActive }: { videos: PromoVideo[]; maxA
                           placeholder={t.films.noTitle}
                           className="field border-line-strong"
                         />
-                        <SubmitButton variant="secondary" pendingLabel={t.films.saving} className="shrink-0">
+                        <SubmitButton variant="secondary" pendingLabel={t.films.saving} savedLabel={t.toast.savedShort} className="shrink-0">
                           {t.films.saveTitle}
                         </SubmitButton>
                       </ActionForm>
@@ -211,7 +215,10 @@ export function VideoManager({ videos, maxActive }: { videos: PromoVideo[]; maxA
                       <button
                         type="button"
                         disabled={pending || index === 0}
-                        onClick={() => void run(() => moveVideo(video.id, 'up'))}
+                        onClick={() => {
+                          move(video.id, 'up');
+                          void run(() => moveVideo(video.id, 'up')).then((result) => (result?.ok ? undefined : reset()));
+                        }}
                         aria-label={t.films.moveUp}
                         className="flex h-11 w-11 items-center justify-center rounded-hair border border-line bg-surface text-ink-secondary disabled:opacity-30"
                       >
@@ -219,8 +226,11 @@ export function VideoManager({ videos, maxActive }: { videos: PromoVideo[]; maxA
                       </button>
                       <button
                         type="button"
-                        disabled={pending || index === videos.length - 1}
-                        onClick={() => void run(() => moveVideo(video.id, 'down'))}
+                        disabled={pending || index === ordered.length - 1}
+                        onClick={() => {
+                          move(video.id, 'down');
+                          void run(() => moveVideo(video.id, 'down')).then((result) => (result?.ok ? undefined : reset()));
+                        }}
                         aria-label={t.films.moveDown}
                         className="flex h-11 w-11 items-center justify-center rounded-hair border border-line bg-surface text-ink-secondary disabled:opacity-30"
                       >
@@ -247,7 +257,7 @@ export function VideoManager({ videos, maxActive }: { videos: PromoVideo[]; maxA
                       </button>
                     )}
                   </div>
-                </li>
+                </motion.li>
               );
             })}
           </ul>

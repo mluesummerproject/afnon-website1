@@ -1,12 +1,16 @@
 import type { ReactNode } from 'react';
 
+import { AnorMark } from '@/components/ui/AnorMark';
+
 type Kind = 'basket' | 'search' | 'menu';
 
 /** A small, quiet line illustration with one line of text — never a bare "nothing here". */
 export function EmptyState({ kind, text, children }: { kind: Kind; text: string; children?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center px-6 py-10 text-center">
-      <svg aria-hidden="true" width="96" height="72" viewBox="0 0 96 72" fill="none" className="text-accent">
+    <div className="relative flex flex-col items-center px-6 py-10 text-center">
+      {/* The house mark, outline only, as a watermark: brand presence without competing with the illustration. */}
+      <AnorMark outline className="pointer-events-none absolute left-1/2 top-4 h-28 w-auto -translate-x-1/2 text-accent opacity-[0.07]" />
+      <svg aria-hidden="true" width="96" height="72" viewBox="0 0 96 72" fill="none" className="relative text-accent">
         <ellipse cx="48" cy="62" rx="30" ry="5" fill="currentColor" opacity="0.06" />
         {kind === 'basket' ? (
           <>
@@ -28,7 +32,7 @@ export function EmptyState({ kind, text, children }: { kind: Kind; text: string;
           </>
         ) : null}
       </svg>
-      <p className="mt-3 text-[15px] text-ink/70">{text}</p>
+      <p className="relative mt-3 text-[15px] text-ink/70">{text}</p>
       {children}
     </div>
   );

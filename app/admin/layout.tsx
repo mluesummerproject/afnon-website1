@@ -26,7 +26,7 @@ export const dynamic = 'force-dynamic';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { locale, dict } = getAdminLocaleAndDict();
   return (
-    <div lang={localeMeta[locale].htmlLang} className="min-h-[100svh] bg-paper">
+    <div lang={localeMeta[locale].htmlLang} className="admin-shell min-h-[100svh] bg-paper">
       <span className="sr-only">{dict.shell.appName}</span>
       {children}
     </div>

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { AdminEmpty } from '@/components/admin/AdminEmpty';
 import { OrderStatusSelect } from '@/components/admin/OrderStatusSelect';
-import { AnorMark } from '@/components/ui/AnorMark';
 import { getOrderCounts, getOrders, ORDERS_PAGE_SIZE } from '@/lib/admin-data';
 import { getAdminLocaleAndDict } from '@/lib/admin-locale';
 import { displayUzPhone, mapsLink } from '@/lib/checkout';
@@ -75,11 +75,7 @@ export default async function OrdersPage({ searchParams }: { searchParams?: { st
       ) : null}
 
       {!error && orders.length === 0 ? (
-        <div className="mt-10 flex flex-col items-center border-t border-line pt-10 text-center">
-          <AnorMark className="h-12 w-auto text-anor opacity-20" />
-          <h2 className="mt-4 font-display text-display-sm text-ink">{filter === 'all' ? t.orders.emptyTitle : t.orders.emptyFilteredTitle}</h2>
-          <p className="mt-2 max-w-measure text-body-sm text-ink-secondary">{filter === 'all' ? t.orders.emptyBody : t.orders.emptyFilteredBody}</p>
-        </div>
+        <AdminEmpty rule title={filter === 'all' ? t.orders.emptyTitle : t.orders.emptyFilteredTitle}>{filter === 'all' ? t.orders.emptyBody : t.orders.emptyFilteredBody}</AdminEmpty>
       ) : null}
 
       <ul className="mt-6 space-y-3">
@@ -126,7 +122,11 @@ export default async function OrdersPage({ searchParams }: { searchParams?: { st
                   {order.items.map((item) => (
                     <li key={item.id} className="flex items-baseline justify-between gap-3 py-2 text-body-sm">
                       <span className="min-w-0 text-ink">
-                        {item.name} <span className="figures font-semibold text-ink-muted">× {item.qty}</span>
+                        {/* Straight to that dish in the Menu tab (its row carries id="dish-{id}"). */}
+                        <Link href={`/admin#dish-${item.id}`} className="underline-offset-4 transition-colors duration-quick hover:text-anor hover:underline">
+                          {item.name}
+                        </Link>{' '}
+                        <span className="figures font-semibold text-ink-muted">× {item.qty}</span>
                       </span>
                       <span className="figures shrink-0 text-ink-secondary">{formatAmount(Number(item.unit_price) * item.qty, currency)}</span>
                     </li>

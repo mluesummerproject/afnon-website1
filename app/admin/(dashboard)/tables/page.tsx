@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { AdminEmpty } from '@/components/admin/AdminEmpty';
 import { CreateTableForm } from '@/components/admin/CreateTableForm';
 import { TableRow } from '@/components/admin/TableRow';
 import { getTables } from '@/lib/admin-data';
@@ -48,7 +49,7 @@ export default async function TablesPage() {
         </div>
 
         {tables.length === 0 ? (
-          <p className="mt-6 text-body-sm text-ink-secondary">{t.tables.empty}</p>
+          <AdminEmpty>{t.tables.empty}</AdminEmpty>
         ) : (
           <ul>
             {tables.map((table) => (

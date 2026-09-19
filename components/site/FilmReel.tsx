@@ -132,7 +132,7 @@ export function FilmReel({ films, labels }: { films: Film[]; labels: Labels }) {
   };
 
   return (
-    <div role="region" aria-label={labels.region} className="mt-3 grid gap-3 md:grid-cols-2 md:gap-6">
+    <div role="region" aria-label={labels.region} className={`mt-3 grid gap-3 ${total > 1 ? 'md:grid-cols-2 md:gap-6' : 'mx-auto max-w-[26rem]'}`}>
       <div>
         <div
           ref={frameRef}

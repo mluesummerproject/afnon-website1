@@ -1,5 +1,6 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useState } from 'react';
 
@@ -13,12 +14,14 @@ import {
   updateBannerTitle,
 } from '@/app/admin/media-actions';
 import { ActionForm } from '@/components/admin/ActionForm';
+import { AdminEmpty } from '@/components/admin/AdminEmpty';
 import { useT } from '@/components/admin/AdminLangProvider';
 import { Chevron } from '@/components/admin/AdminMenu';
 import { SubmitButton } from '@/components/admin/SubmitButton';
 import { toast } from '@/components/admin/toast';
 import { prepareImage, uploadToSignedUrl } from '@/components/admin/upload';
 import { useAdminAction } from '@/components/admin/useAdminAction';
+import { useReorderList } from '@/components/admin/useReorderList';
 import { format } from '@/lib/i18n';
 import { formatBytes, MAX_IMAGE_BYTES } from '@/lib/media';
 import type { Banner } from '@/lib/types';
@@ -84,7 +87,7 @@ function BannerLink({ banner, categories }: { banner: Banner; categories: string
           />
         ) : null}
 
-        <SubmitButton variant="secondary" pendingLabel={t.banners.saving} className="shrink-0">
+        <SubmitButton variant="secondary" pendingLabel={t.banners.saving} savedLabel={t.toast.savedShort} className="shrink-0">
           {t.banners.saveLink}
         </SubmitButton>
       </div>
@@ -106,6 +109,7 @@ export function BannerManager({ banners, categories, linksReady }: { banners: Ba
   const [upload, setUpload] = useState<Upload | null>(null);
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [pending, run] = useAdminAction();
+  const { list: ordered, move, reset } = useReorderList(banners, (banner) => banner.id);
   const busy = upload !== null && upload.stage !== 'failed';
   const activeCount = banners.filter((banner) => banner.is_active !== false).length;
 
@@ -211,13 +215,13 @@ export function BannerManager({ banners, categories, linksReady }: { banners: Ba
         </div>
 
         {banners.length === 0 ? (
-          <p className="mt-6 text-body-sm text-ink-secondary">{t.banners.empty}</p>
+          <AdminEmpty>{t.banners.empty}</AdminEmpty>
         ) : (
           <ul>
-            {banners.map((banner, index) => {
+            {ordered.map((banner, index) => {
               const active = banner.is_active !== false;
               return (
-                <li key={banner.id} className="flex flex-col gap-4 border-b border-line py-5 sm:flex-row">
+                <motion.li key={banner.id} layout="position" transition={{ type: 'spring', stiffness: 420, damping: 38 }} className="-mx-3 flex flex-col gap-4 rounded-hair border-b border-line px-3 py-5 transition-colors duration-quick hover:bg-surface sm:flex-row">
                   <div className="flex gap-4 sm:contents">
                     <span className="figures label w-5 shrink-0 pt-1 text-ink-muted">{index + 1}</span>
                     <div className="relative aspect-video w-32 shrink-0 overflow-hidden rounded-hair bg-paper-alt sm:w-40">
@@ -247,7 +251,7 @@ export function BannerManager({ banners, categories, linksReady }: { banners: Ba
                           placeholder={t.banners.noTitle}
                           className="field border-line-strong"
                         />
-                        <SubmitButton variant="secondary" pendingLabel={t.banners.saving} className="shrink-0">
+                        <SubmitButton variant="secondary" pendingLabel={t.banners.saving} savedLabel={t.toast.savedShort} className="shrink-0">
                           {t.banners.saveTitle}
                         </SubmitButton>
                       </ActionForm>
@@ -271,7 +275,10 @@ export function BannerManager({ banners, categories, linksReady }: { banners: Ba
                       <button
                         type="button"
                         disabled={pending || index === 0}
-                        onClick={() => void run(() => moveBanner(banner.id, 'up'))}
+                        onClick={() => {
+                          move(banner.id, 'up');
+                          void run(() => moveBanner(banner.id, 'up')).then((result) => (result?.ok ? undefined : reset()));
+                        }}
                         aria-label={t.banners.moveUp}
                         className="flex h-11 w-11 items-center justify-center rounded-hair border border-line bg-surface text-ink-secondary disabled:opacity-30"
                       >
@@ -279,8 +286,11 @@ export function BannerManager({ banners, categories, linksReady }: { banners: Ba
                       </button>
                       <button
                         type="button"
-                        disabled={pending || index === banners.length - 1}
-                        onClick={() => void run(() => moveBanner(banner.id, 'down'))}
+                        disabled={pending || index === ordered.length - 1}
+                        onClick={() => {
+                          move(banner.id, 'down');
+                          void run(() => moveBanner(banner.id, 'down')).then((result) => (result?.ok ? undefined : reset()));
+                        }}
                         aria-label={t.banners.moveDown}
                         className="flex h-11 w-11 items-center justify-center rounded-hair border border-line bg-surface text-ink-secondary disabled:opacity-30"
                       >
@@ -307,7 +317,7 @@ export function BannerManager({ banners, categories, linksReady }: { banners: Ba
                       </button>
                     )}
                   </div>
-                </li>
+                </motion.li>
               );
             })}
           </ul>

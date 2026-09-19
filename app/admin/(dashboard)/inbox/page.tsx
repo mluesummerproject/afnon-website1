@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { setFeedbackRead, setMessageRead } from '@/app/admin/inbox-actions';
 import { ActionForm } from '@/components/admin/ActionForm';
+import { AdminEmpty } from '@/components/admin/AdminEmpty';
 import { SubmitButton } from '@/components/admin/SubmitButton';
 import { StarIcon } from '@/components/ui/icons';
 import { getFeedback, getMessages, getUnifiedInbox, getUnreadCount, getUnreadFeedbackCount, MESSAGES_PAGE_SIZE, type InboxEntry } from '@/lib/admin-data';
@@ -103,7 +104,7 @@ export default async function InboxPage({ searchParams }: { searchParams?: { sou
               href={tab.href}
               aria-current={filter === tab.key ? 'page' : undefined}
               className={`flex min-h-[2.75rem] items-center rounded-hair border px-3.5 text-micro font-semibold uppercase ${
-                filter === tab.key ? 'border-ink bg-ink text-paper' : 'border-line-strong bg-surface text-ink-secondary hover:border-ink'
+                filter === tab.key ? 'border-anor bg-anor text-paper' : 'border-line-strong bg-surface text-ink-secondary hover:border-anor/50 hover:text-ink'
               }`}
             >
               {tab.label}
@@ -119,10 +120,7 @@ export default async function InboxPage({ searchParams }: { searchParams?: { sou
       ) : null}
 
       {!error && entries.length === 0 ? (
-        <div className="mt-10 border-t border-line pt-8">
-          <h2 className="font-display text-display-sm text-ink">{filter === 'unread' ? t.inbox.caughtUpTitle : t.inbox.emptyTitle}</h2>
-          <p className="mt-2 text-body-sm text-ink-secondary">{filter === 'unread' ? t.inbox.caughtUpBody : t.inbox.emptyBody}</p>
-        </div>
+        <AdminEmpty rule title={filter === 'unread' ? t.inbox.caughtUpTitle : t.inbox.emptyTitle}>{filter === 'unread' ? t.inbox.caughtUpBody : t.inbox.emptyBody}</AdminEmpty>
       ) : null}
 
       <ul className="mt-6 space-y-3">
@@ -236,7 +234,14 @@ function FeedbackCard({
         <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
           <h2 className="flex items-baseline gap-2.5">
             {isUnread ? <span className="label rounded-hair bg-anor px-1.5 py-1 text-paper">{t.inbox.new}</span> : null}
-            <span className={`font-display text-[1.3rem] leading-tight ${isUnread ? 'text-ink' : 'text-ink-secondary'}`}>{tableLabel}</span>
+            {feedback.table_id && feedback.table_number ? (
+              // A feedback entry from a table links to that table in the Tables tab.
+              <Link href={`/admin/tables#table-${feedback.table_id}`} className={`font-display text-[1.3rem] leading-tight underline-offset-4 hover:text-anor hover:underline ${isUnread ? 'text-ink' : 'text-ink-secondary'}`}>
+                {tableLabel}
+              </Link>
+            ) : (
+              <span className={`font-display text-[1.3rem] leading-tight ${isUnread ? 'text-ink' : 'text-ink-secondary'}`}>{tableLabel}</span>
+            )}
           </h2>
           <time dateTime={feedback.created_at} className="figures text-micro text-ink-muted">
             {timeFormat.format(new Date(feedback.created_at))}

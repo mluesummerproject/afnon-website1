@@ -201,7 +201,7 @@ export function ItemForm({ item, categories, onCreated }: ItemFormProps) {
         </div>
       </details>
 
-      <SubmitButton pendingLabel={t.form.saving} className="min-h-[3.25rem] w-full md:w-auto">
+      <SubmitButton pendingLabel={t.form.saving} savedLabel={t.toast.savedShort} className="min-h-[3.25rem] w-full md:w-auto">
         {item ? t.form.save : t.form.add}
       </SubmitButton>
     </ActionForm>
