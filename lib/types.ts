@@ -79,6 +79,36 @@ export type Order = {
   telegram_opened: boolean;
 };
 
+/** A printed table QR code. Never readable by anon — resolved server-side only. */
+export type RestaurantTable = {
+  id: number;
+  created_at: string;
+  table_number: string;
+  token: string;
+  is_active: boolean;
+};
+
+export const FEEDBACK_STATUSES = ['new', 'read'] as const;
+export type FeedbackStatus = (typeof FEEDBACK_STATUSES)[number];
+
+export function isFeedbackStatus(value: unknown): value is FeedbackStatus {
+  return typeof value === 'string' && (FEEDBACK_STATUSES as readonly string[]).includes(value);
+}
+
+/** A visit review, from a table's QR code (or, in principle, outside one — table_id is nullable). */
+export type Feedback = {
+  id: number;
+  created_at: string;
+  table_id: number | null;
+  overall_rating: number | null;
+  comment: string | null;
+  is_anonymous: boolean;
+  name: string | null;
+  phone: string | null;
+  language: 'uz' | 'ru' | 'en' | null;
+  status: FeedbackStatus;
+};
+
 export type BannerLinkType = 'category' | 'external';
 
 export type Banner = {

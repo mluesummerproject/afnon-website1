@@ -10,7 +10,7 @@ import { SubmitButton } from '@/components/admin/SubmitButton';
 import { Toaster } from '@/components/admin/Toaster';
 import { AnorMark } from '@/components/ui/AnorMark';
 import { getAdminLocaleAndDict } from '@/lib/admin-locale';
-import { getNewOrderCount, getUnreadCount } from '@/lib/admin-data';
+import { getNewOrderCount, getUnreadCount, getUnreadFeedbackCount } from '@/lib/admin-data';
 import { hasSessionCookie, isAuthenticated } from '@/lib/auth';
 import { brand } from '@/lib/site';
 
@@ -18,16 +18,21 @@ import { brand } from '@/lib/site';
  * The route guard and the shared staff shell. Rendered on the server before
  * any dashboard page, so an unauthenticated request never reaches the data —
  * and every Server Action behind every control checks the session again.
+ *
+ * The header, home-screen hint and toaster carry `print:hidden` so that
+ * printing the Tables tab's print view (a page inside this same protected
+ * group, for a shared auth guard) shows only that page's own content.
  */
 export default async function ProtectedAdminLayout({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated()) redirect(`/admin/login?m=${hasSessionCookie() ? 'expired' : 'required'}`);
-  const [unread, newOrders] = await Promise.all([getUnreadCount(), getNewOrderCount()]);
+  const [unreadMessages, unreadFeedback, newOrders] = await Promise.all([getUnreadCount(), getUnreadFeedbackCount(), getNewOrderCount()]);
+  const unread = unreadMessages + unreadFeedback;
   const { locale, dict } = getAdminLocaleAndDict();
 
   return (
     <AdminLangProvider locale={locale}>
-      <div className="pb-28">
-        <header className="sticky top-0 z-40 border-b border-line bg-paper">
+      <div className="pb-28 print:pb-0">
+        <header className="sticky top-0 z-40 border-b border-line bg-paper print:hidden">
           <div className="shell flex h-14 items-center justify-between gap-3 md:h-16">
             <div className="flex min-w-0 items-center gap-2.5">
               <AnorMark className="h-5 w-auto shrink-0 text-anor" />
@@ -50,16 +55,20 @@ export default async function ProtectedAdminLayout({ children }: { children: Rea
             <AdminNav unread={unread} newOrders={newOrders} />
           </div>
         </header>
-        <HomeScreenHint
-          labels={{
-            title: dict.homeScreen.title,
-            ios: dict.homeScreen.ios,
-            android: dict.homeScreen.android,
-            dismiss: dict.homeScreen.dismiss,
-          }}
-        />
+        <div className="print:hidden">
+          <HomeScreenHint
+            labels={{
+              title: dict.homeScreen.title,
+              ios: dict.homeScreen.ios,
+              android: dict.homeScreen.android,
+              dismiss: dict.homeScreen.dismiss,
+            }}
+          />
+        </div>
         {children}
-        <Toaster />
+        <div className="print:hidden">
+          <Toaster />
+        </div>
       </div>
     </AdminLangProvider>
   );

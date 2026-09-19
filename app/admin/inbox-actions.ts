@@ -29,3 +29,26 @@ export async function setMessageRead(_prev: ActionResult, formData: FormData): P
   revalidatePath('/admin', 'layout');
   return succeed(read ? t.actions.markedRead : t.actions.markedUnread, id);
 }
+
+/** Marks one piece of table feedback read or unread — the same shape as setMessageRead, one table over. */
+export async function setFeedbackRead(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  requireAdmin();
+
+  const t = getAdminDict();
+  const id = toId(formData.get('id'));
+  if (id === null) return fail(t.actions.feedbackNotIdentified);
+  const read = formData.get('read') === 'true';
+
+  const { data, error } = await getSupabaseAdmin()
+    .from('feedback')
+    .update({ status: read ? 'read' : 'new' })
+    .eq('id', id)
+    .select('id')
+    .maybeSingle();
+
+  if (error) return fail(format(t.actions.feedbackUpdateFailed, { reason: error.message }));
+  if (!data) return fail(t.actions.feedbackNotIdentified);
+
+  revalidatePath('/admin', 'layout');
+  return succeed(read ? t.actions.feedbackMarkedRead : t.actions.feedbackMarkedUnread, id);
+}

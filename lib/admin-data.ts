@@ -5,7 +5,20 @@ import { labelsByCategory, orderCategoryGroups } from '@/lib/categories';
 import { groupByCategory, sortForAdmin } from '@/lib/ordering';
 import { rowsToStored, type StoredSettings } from '@/lib/settings-core';
 import { getSupabaseAdmin, isAdminSupabaseConfigured } from '@/lib/supabase-admin';
-import { MENU_ITEM_COLUMNS, ORDER_STATUSES, type Banner, type CategoryLabelRow, type Message, type MenuImage, type MenuItem, type Order, type OrderStatus, type PromoVideo } from '@/lib/types';
+import {
+  MENU_ITEM_COLUMNS,
+  ORDER_STATUSES,
+  type Banner,
+  type CategoryLabelRow,
+  type Feedback,
+  type Message,
+  type MenuImage,
+  type MenuItem,
+  type Order,
+  type OrderStatus,
+  type PromoVideo,
+  type RestaurantTable,
+} from '@/lib/types';
 
 export type { AdminDish } from '@/lib/admin-types';
 import type { AdminDish } from '@/lib/admin-types';
@@ -211,3 +224,103 @@ export async function getStoredSettings(): Promise<{ settings: StoredSettings; e
   return { settings: rowsToStored(data ?? []) };
 }
 
+
+/* ==========================================================================
+   Tables (Stollar) — printed QR codes.
+   ========================================================================== */
+
+/** Every table, newest first isn't useful here — table number order is. */
+export async function getTables(): Promise<{ tables: RestaurantTable[]; error?: string }> {
+  requireAdmin();
+  if (!isAdminSupabaseConfigured) return { tables: [], error: t().toast.missingKey };
+  const { data, error } = await getSupabaseAdmin().from('restaurant_tables').select('*').order('table_number', { ascending: true });
+  if (error) return { tables: [], error: format(t().toast.loadTables, { reason: error.message }) };
+  return { tables: (data ?? []) as RestaurantTable[] };
+}
+
+/* ==========================================================================
+   Feedback (table reviews) — a second Inbox source, never a second inbox.
+   ========================================================================== */
+
+export const FEEDBACK_PAGE_SIZE = 25;
+
+export type FeedbackWithTable = Feedback & { table_number: string | null };
+
+const FEEDBACK_COLUMNS = 'id, created_at, table_id, overall_rating, comment, is_anonymous, name, phone, language, status, restaurant_tables(table_number)';
+
+function withTableNumber(row: Feedback & { restaurant_tables: { table_number: string } | { table_number: string }[] | null }): FeedbackWithTable {
+  const joined = row.restaurant_tables;
+  const table_number = Array.isArray(joined) ? joined[0]?.table_number ?? null : joined?.table_number ?? null;
+  const { restaurant_tables: _drop, ...rest } = row;
+  return { ...rest, table_number };
+}
+
+export async function getFeedback(filter: 'all' | 'unread', page: number): Promise<{ feedback: FeedbackWithTable[]; total: number; error?: string }> {
+  requireAdmin();
+  if (!isAdminSupabaseConfigured) return { feedback: [], total: 0, error: t().toast.missingKey };
+
+  const from = (Math.max(1, page) - 1) * FEEDBACK_PAGE_SIZE;
+  let query = getSupabaseAdmin()
+    .from('feedback')
+    .select(FEEDBACK_COLUMNS, { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
+    .range(from, from + FEEDBACK_PAGE_SIZE - 1);
+  if (filter === 'unread') query = query.eq('status', 'new');
+
+  const { data, error, count } = await query;
+  if (error) return { feedback: [], total: 0, error: format(t().toast.loadFeedback, { reason: error.message }) };
+  return { feedback: (data ?? []).map((row) => withTableNumber(row as never)), total: count ?? 0 };
+}
+
+export async function getUnreadFeedbackCount(): Promise<number> {
+  requireAdmin();
+  if (!isAdminSupabaseConfigured) return 0;
+  const { count } = await getSupabaseAdmin().from('feedback').select('id', { count: 'exact', head: true }).eq('status', 'new');
+  return count ?? 0;
+}
+
+/** One row of the unified Inbox: a contact message or a piece of table feedback, sharing a timeline. */
+export type InboxEntry = ({ kind: 'message' } & Message) | ({ kind: 'feedback' } & FeedbackWithTable);
+
+/**
+ * Messages and feedback merged into one timeline, newest first. There is no
+ * SQL UNION across two differently-shaped tables here — instead each source
+ * is over-fetched just far enough to cover every page up to and including the
+ * one requested, then merged and sliced. Fine at a single restaurant's volume;
+ * `total` is still the real combined count, not the over-fetched one.
+ */
+export async function getUnifiedInbox(page: number): Promise<{ entries: InboxEntry[]; total: number; error?: string }> {
+  requireAdmin();
+  if (!isAdminSupabaseConfigured) return { entries: [], total: 0, error: t().toast.missingKey };
+
+  const need = Math.max(1, page) * MESSAGES_PAGE_SIZE;
+  const supabase = getSupabaseAdmin();
+  const [messages, feedback] = await Promise.all([
+    supabase
+      .from('messages')
+      .select('id, name, contact, message, is_read, created_at', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .range(0, need - 1),
+    supabase
+      .from('feedback')
+      .select(FEEDBACK_COLUMNS, { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .range(0, need - 1),
+  ]);
+
+  if (messages.error || feedback.error) {
+    const reason = (messages.error ?? feedback.error)!.message;
+    return { entries: [], total: 0, error: format(t().toast.loadMessages, { reason }) };
+  }
+
+  const messageEntries: InboxEntry[] = (messages.data ?? []).map((row) => ({ kind: 'message', ...(row as Message) }));
+  const feedbackEntries: InboxEntry[] = (feedback.data ?? []).map((row) => ({ kind: 'feedback', ...withTableNumber(row as never) }));
+  const merged = [...messageEntries, ...feedbackEntries].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+  const from = (Math.max(1, page) - 1) * MESSAGES_PAGE_SIZE;
+  const total = (messages.count ?? 0) + (feedback.count ?? 0);
+  return { entries: merged.slice(from, from + MESSAGES_PAGE_SIZE), total };
+}

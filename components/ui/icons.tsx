@@ -24,6 +24,11 @@ export const HeartIcon = ({ className, size = 20, filled = false }: IconProps & 
     <path d="M12 20.3s-7.5-4.6-9.2-9.4C1.6 7.4 3.8 4 7.2 4c2 0 3.5 1.1 4.8 2.8C13.3 5.1 14.8 4 16.8 4c3.4 0 5.6 3.4 4.4 6.9-1.7 4.8-9.2 9.4-9.2 9.4Z" />
   </svg>
 );
+export const StarIcon = ({ className, size = 20, filled = false }: IconProps & { filled?: boolean }) => (
+  <svg {...base(size)} strokeWidth={filled ? 0 : 1.6} fill={filled ? 'currentColor' : 'none'} className={className}>
+    <path d="M12 3.4l2.47 5.18 5.63.72-4.16 3.94 1.1 5.66L12 16.1l-5.04 2.8 1.1-5.66-4.16-3.94 5.63-.72Z" strokeLinejoin="round" />
+  </svg>
+);
 export const SearchIcon = ({ className, size = 20 }: IconProps) => (
   <svg {...base(size)} className={className}><circle cx="11" cy="11" r="6.5" /><path d="m20 20-4.2-4.2" /></svg>
 );
