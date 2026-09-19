@@ -146,6 +146,7 @@ export function DetailsStep({
   invalid,
   pickupAddress,
   privacy,
+  privacyLink,
   onChange,
   onSubmit,
   onBlurPhone,
@@ -156,6 +157,7 @@ export function DetailsStep({
   invalid: OrderField[];
   pickupAddress: string | null;
   privacy: string;
+  privacyLink: string;
   onChange: (patch: Partial<Draft>) => void;
   onSubmit: () => void;
   onBlurPhone: () => void;
@@ -325,7 +327,12 @@ export function DetailsStep({
       )}
 
       <PaymentNote copy={copy} fulfillment={draft.fulfillment} />
-      <p className="text-[12px] leading-snug text-ink/60">{privacy}</p>
+      <p className="text-[12px] leading-snug text-ink/60">
+        {privacy}{' '}
+        <a href="/maxfiylik" target="_blank" rel="noopener" className="inline-flex min-h-[44px] items-center font-medium text-ink/80 underline underline-offset-4">
+          {privacyLink}
+        </a>
+      </p>
 
       {/* Lets Enter on the keyboard move on; the visible button lives in the sheet footer. */}
       <button type="submit" className="sr-only" tabIndex={-1} aria-hidden="true" />

@@ -59,7 +59,12 @@ export function SiteFooter({ dict, settings }: { dict: Dictionary; settings: Res
         ) : null}
       </div>
       <div className="shell mt-4 space-y-1.5 text-[12px] text-ink/60">
-        <p className="max-w-[40rem]">{dict.footer.privacy}</p>
+        <p className="max-w-[40rem]">
+          {dict.footer.privacy}{' '}
+          <Link href="/maxfiylik" className="inline-flex min-h-[44px] items-center font-medium text-ink/80 underline underline-offset-4 hover:text-accent">
+            {dict.footer.privacyLink}
+          </Link>
+        </p>
         <p>
           © {year} {brand.name}
         </p>

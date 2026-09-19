@@ -35,6 +35,7 @@ type BasketSheetProps = {
   menu: Dictionary['menu'];
   order: OrderCopy;
   privacy: string;
+  privacyLink: string;
   /** Signed render-time token (lib/antispam) — proves the order form was loaded. */
   token: string;
   /** From site_settings; null until the restaurant saves one. */
@@ -54,7 +55,7 @@ const ORDER: View[] = ['basket', ...CHECKOUT_STEPS, 'done'];
  * is recorded on the server first; the basket is only cleared once it has
  * been, and any failure keeps both the basket and everything typed.
  */
-export function BasketSheet({ locale, basket, menu, order, privacy, token, pickupAddress, telegramUsername, onBrowse }: BasketSheetProps) {
+export function BasketSheet({ locale, basket, menu, order, privacy, privacyLink, token, pickupAddress, telegramUsername, onBrowse }: BasketSheetProps) {
   const { lines, dishes, count, total, isOpen, closeBasket, increment, decrement, remove, clear } = useBasket();
   const [view, setView] = useState<View>('basket');
   const [direction, setDirection] = useState(1);
@@ -282,6 +283,7 @@ export function BasketSheet({ locale, basket, menu, order, privacy, token, picku
             invalid={invalid}
             pickupAddress={pickupAddress}
             privacy={privacy}
+            privacyLink={privacyLink}
             onChange={patch}
             onSubmit={checkDetails}
             onTrap={(value) => {

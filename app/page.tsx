@@ -119,6 +119,7 @@ export default async function HomePage() {
         menu={dict.menu}
         order={dict.order}
         privacy={dict.footer.privacy}
+        privacyLink={dict.footer.privacyLink}
         token={formToken}
         pickupAddress={settings.address}
         telegramUsername={settings.configured.telegram ? settings.telegramUsername : null}

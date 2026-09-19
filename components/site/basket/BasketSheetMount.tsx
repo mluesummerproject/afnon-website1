@@ -11,6 +11,7 @@ export function BasketSheetMount(props: {
   menu: Dictionary['menu'];
   order: Dictionary['order'];
   privacy: string;
+  privacyLink: string;
   token: string;
   pickupAddress: string | null;
   telegramUsername: string | null;

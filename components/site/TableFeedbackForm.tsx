@@ -153,7 +153,12 @@ export function TableFeedbackForm({
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-[12px] leading-snug text-ink/50">{copy.privacy}</p>
+        <p className="text-[12px] leading-snug text-ink/50">
+          {copy.privacy}{' '}
+          <a href="/maxfiylik" className="inline-flex min-h-[44px] items-center font-medium text-ink/70 underline underline-offset-4">
+            {copy.privacyLink}
+          </a>
+        </p>
         <Submit label={copy.submit} pendingLabel={copy.sending} />
       </div>
     </form>
