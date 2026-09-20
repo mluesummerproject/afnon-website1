@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { requireAdmin } from '@/lib/admin';
-import { ratingsByDish } from '@/lib/ratings';
+import { cleanReasons, ratingsByDish, type ReasonKey } from '@/lib/ratings';
 import { labelsByCategory, orderCategoryGroups } from '@/lib/categories';
 import { groupByCategory, sortForAdmin } from '@/lib/ordering';
 import { rowsToStored, type StoredSettings } from '@/lib/settings-core';
@@ -327,4 +327,92 @@ export async function getUnifiedInbox(page: number): Promise<{ entries: InboxEnt
   const from = (Math.max(1, page) - 1) * MESSAGES_PAGE_SIZE;
   const total = (messages.count ?? 0) + (feedback.count ?? 0);
   return { entries: merged.slice(from, from + MESSAGES_PAGE_SIZE), total };
+}
+
+
+/* ==========================================================================
+   Dish comments — what guests write under a dish.
+   ========================================================================== */
+
+export const COMMENTS_PAGE_SIZE = 25;
+
+/** A comment as staff see it: everything the public sees, plus the private phone and the dish's name. */
+export type AdminComment = {
+  id: number;
+  created_at: string;
+  menu_item_id: number;
+  dish_name: string | null;
+  rating: number;
+  comment: string | null;
+  reasons: ReasonKey[];
+  author_name: string | null;
+  author_phone: string | null;
+  is_hidden: boolean;
+  hidden_at: string | null;
+};
+
+/** Whether supabase/migrations/0002 has been run (the comments table exists). */
+export async function adminCommentsAvailable(): Promise<boolean> {
+  requireAdmin();
+  if (!isAdminSupabaseConfigured) return false;
+  const { error } = await getSupabaseAdmin().from('dish_comments').select('id').limit(1);
+  return !error;
+}
+
+export async function getCommentCounts(): Promise<{ visible: number; hidden: number }> {
+  requireAdmin();
+  if (!isAdminSupabaseConfigured) return { visible: 0, hidden: 0 };
+  const supabase = getSupabaseAdmin();
+  const [visible, hidden] = await Promise.all([
+    supabase.from('dish_comments').select('id', { count: 'exact', head: true }).eq('is_hidden', false),
+    supabase.from('dish_comments').select('id', { count: 'exact', head: true }).eq('is_hidden', true),
+  ]);
+  return { visible: visible.count ?? 0, hidden: hidden.count ?? 0 };
+}
+
+export async function getAdminComments(
+  view: 'visible' | 'hidden',
+  page: number,
+): Promise<{ comments: AdminComment[]; total: number; error?: string }> {
+  requireAdmin();
+  if (!isAdminSupabaseConfigured) return { comments: [], total: 0, error: t().toast.missingKey };
+
+  const from = (Math.max(1, page) - 1) * COMMENTS_PAGE_SIZE;
+  const supabase = getSupabaseAdmin();
+  const { data, error, count } = await supabase
+    .from('dish_comments')
+    .select('id, created_at, menu_item_id, rating, comment, reasons, author_name, author_phone, is_hidden, hidden_at', { count: 'exact' })
+    .eq('is_hidden', view === 'hidden')
+    .order(view === 'hidden' ? 'hidden_at' : 'created_at', { ascending: false, nullsFirst: false })
+    .order('id', { ascending: false })
+    .range(from, from + COMMENTS_PAGE_SIZE - 1);
+  if (error) {
+    console.error('[admin] comments read failed with code', error.code);
+    return { comments: [], total: 0, error: t().toast.loadComments };
+  }
+
+  const ids = [...new Set((data ?? []).map((row) => row.menu_item_id as number))];
+  const names = new Map<number, string>();
+  if (ids.length > 0) {
+    const dishes = await supabase.from('menu_items').select('id, name, name_uz, name_en, name_ru').in('id', ids);
+    for (const dish of dishes.data ?? []) {
+      const label = [dish.name, dish.name_uz, dish.name_en, dish.name_ru].find((value) => typeof value === 'string' && value.trim() !== '');
+      if (label) names.set(dish.id as number, label.trim());
+    }
+  }
+
+  const comments = (data ?? []).map((row) => ({
+    id: row.id as number,
+    created_at: row.created_at as string,
+    menu_item_id: row.menu_item_id as number,
+    dish_name: names.get(row.menu_item_id as number) ?? null,
+    rating: row.rating as number,
+    comment: (row.comment as string | null)?.trim() ? (row.comment as string) : null,
+    reasons: cleanReasons(row.reasons, row.rating as number),
+    author_name: (row.author_name as string | null)?.trim() ? (row.author_name as string) : null,
+    author_phone: (row.author_phone as string | null)?.trim() ? (row.author_phone as string) : null,
+    is_hidden: row.is_hidden === true,
+    hidden_at: (row.hidden_at as string | null) ?? null,
+  }));
+  return { comments, total: count ?? 0 };
 }

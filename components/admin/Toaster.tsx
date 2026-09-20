@@ -8,25 +8,57 @@ import { TOAST_EVENT, type ToastDetail } from '@/components/admin/toast';
 type Item = ToastDetail & { id: number };
 
 /**
+ * The toasts live at module level, not in the component. After a staff action
+ * the page's data is refreshed and the dashboard tree can re-mount, Toaster
+ * included; a toast held in component state (or fired while no Toaster was
+ * listening) would vanish before anyone read it — which is exactly what
+ * happened to "Deleted" once the row it belonged to was gone. Here a toast
+ * outlives the re-mount and is simply picked up again.
+ */
+let queue: Item[] = [];
+let counter = 0;
+const listeners = new Set<() => void>();
+const emit = () => listeners.forEach((listener) => listener());
+
+function push(detail: ToastDetail) {
+  const id = ++counter;
+  queue = [...queue.slice(-2), { ...detail, id }];
+  emit();
+  const life = detail.action ? 6000 : detail.ok ? 3500 : 8000;
+  window.setTimeout(() => dismiss(id), life);
+}
+
+function dismiss(id: number) {
+  const next = queue.filter((item) => item.id !== id);
+  if (next.length === queue.length) return;
+  queue = next;
+  emit();
+}
+
+if (typeof window !== 'undefined') {
+  const guard = window as unknown as { __afnonAdminToasts?: boolean };
+  if (!guard.__afnonAdminToasts) {
+    guard.__afnonAdminToasts = true;
+    window.addEventListener(TOAST_EVENT, (event) => push((event as CustomEvent<ToastDetail>).detail));
+  }
+}
+
+/**
  * One feedback surface for the whole admin, anchored to the bottom of the
  * screen — the thumb zone on a phone. Successes fade quickly; failures stay
  * longer and are announced assertively.
  */
 export function Toaster() {
   const t = useT();
-  const [items, setItems] = useState<Item[]>([]);
+  const [items, setItems] = useState<Item[]>(queue);
 
   useEffect(() => {
-    let counter = 0;
-    const onToast = (event: Event) => {
-      const detail = (event as CustomEvent<ToastDetail>).detail;
-      const id = ++counter;
-      setItems((list) => [...list.slice(-2), { ...detail, id }]);
-      const life = detail.action ? 6000 : detail.ok ? 3500 : 8000;
-      window.setTimeout(() => setItems((list) => list.filter((item) => item.id !== id)), life);
+    const sync = () => setItems(queue);
+    listeners.add(sync);
+    sync(); // pick up anything raised between render and mount
+    return () => {
+      listeners.delete(sync);
     };
-    window.addEventListener(TOAST_EVENT, onToast);
-    return () => window.removeEventListener(TOAST_EVENT, onToast);
   }, []);
 
   return (
@@ -49,7 +81,7 @@ export function Toaster() {
               type="button"
               onClick={() => {
                 item.action?.run();
-                setItems((list) => list.filter((entry) => entry.id !== item.id));
+                dismiss(item.id);
               }}
               className="label -my-2 shrink-0 px-2 font-medium uppercase text-gold-soft underline underline-offset-2 hover:text-paper"
             >
@@ -58,7 +90,7 @@ export function Toaster() {
           ) : null}
           <button
             type="button"
-            onClick={() => setItems((list) => list.filter((entry) => entry.id !== item.id))}
+            onClick={() => dismiss(item.id)}
             className="-my-2 -mr-2 flex h-9 w-9 shrink-0 items-center justify-center text-paper/70 hover:text-paper"
             aria-label={t.toast.dismiss}
           >

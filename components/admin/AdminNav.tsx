@@ -16,6 +16,7 @@ export function AdminNav({ unread, newOrders }: { unread: number; newOrders: num
     { href: '/admin/videos', label: t.nav.films, active: pathname.startsWith('/admin/videos') },
     { href: '/admin/banners', label: t.nav.banners, active: pathname.startsWith('/admin/banners') },
     { href: '/admin/categories', label: t.nav.categories, active: pathname.startsWith('/admin/categories') },
+    { href: '/admin/comments', label: t.nav.comments, active: pathname.startsWith('/admin/comments') },
     { href: '/admin/tables', label: t.nav.tables, active: pathname.startsWith('/admin/tables') },
     { href: '/admin/settings', label: t.nav.settings, active: pathname.startsWith('/admin/settings') },
     { href: '/admin/inbox', label: t.nav.inbox, active: pathname.startsWith('/admin/inbox'), badge: unread, badgeLabel: t.nav.unread },
