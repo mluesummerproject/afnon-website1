@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useBasket } from '@/components/site/basket/BasketProvider';
 import { QuantityStepper } from '@/components/site/basket/QuantityStepper';
 import { DishImage, PlaceholderTile } from '@/components/site/menu/DishImage';
+import { DishReviews } from '@/components/site/menu/DishReviews';
 import { FavoriteButton, PriceText, Ribbons, type CardLabels } from '@/components/site/menu/DishParts';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { CloseIcon, PlusIcon } from '@/components/ui/icons';
@@ -143,6 +144,8 @@ export function PhotoSheet({ dish, onClose, labels }: PhotoSheetProps) {
             ))}
           </div>
         ) : null}
+
+        <DishReviews key={shown.id} dish={shown} />
       </div>
     </BottomSheet>
   );

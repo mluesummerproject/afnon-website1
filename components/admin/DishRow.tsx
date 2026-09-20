@@ -10,9 +10,11 @@ import { Chevron } from '@/components/admin/AdminMenu';
 import { ImageManager } from '@/components/admin/ImageManager';
 import { ItemForm } from '@/components/admin/ItemForm';
 import { SubmitButton } from '@/components/admin/SubmitButton';
+import { StarIcon } from '@/components/ui/icons';
 import type { AdminDish } from '@/lib/admin-types';
 import { format } from '@/lib/i18n';
 import { formatAmount } from '@/lib/menu-format';
+import { formatAverage } from '@/lib/ratings';
 import { discountPercent, toAmount } from '@/lib/pricing';
 
 type DishRowProps = {
@@ -62,6 +64,19 @@ export function DishRow({ dish, position, isFirst, isLast, reorderable, open, on
                   <span className="ml-1.5 text-ink-muted line-through">{formatAmount(toAmount(dish.old_price) ?? 0, '')}</span>
                 ) : null}
               </span>
+              <span aria-hidden="true" className="text-line-strong">·</span>
+              {dish.rating ? (
+                <span
+                  className="figures inline-flex items-center gap-1 font-medium text-ink"
+                  aria-label={format(t.dish.ratingAria, { average: formatAverage(dish.rating.average), count: dish.rating.count })}
+                >
+                  <StarIcon size={13} filled className="text-anor" />
+                  {formatAverage(dish.rating.average)}
+                  <span className="font-normal text-ink-muted">({dish.rating.count})</span>
+                </span>
+              ) : (
+                <span className="text-ink-muted">{t.dish.noRatings}</span>
+              )}
               <span aria-hidden="true" className="text-line-strong">·</span>
               <span className={photoCount === 0 ? 'text-ink-muted' : ''}>
                 {photoCount === 0 ? t.dish.noPhotos : photoCount === 1 ? t.dish.onePhoto : format(t.dish.photos, { count: photoCount })}

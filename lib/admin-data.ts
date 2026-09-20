@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { requireAdmin } from '@/lib/admin';
+import { ratingsByDish } from '@/lib/ratings';
 import { labelsByCategory, orderCategoryGroups } from '@/lib/categories';
 import { groupByCategory, sortForAdmin } from '@/lib/ordering';
 import { rowsToStored, type StoredSettings } from '@/lib/settings-core';
@@ -42,7 +43,7 @@ export async function getAdminMenu(): Promise<{ dishes: AdminDish[]; error?: str
 
   try {
     const supabase = getSupabaseAdmin();
-    const [items, images, labels] = await Promise.all([
+    const [items, images, labels, ratingRows] = await Promise.all([
       supabase.from('menu_items').select(MENU_ITEM_COLUMNS),
       supabase
         .from('menu_item_images')
@@ -50,6 +51,7 @@ export async function getAdminMenu(): Promise<{ dishes: AdminDish[]; error?: str
         .order('sort_order', { ascending: true, nullsFirst: false })
         .order('id', { ascending: true }),
       supabase.from('category_labels').select('category, name_uz, name_ru, name_en, sort_order'),
+      supabase.from('dish_rating_summary').select('menu_item_id, average_rating, rating_count'),
     ]);
 
     if (items.error) return { dishes: [], error: format(t().toast.loadMenu, { reason: items.error.message }) };
@@ -63,9 +65,11 @@ export async function getAdminMenu(): Promise<{ dishes: AdminDish[]; error?: str
     // Same order as the public site: category_labels order, then the kitchen's dish order.
     const labelMap = labelsByCategory((labels.data ?? []) as CategoryLabelRow[]);
     const ordered = orderCategoryGroups(groupByCategory(sortForAdmin((items.data ?? []) as MenuItem[])), labelMap).flatMap((group) => group.items);
+    const ratings = ratingsByDish(ratingRows.error ? [] : ratingRows.data);
     const dishes = ordered.map((item) => ({
       ...item,
       images: byDish.get(item.id) ?? [],
+      rating: ratings.get(item.id) ?? null,
     }));
 
     return { dishes, error: images.error ? format(t().toast.loadPhotos, { reason: images.error.message }) : undefined };

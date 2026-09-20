@@ -10,6 +10,7 @@ import { toast } from '@/components/admin/toast';
 import type { AdminDish } from '@/lib/admin-types';
 import { format } from '@/lib/i18n';
 import { groupByCategory } from '@/lib/ordering';
+import { compareByRating } from '@/lib/ratings';
 
 const opposite = { up: 'down', down: 'up' } as const;
 
@@ -22,6 +23,7 @@ function moveCategoryOnce(category: string, direction: 'up' | 'down') {
 }
 
 type Filter = 'all' | 'unavailable' | 'translations' | 'photos' | 'descriptions';
+type Sort = 'order' | 'rating';
 
 const blank = (value: string | null) => !value || value.trim() === '';
 
@@ -47,6 +49,7 @@ export function missingDescription(dish: AdminDish): boolean {
 export function AdminMenu({ dishes, categories }: { dishes: AdminDish[]; categories: string[] }) {
   const t = useT();
   const [filter, setFilter] = useState<Filter>('all');
+  const [sort, setSort] = useState<Sort>('order');
   const [query, setQuery] = useState('');
   const [openId, setOpenId] = useState<number | null>(null);
   const [adding, setAdding] = useState(false);
@@ -95,8 +98,12 @@ export function AdminMenu({ dishes, categories }: { dishes: AdminDish[]; categor
     });
   }, [dishes, filter, query]);
 
-  const reorderable = filter === 'all' && query.trim() === '';
-  const groups = groupByCategory(visible);
+  // Reordering only makes sense against the real menu order, on the full list.
+  const reorderable = filter === 'all' && query.trim() === '' && sort === 'order';
+  // Best rated re-sorts dishes WITHIN each category; categories keep the order guests see.
+  const groups = groupByCategory(visible).map((group) =>
+    sort === 'rating' ? { ...group, items: [...group.items].sort((a, b) => compareByRating(a.rating, b.rating)) } : group,
+  );
   const allGroups = groupByCategory(dishes);
 
   // After adding a dish, open it and bring it into view once the fresh list arrives.
@@ -184,6 +191,30 @@ export function AdminMenu({ dishes, categories }: { dishes: AdminDish[]; categor
           className="field border-line-strong"
         />
       </label>
+
+      {dishes.length > 1 ? (
+        <div className="mt-3 flex flex-wrap items-center gap-2" role="group" aria-label={t.menu.sortLabel}>
+          <span className="label basis-full text-ink-muted sm:basis-auto">{t.menu.sortLabel}</span>
+          {(
+            [
+              { key: 'order', label: t.menu.sortOrder },
+              { key: 'rating', label: t.menu.sortRating },
+            ] as const
+          ).map((option) => (
+            <button
+              key={option.key}
+              type="button"
+              aria-pressed={sort === option.key}
+              onClick={() => setSort(option.key)}
+              className={`flex min-h-[2.75rem] items-center rounded-hair border px-3.5 text-body-sm transition-colors duration-quick ${
+                sort === option.key ? 'border-anor bg-anor text-paper' : 'border-line-strong bg-surface text-ink hover:border-anor/50'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {!reorderable && dishes.length > 0 ? (
         <p className="mt-3 text-micro text-ink-muted">{t.menu.reorderHint}</p>

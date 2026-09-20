@@ -5,6 +5,7 @@ import { clean, localizedText, type Dictionary, type Locale } from '@/lib/i18n';
 import { categorySlug, isRenderableImage } from '@/lib/menu-format';
 import { groupByCategory, sortForAdmin } from '@/lib/ordering';
 import { dishPricing } from '@/lib/pricing';
+import { ratingsByDish } from '@/lib/ratings';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import {
   MENU_ITEM_COLUMNS,
@@ -25,7 +26,7 @@ export { categorySlug, formatPrice, isOptimizableImage, isRenderableImage, parse
 export const getMenu = cache(async (locale: Locale, dict: Dictionary): Promise<MenuResult> => {
   if (!isSupabaseConfigured) return { status: 'error', categories: [] };
 
-  const [itemsResult, imagesResult, labelsResult] = await Promise.all([
+  const [itemsResult, imagesResult, labelsResult, ratingsResult] = await Promise.all([
     supabase.from('menu_items').select(MENU_ITEM_COLUMNS).order('sort_order', { ascending: true, nullsFirst: false }).order('id', { ascending: true }),
     supabase
       .from('menu_item_images')
@@ -33,6 +34,8 @@ export const getMenu = cache(async (locale: Locale, dict: Dictionary): Promise<M
       .order('sort_order', { ascending: true, nullsFirst: false })
       .order('id', { ascending: true }),
     supabase.from('category_labels').select('category, name_uz, name_ru, name_en, sort_order'),
+    // Averages and counts are computed by the database (a view); raw ratings never reach a browser.
+    supabase.from('dish_rating_summary').select('menu_item_id, average_rating, rating_count'),
   ]);
 
   if (itemsResult.error) {
@@ -41,6 +44,9 @@ export const getMenu = cache(async (locale: Locale, dict: Dictionary): Promise<M
   }
   if (imagesResult.error) console.error('[menu] menu_item_images read failed:', imagesResult.error.message);
   if (labelsResult.error) console.error('[menu] category_labels read failed:', labelsResult.error.message);
+  // A ratings hiccup must never take the menu down: without them, dishes simply show no stars.
+  if (ratingsResult.error) console.error('[menu] dish_rating_summary read failed:', ratingsResult.error.message);
+  const ratings = ratingsByDish(ratingsResult.error ? [] : ratingsResult.data);
 
   const imagesByDish = new Map<number, MenuImage[]>();
   for (const image of (imagesResult.data ?? []) as MenuImage[]) {
@@ -75,6 +81,7 @@ export const getMenu = cache(async (locale: Locale, dict: Dictionary): Promise<M
         available: item.is_available !== false,
         images: gallery.length > 0 ? gallery : legacy,
         rank: rank.get(item.id) ?? 0,
+        rating: ratings.get(item.id) ?? null,
       });
     }
 

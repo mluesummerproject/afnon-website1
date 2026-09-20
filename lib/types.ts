@@ -145,6 +145,9 @@ export const MENU_ITEM_COLUMNS =
 
 export type DishPhoto = { src: string; alt: string };
 
+/** What guests think of a dish: computed by the database (the dish_rating_summary view), never in a browser. */
+export type DishRating = { average: number; count: number };
+
 export type Dish = {
   id: number;
   name: string;
@@ -162,6 +165,8 @@ export type Dish = {
   images: DishPhoto[];
   /** Position in the kitchen's own sort_order across the whole menu (for Chef's picks). */
   rank: number;
+  /** null until at least one guest has rated it — an unrated dish shows no stars and no number. */
+  rating: DishRating | null;
 };
 
 export type DishCategory = {

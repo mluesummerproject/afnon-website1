@@ -4,6 +4,7 @@ import type { CSSProperties } from 'react';
 
 import { useBasket } from '@/components/site/basket/BasketProvider';
 import { DishImage } from '@/components/site/menu/DishImage';
+import { RatingPill } from '@/components/site/menu/RatingPill';
 import { AddControl, FavoriteButton, PRICE_RESERVE, PriceText, Ribbons, type CardLabels } from '@/components/site/menu/DishParts';
 import { useReveal } from '@/components/ui/motion/useReveal';
 import { format, type Locale } from '@/lib/i18n';
@@ -54,6 +55,7 @@ export function DishCard({ dish, locale, labels, onOpen, index = 0, variant = 'g
           ) : null}
         </button>
         <Ribbons dish={dish} />
+        <RatingPill dish={dish} raised={!dish.available} />
         <FavoriteButton dish={dish} labels={labels} />
       </div>
 

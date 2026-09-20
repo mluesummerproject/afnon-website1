@@ -7,6 +7,7 @@ import { Films } from '@/components/site/Films';
 import { ContactFab, ScrollTopButton } from '@/components/site/FloatingButtons';
 import { IntroOverlay } from '@/components/site/IntroOverlay';
 import { MenuExplorer } from '@/components/site/menu/MenuExplorer';
+import { RatingsProvider } from '@/components/site/menu/RatingsContext';
 import { PromotionsSection } from '@/components/site/PromotionsSection';
 import { ScrollSeed } from '@/components/site/ScrollSeed';
 import { SeedGutters } from '@/components/site/SeedGutters';
@@ -16,6 +17,7 @@ import { SiteHero } from '@/components/site/SiteHero';
 import { SiteToaster } from '@/components/site/SiteToaster';
 import { VisitCard } from '@/components/site/VisitCard';
 import { issueFormToken } from '@/lib/antispam';
+import { commentsAvailable } from '@/lib/comments-server';
 import { getActiveBanners, heroSlides } from '@/lib/banners';
 import { getLocaleAndDictionary } from '@/lib/locale';
 import { getMenu } from '@/lib/menu';
@@ -30,7 +32,13 @@ import { getActiveVideos } from '@/lib/videos';
  */
 export default async function HomePage() {
   const { locale, dict } = getLocaleAndDictionary();
-  const [menu, videos, banners, settings] = await Promise.all([getMenu(locale, dict), getActiveVideos(), getActiveBanners(), getSiteSettings()]);
+  const [menu, videos, banners, settings, commentsEnabled] = await Promise.all([
+    getMenu(locale, dict),
+    getActiveVideos(),
+    getActiveBanners(),
+    getSiteSettings(),
+    commentsAvailable(),
+  ]);
 
   // Videos are only a destination when staff have actually uploaded one.
   const sections = sectionsFor(videos.length > 0);
@@ -60,71 +68,73 @@ export default async function HomePage() {
 
   return (
     <BasketProvider dishes={basketDishes} templates={dict.basket} currency={dict.menu.currency} telegramUsername={settings.telegramUsername}>
-      <IntroOverlay />
-      <div id="top" />
-      <a
-        href="#menu"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-[12px] focus:bg-ink focus:px-4 focus:py-3 focus:text-white"
-      >
-        {dict.a11y.skipToContent}
-      </a>
+      <RatingsProvider copy={dict.rating} locale={locale} commentsEnabled={commentsEnabled} formToken={formToken}>
+        <IntroOverlay />
+        <div id="top" />
+        <a
+          href="#menu"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-[12px] focus:bg-ink focus:px-4 focus:py-3 focus:text-white"
+        >
+          {dict.a11y.skipToContent}
+        </a>
 
-      <SiteHeader
-        locale={locale}
-        brandName={brand.name}
-        phoneHref={phoneHref}
-        nav={dict.nav}
-        sections={sections}
-        labels={{
-          home: dict.a11y.siteNav,
-          cta: dict.header.cta,
-          basket: dict.header.basket,
-          call: dict.header.call,
-          language: dict.a11y.language,
-          switchTo: dict.a11y.switchTo,
-          siteNav: dict.a11y.siteNav,
-        }}
-      />
-
-      <main id="main">
-        <h1 className="sr-only">{dict.meta.title}</h1>
-        <SiteHero brandName={brand.name} hero={dict.hero} badge={dict.visit.badge} slides={slides} bannerLabels={dict.banners} />
-
-        <MenuExplorer status={menu.status} categories={menu.categories} locale={locale} search={dict.search} picksHeading={dict.picks.heading} menu={dict.menu} />
-        {videos.length > 0 ? <Films dict={dict} videos={videos} /> : null}
-
-        <PromotionsSection
-          dishes={discountedDishes}
+        <SiteHeader
           locale={locale}
-          copy={dict.promotions}
-          cardLabels={cardLabels}
+          brandName={brand.name}
+          phoneHref={phoneHref}
+          nav={dict.nav}
+          sections={sections}
+          labels={{
+            home: dict.a11y.siteNav,
+            cta: dict.header.cta,
+            basket: dict.header.basket,
+            call: dict.header.call,
+            language: dict.a11y.language,
+            switchTo: dict.a11y.switchTo,
+            siteNav: dict.a11y.siteNav,
+          }}
         />
 
-        <AboutSection locale={locale} copy={dict.about} settings={settings} />
+        <main id="main">
+          <h1 className="sr-only">{dict.meta.title}</h1>
+          <SiteHero brandName={brand.name} hero={dict.hero} badge={dict.visit.badge} slides={slides} bannerLabels={dict.banners} />
 
-        <VisitCard visit={dict.visit} settings={settings} />
+          <MenuExplorer status={menu.status} categories={menu.categories} locale={locale} search={dict.search} picksHeading={dict.picks.heading} menu={dict.menu} />
+          {videos.length > 0 ? <Films dict={dict} videos={videos} /> : null}
 
-        <ContactInfoSection copy={dict.contactSection} settings={settings} />
-      </main>
+          <PromotionsSection
+            dishes={discountedDishes}
+            locale={locale}
+            copy={dict.promotions}
+            cardLabels={cardLabels}
+          />
 
-      <SiteFooter dict={dict} settings={settings} />
-      <BottomNav nav={dict.nav} label={dict.a11y.bottomNav} />
-      <SeedGutters />
-      <ScrollSeed />
-      <ScrollTopButton label={dict.a11y.backToTop} />
-      <ContactFab labels={dict.fab} contactCopy={dict.contact} token={formToken} telegramHref={telegramHref} phoneHref={phoneHref} />
-      <BasketSheetMount
-        locale={locale}
-        basket={dict.basket}
-        menu={dict.menu}
-        order={dict.order}
-        privacy={dict.footer.privacy}
-        privacyLink={dict.footer.privacyLink}
-        token={formToken}
-        pickupAddress={settings.address}
-        telegramUsername={settings.configured.telegram ? settings.telegramUsername : null}
-      />
-      <SiteToaster closeLabel={dict.a11y.close} />
+          <AboutSection locale={locale} copy={dict.about} settings={settings} />
+
+          <VisitCard visit={dict.visit} settings={settings} />
+
+          <ContactInfoSection copy={dict.contactSection} settings={settings} />
+        </main>
+
+        <SiteFooter dict={dict} settings={settings} />
+        <BottomNav nav={dict.nav} label={dict.a11y.bottomNav} />
+        <SeedGutters />
+        <ScrollSeed />
+        <ScrollTopButton label={dict.a11y.backToTop} />
+        <ContactFab labels={dict.fab} contactCopy={dict.contact} token={formToken} telegramHref={telegramHref} phoneHref={phoneHref} />
+        <BasketSheetMount
+          locale={locale}
+          basket={dict.basket}
+          menu={dict.menu}
+          order={dict.order}
+          privacy={dict.footer.privacy}
+          privacyLink={dict.footer.privacyLink}
+          token={formToken}
+          pickupAddress={settings.address}
+          telegramUsername={settings.configured.telegram ? settings.telegramUsername : null}
+        />
+        <SiteToaster closeLabel={dict.a11y.close} />
+      </RatingsProvider>
     </BasketProvider>
   );
 }

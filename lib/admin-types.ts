@@ -1,4 +1,4 @@
-import type { MenuImage, MenuItem } from '@/lib/types';
+import type { DishRating, MenuImage, MenuItem } from '@/lib/types';
 
 /**
  * What every admin mutation returns: enough to show SAVING → SUCCESS / FAILURE
@@ -11,4 +11,4 @@ import type { MenuImage, MenuItem } from '@/lib/types';
 export type ActionResult = { ok: boolean; message: string; id?: number; at?: number; moved?: boolean } | null;
 
 /** A dish with its ordered photos, as the admin works with it. */
-export type AdminDish = MenuItem & { images: MenuImage[] };
+export type AdminDish = MenuItem & { images: MenuImage[]; rating: DishRating | null };
