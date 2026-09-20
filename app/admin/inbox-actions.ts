@@ -46,9 +46,52 @@ export async function setFeedbackRead(_prev: ActionResult, formData: FormData): 
     .select('id')
     .maybeSingle();
 
-  if (error) return fail(format(t.actions.feedbackUpdateFailed, { reason: error.message }));
+  if (error) {
+    console.error('[admin] feedback update failed with code', error.code);
+    return fail(t.actions.feedbackUpdateFailed);
+  }
   if (!data) return fail(t.actions.feedbackNotIdentified);
 
   revalidatePath('/admin', 'layout');
   return succeed(read ? t.actions.feedbackMarkedRead : t.actions.feedbackMarkedUnread, id);
+}
+
+/** Permanently deletes one contact-form message. Staff-only and irreversible — the UI confirms first. */
+export async function deleteMessage(id: number): Promise<ActionResult> {
+  requireAdmin();
+
+  const t = getAdminDict();
+  const messageId = toId(id);
+  if (messageId === null) return fail(t.actions.messageNotIdentified);
+
+  const { data, error } = await getSupabaseAdmin().from('messages').delete().eq('id', messageId).select('id').maybeSingle();
+
+  if (error) {
+    console.error('[admin] message delete failed with code', error.code);
+    return fail(t.actions.messageDeleteFailed);
+  }
+  if (!data) return fail(t.actions.messageGone);
+
+  revalidatePath('/admin', 'layout');
+  return succeed(t.actions.messageDeleted, messageId);
+}
+
+/** Permanently deletes one piece of table feedback. Staff-only and irreversible — the UI confirms first. */
+export async function deleteFeedback(id: number): Promise<ActionResult> {
+  requireAdmin();
+
+  const t = getAdminDict();
+  const feedbackId = toId(id);
+  if (feedbackId === null) return fail(t.actions.feedbackNotIdentified);
+
+  const { data, error } = await getSupabaseAdmin().from('feedback').delete().eq('id', feedbackId).select('id').maybeSingle();
+
+  if (error) {
+    console.error('[admin] feedback delete failed with code', error.code);
+    return fail(t.actions.feedbackDeleteFailed);
+  }
+  if (!data) return fail(t.actions.feedbackNotIdentified);
+
+  revalidatePath('/admin', 'layout');
+  return succeed(t.actions.feedbackDeleted, feedbackId);
 }

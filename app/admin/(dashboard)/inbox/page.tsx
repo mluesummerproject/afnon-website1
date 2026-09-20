@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import { setFeedbackRead, setMessageRead } from '@/app/admin/inbox-actions';
+import { deleteFeedback, deleteMessage, setFeedbackRead, setMessageRead } from '@/app/admin/inbox-actions';
 import { ActionForm } from '@/components/admin/ActionForm';
 import { AdminEmpty } from '@/components/admin/AdminEmpty';
+import { DeleteRecord } from '@/components/admin/DeleteRecord';
 import { SubmitButton } from '@/components/admin/SubmitButton';
 import { StarIcon } from '@/components/ui/icons';
 import { getFeedback, getMessages, getUnifiedInbox, getUnreadCount, getUnreadFeedbackCount, MESSAGES_PAGE_SIZE, type InboxEntry } from '@/lib/admin-data';
@@ -207,6 +208,9 @@ function MessageCard({
               {isUnread ? t.inbox.markRead : t.inbox.markUnread}
             </SubmitButton>
           </ActionForm>
+          <div className="sm:ml-auto">
+            <DeleteRecord action={deleteMessage.bind(null, message.id)} confirmText={format(t.inbox.deleteMessageConfirm, { name: message.name })} />
+          </div>
         </div>
       </article>
     </li>
@@ -281,6 +285,9 @@ function FeedbackCard({
               {isUnread ? t.inbox.markRead : t.inbox.markUnread}
             </SubmitButton>
           </ActionForm>
+          <div className="sm:ml-auto">
+            <DeleteRecord action={deleteFeedback.bind(null, feedback.id)} confirmText={t.inbox.deleteFeedbackConfirm} />
+          </div>
         </div>
       </article>
     </li>

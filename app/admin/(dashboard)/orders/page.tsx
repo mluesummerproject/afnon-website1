@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { deleteOrder } from '@/app/admin/order-actions';
 import { AdminEmpty } from '@/components/admin/AdminEmpty';
+import { DeleteRecord } from '@/components/admin/DeleteRecord';
 import { OrderStatusSelect } from '@/components/admin/OrderStatusSelect';
 import { getOrderCounts, getOrders, ORDERS_PAGE_SIZE } from '@/lib/admin-data';
 import { getAdminLocaleAndDict } from '@/lib/admin-locale';
@@ -155,6 +157,10 @@ export default async function OrdersPage({ searchParams }: { searchParams?: { st
                   {order.language ? <span>{format(t.orders.language, { language: localeMeta[order.language].name })}</span> : null}
                   {order.telegram_opened ? <span>{t.orders.telegramSent}</span> : null}
                 </p>
+
+                <div className="mt-3 flex justify-end border-t border-line pt-3">
+                  <DeleteRecord action={deleteOrder.bind(null, order.id)} confirmText={format(t.orders.deleteConfirm, { code: order.order_code })} />
+                </div>
               </article>
             </li>
           );

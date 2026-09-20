@@ -27,7 +27,8 @@ export async function createTable(_prev: ActionResult, formData: FormData): Prom
 
   if (error) {
     if (error.code === '23505') return fail(t.actions.tableNumberDuplicate);
-    return fail(format(t.actions.tableCreateFailed, { reason: error.message }));
+    console.error('[admin] table create failed with code', error.code);
+    return fail(t.actions.tableCreateFailed);
   }
 
   revalidatePath('/admin', 'layout');
@@ -44,7 +45,10 @@ export async function setTableActive(id: number, active: boolean): Promise<Actio
 
   const { data, error } = await getSupabaseAdmin().from('restaurant_tables').update({ is_active: active }).eq('id', tableId).select('id, table_number').maybeSingle();
 
-  if (error) return fail(format(t.actions.tableToggleFailed, { reason: error.message }));
+  if (error) {
+    console.error('[admin] table update failed with code', error.code);
+    return fail(t.actions.tableToggleFailed);
+  }
   if (!data) return fail(t.actions.tableGone);
 
   revalidatePath('/admin', 'layout');
@@ -71,7 +75,8 @@ export async function deleteTable(id: number): Promise<ActionResult> {
 
   if (error) {
     if (error.code === '23503') return fail(format(t.actions.tableDeleteBlocked, { number: existing.table_number }));
-    return fail(format(t.actions.tableDeleteFailed, { reason: error.message }));
+    console.error('[admin] table delete failed with code', error.code);
+    return fail(t.actions.tableDeleteFailed);
   }
 
   revalidatePath('/admin', 'layout');
