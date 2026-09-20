@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 
 import { deleteTable, setTableActive } from '@/app/admin/table-actions';
 import { useT } from '@/components/admin/AdminLangProvider';
+import { fileSlug } from '@/components/admin/qr-download';
+import { QrDownloads } from '@/components/admin/QrDownloads';
 import { TableQr, tableUrl } from '@/components/admin/TableQr';
 import { toast } from '@/components/admin/toast';
 import { useAdminAction } from '@/components/admin/useAdminAction';
@@ -58,6 +60,9 @@ export function TableRow({ table }: { table: RestaurantTable }) {
           </span>
         </div>
         <p className="mt-1 break-all text-micro text-ink-muted">/t/{table.token}</p>
+        <div className="mt-3">
+          <QrDownloads path={`/t/${table.token}`} name={`afnon-table-${fileSlug(table.table_number, String(table.id))}`} />
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 sm:shrink-0">

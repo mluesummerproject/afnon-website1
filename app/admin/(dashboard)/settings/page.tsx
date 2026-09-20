@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { SettingsForm } from '@/components/admin/SettingsForm';
+import { SiteQrCard } from '@/components/admin/SiteQrCard';
 import { getStoredSettings } from '@/lib/admin-data';
 import { getAdminDict } from '@/lib/admin-locale';
 
@@ -22,6 +23,8 @@ export default async function AdminSettingsPage() {
       ) : null}
 
       <SettingsForm settings={settings} />
+
+      <SiteQrCard />
     </main>
   );
 }
