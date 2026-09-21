@@ -2,6 +2,7 @@ import 'server-only';
 
 import { cleanReasons, type PublicComment, type ReasonKey } from '@/lib/ratings';
 import { getSupabaseAdmin, isAdminSupabaseConfigured } from '@/lib/supabase-admin';
+import { isMissingSchema } from '@/lib/tables-server';
 
 /**
  * Whether supabase/migrations/0002_table_orders_and_dish_comments.sql has been
@@ -19,9 +20,10 @@ export async function commentsAvailable(): Promise<boolean> {
   if (!isAdminSupabaseConfigured) return false;
   if (knownAvailable) return true;
   if (Date.now() - checkedAt < 30_000) return false;
-  checkedAt = Date.now();
   const { error } = await getSupabaseAdmin().from('dish_comments').select('id').limit(1);
-  knownAvailable = !error;
+  // Only "the table does not exist" counts as not-run-yet; a dropped connection is retried next time.
+  if (!error) knownAvailable = true;
+  else if (isMissingSchema(error.code)) checkedAt = Date.now();
   return knownAvailable;
 }
 

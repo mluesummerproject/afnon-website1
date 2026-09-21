@@ -6,6 +6,7 @@ import { AdminLangProvider } from '@/components/admin/AdminLangProvider';
 import { AdminLanguageSwitch } from '@/components/admin/AdminLanguageSwitch';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { HomeScreenHint } from '@/components/admin/HomeScreenHint';
+import { OrderWatcher } from '@/components/admin/OrderWatcher';
 import { SubmitButton } from '@/components/admin/SubmitButton';
 import { Toaster } from '@/components/admin/Toaster';
 import { AnorMark } from '@/components/ui/AnorMark';
@@ -40,6 +41,7 @@ export default async function ProtectedAdminLayout({ children }: { children: Rea
               <span className="label hidden text-ink-muted sm:inline">{dict.shell.staff}</span>
             </div>
             <div className="flex shrink-0 items-center gap-2 md:gap-4">
+              <OrderWatcher />
               <AdminLanguageSwitch />
               <Link href="/" target="_blank" className="link-underline label hidden min-h-[2.75rem] items-center text-ink-secondary lg:inline-flex">
                 {dict.shell.viewSite}

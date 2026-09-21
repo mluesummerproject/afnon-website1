@@ -5,6 +5,7 @@ import { cleanOrderLines, snapshotTotal, validateDetails, type OrderField, type 
 import { isLocale, localizedText, type Locale } from '@/lib/i18n';
 import { parseAmount } from '@/lib/menu-format';
 import { getSupabaseAdmin, isAdminSupabaseConfigured } from '@/lib/supabase-admin';
+import { resolveTableByToken, tableOrderingAvailable } from '@/lib/tables-server';
 import type { MenuItem } from '@/lib/types';
 
 export type PlaceOrderInput = {
@@ -12,6 +13,8 @@ export type PlaceOrderInput = {
   company: unknown;
   locale: unknown;
   fulfillment: unknown;
+  /** For a table order only: the token from the table's QR code. The table itself is always looked up here. */
+  tableToken?: unknown;
   phone: unknown;
   name: unknown;
   address: unknown;
@@ -26,7 +29,10 @@ export type PlacedOrder = {
   code: string;
   items: OrderItemSnapshot[];
   total: number;
-  phone: string;
+  /** null for a table order — those are placed from the table, with no phone. */
+  phone: string | null;
+  /** The table's number for a table order, as it was when the order was placed. */
+  table: string | null;
   /** Proof this browser placed the order — the only thing that may mark it as sent to Telegram. */
   receipt: string;
 };
@@ -34,7 +40,7 @@ export type PlacedOrder = {
 export type PlaceOrderResult =
   | { status: 'ok'; order: PlacedOrder }
   | { status: 'error'; reason: 'fields'; invalid: OrderField[] }
-  | { status: 'error'; reason: 'basketChanged' | 'rateLimited' | 'expired' | 'generic' };
+  | { status: 'error'; reason: 'basketChanged' | 'rateLimited' | 'expired' | 'tableUnavailable' | 'generic' };
 
 const MAX_TOKEN_AGE_MS = 24 * 60 * 60 * 1000;
 const MIN_FILL_MS = 2500;
@@ -45,11 +51,18 @@ const MEMORY_WINDOW_MS = 10 * 60 * 1000;
 const MEMORY_LIMIT = 8; // attempts, not orders: a retry after a dropped connection must still get through
 const DB_WINDOW_MS = 30 * 60 * 1000;
 const DB_LIMIT_PER_PHONE = 3;
-const DB_LIMIT_PER_VISITOR = 5;
+const DB_LIMIT_PER_VISITOR = 20;
 /** The same phone sending the same dishes this soon is a double tap or a resubmit, not a new order. */
 const DUPLICATE_WINDOW_MS = 2 * 60 * 1000;
 
-const fail = (reason: 'basketChanged' | 'rateLimited' | 'expired' | 'generic'): PlaceOrderResult => ({ status: 'error', reason });
+// Table orders are throttled per TABLE, not per address: everyone in the restaurant shares one Wi-Fi
+// address, so an address-wide limit would lock the whole room out after a few tables had ordered.
+const TABLE_LIMIT_PER_VISITOR = 4; // orders from one device/address at one table, per window
+const TABLE_LIMIT_PER_TABLE = 12; // orders at one table, per window
+/** Shorter than for phone orders: two friends at one table may each order the same single dish. */
+const TABLE_DUPLICATE_WINDOW_MS = 45 * 1000;
+
+const fail = (reason: 'basketChanged' | 'rateLimited' | 'expired' | 'tableUnavailable' | 'generic'): PlaceOrderResult => ({ status: 'error', reason });
 
 const sameItems = (a: OrderItemSnapshot[], b: OrderItemSnapshot[]) => {
   const key = (items: OrderItemSnapshot[]) => items.map((item) => `${item.id}x${item.qty}`).sort().join(',');
@@ -93,7 +106,20 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   const locale: Locale = isLocale(input.locale) ? input.locale : 'uz';
 
   const visitor = visitorKey();
-  if (!withinRateLimit(`order:${visitor}`, MEMORY_LIMIT, MEMORY_WINDOW_MS)) return fail('rateLimited');
+
+  // A table order names its table by the QR token alone. The number, and whether the table exists and is
+  // active, come from the database here — nothing about the table is ever taken from the browser.
+  let table: { id: number; tableNumber: string } | null = null;
+  if (values.fulfillment === 'table') {
+    if (!withinRateLimit(`order-table-lookup:${visitor}`, 30, MEMORY_WINDOW_MS)) return fail('rateLimited');
+    const token = typeof input.tableToken === 'string' ? input.tableToken : '';
+    const [available, resolved] = await Promise.all([tableOrderingAvailable(), resolveTableByToken(token)]);
+    if (!available || !resolved) return fail('tableUnavailable');
+    table = resolved;
+  }
+
+  const attemptKey = table ? `order:table:${table.id}:${visitor}` : `order:${visitor}`;
+  if (!withinRateLimit(attemptKey, MEMORY_LIMIT, MEMORY_WINDOW_MS)) return fail('rateLimited');
 
   const supabase = getSupabaseAdmin();
 
@@ -124,9 +150,64 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
 
   // Cross-instance throttle + double-submit guard, read with the server-only client.
   const since = new Date(Date.now() - DB_WINDOW_MS).toISOString();
+
+  if (table) {
+    const recent = await supabase
+      .from('orders')
+      .select('id, order_code, items, total, created_at, visitor_key')
+      .eq('table_id', table.id)
+      .gte('created_at', since)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (recent.error) {
+      console.error('[order] table throttle read failed with code', recent.error.code);
+      return fail('generic');
+    }
+    const rows = recent.data ?? [];
+    const repeat = rows.find(
+      (order) =>
+        order.visitor_key === visitor && Date.now() - new Date(order.created_at).getTime() < TABLE_DUPLICATE_WINDOW_MS && sameItems(order.items as OrderItemSnapshot[], items),
+    );
+    if (repeat) {
+      return {
+        status: 'ok',
+        order: { code: repeat.order_code, items: repeat.items as OrderItemSnapshot[], total: Number(repeat.total), phone: null, table: table.tableNumber, receipt: signValue(RECEIPT, String(repeat.id)) },
+      };
+    }
+    if (rows.filter((order) => order.visitor_key === visitor).length >= TABLE_LIMIT_PER_VISITOR || rows.length >= TABLE_LIMIT_PER_TABLE) return fail('rateLimited');
+
+    const placedAtTable = await supabase
+      .from('orders')
+      .insert({
+        fulfillment_type: 'table',
+        table_id: table.id,
+        table_number: table.tableNumber,
+        customer_name: null,
+        phone: null,
+        items,
+        total,
+        payment_method: 'cash',
+        language: locale,
+        visitor_key: visitor,
+      })
+      .select('id, order_code')
+      .single();
+    if (placedAtTable.error || !placedAtTable.data) {
+      console.error('[order] table insert failed with code', placedAtTable.error?.code);
+      return fail('generic');
+    }
+    return {
+      status: 'ok',
+      order: { code: placedAtTable.data.order_code, items, total, phone: null, table: table.tableNumber, receipt: signValue(RECEIPT, String(placedAtTable.data.id)) },
+    };
+  }
+
+  // Delivery and pickup always carry a validated phone (a table order returned above).
+  const phone = values.phone as string;
   const [byPhone, byVisitor] = await Promise.all([
-    supabase.from('orders').select('id, order_code, items, total, created_at').eq('phone', values.phone).gte('created_at', since).order('created_at', { ascending: false }).limit(10),
-    supabase.from('orders').select('id', { count: 'exact', head: true }).eq('visitor_key', visitor).gte('created_at', since),
+    supabase.from('orders').select('id, order_code, items, total, created_at').eq('phone', phone).gte('created_at', since).order('created_at', { ascending: false }).limit(10),
+    // Table orders share the restaurant's address and have their own per-table limit above, so they do not count here.
+    supabase.from('orders').select('id', { count: 'exact', head: true }).eq('visitor_key', visitor).neq('fulfillment_type', 'table').gte('created_at', since),
   ]);
   if (byPhone.error || byVisitor.error) {
     console.error('[order] throttle read failed with code', byPhone.error?.code ?? byVisitor.error?.code);
@@ -139,7 +220,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   if (duplicate) {
     return {
       status: 'ok',
-      order: { code: duplicate.order_code, items: duplicate.items as OrderItemSnapshot[], total: Number(duplicate.total), phone: values.phone, receipt: signValue(RECEIPT, String(duplicate.id)) },
+      order: { code: duplicate.order_code, items: duplicate.items as OrderItemSnapshot[], total: Number(duplicate.total), phone, table: null, receipt: signValue(RECEIPT, String(duplicate.id)) },
     };
   }
   if ((byPhone.data?.length ?? 0) >= DB_LIMIT_PER_PHONE || (byVisitor.count ?? 0) >= DB_LIMIT_PER_VISITOR) return fail('rateLimited');
@@ -149,7 +230,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     .insert({
       fulfillment_type: values.fulfillment,
       customer_name: values.name,
-      phone: values.phone,
+      phone,
       address: values.address,
       address_note: values.addressNote,
       geo_lat: values.geo?.lat ?? null,
@@ -170,7 +251,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
 
   return {
     status: 'ok',
-    order: { code: created.order_code, items, total, phone: values.phone, receipt: signValue(RECEIPT, String(created.id)) },
+    order: { code: created.order_code, items, total, phone, table: null, receipt: signValue(RECEIPT, String(created.id)) },
   };
 }
 

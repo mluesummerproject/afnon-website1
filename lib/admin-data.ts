@@ -6,6 +6,7 @@ import { labelsByCategory, orderCategoryGroups } from '@/lib/categories';
 import { groupByCategory, sortForAdmin } from '@/lib/ordering';
 import { rowsToStored, type StoredSettings } from '@/lib/settings-core';
 import { getSupabaseAdmin, isAdminSupabaseConfigured } from '@/lib/supabase-admin';
+import { isMissingSchema, tableOrderingAvailable } from '@/lib/tables-server';
 import {
   MENU_ITEM_COLUMNS,
   ORDER_STATUSES,
@@ -130,24 +131,49 @@ export const ORDERS_PAGE_SIZE = 25;
 
 const ORDER_COLUMNS =
   'id, created_at, order_code, fulfillment_type, customer_name, phone, address, address_note, geo_lat, geo_lng, items, total, payment_method, status, language, telegram_opened';
+/** Once the table-orders SQL has run, orders also carry the table they were placed from. */
+const ORDER_COLUMNS_WITH_TABLE = `${ORDER_COLUMNS}, table_id, table_number`;
+
+export type OrderTypeFilter = 'all' | 'delivery' | 'pickup' | 'table';
 
 /** Orders newest first, optionally one status only. Read only here, with the service role. */
-export async function getOrders(filter: OrderStatus | 'all', page: number): Promise<{ orders: Order[]; total: number; error?: string }> {
+export async function getOrders(
+  filter: OrderStatus | 'all',
+  page: number,
+  type: OrderTypeFilter = 'all',
+  table: string | null = null,
+): Promise<{ orders: Order[]; total: number; error?: string }> {
   requireAdmin();
   if (!isAdminSupabaseConfigured) return { orders: [], total: 0, error: t().toast.missingKey };
+
+  const withTables = await tableOrderingAvailable();
+  // Asking for table orders before there can be any is simply an empty list.
+  if (!withTables && (type === 'table' || table)) return { orders: [], total: 0 };
 
   const from = (Math.max(1, page) - 1) * ORDERS_PAGE_SIZE;
   let query = getSupabaseAdmin()
     .from('orders')
-    .select(ORDER_COLUMNS, { count: 'exact' })
+    .select(withTables ? ORDER_COLUMNS_WITH_TABLE : ORDER_COLUMNS, { count: 'exact' })
     .order('created_at', { ascending: false })
     .order('id', { ascending: false })
     .range(from, from + ORDERS_PAGE_SIZE - 1);
   if (filter !== 'all') query = query.eq('status', filter);
+  if (type !== 'all') query = query.eq('fulfillment_type', type);
+  if (table) query = query.eq('table_number', table);
 
   const { data, error, count } = await query;
   if (error) return { orders: [], total: 0, error: format(t().toast.loadOrders, { reason: error.message }) };
-  return { orders: (data ?? []) as Order[], total: count ?? 0 };
+  return { orders: (data ?? []) as unknown as Order[], total: count ?? 0 };
+}
+
+/** Every table number that has had an order, in natural order (2 before 10) — for the table filter. */
+export async function getOrderTableNumbers(): Promise<string[]> {
+  requireAdmin();
+  if (!isAdminSupabaseConfigured || !(await tableOrderingAvailable())) return [];
+  const { data } = await getSupabaseAdmin().from('orders').select('table_number').eq('fulfillment_type', 'table').not('table_number', 'is', null).limit(5000);
+  const numbers = new Set<string>();
+  for (const row of data ?? []) if (typeof row.table_number === 'string' && row.table_number.trim() !== '') numbers.add(row.table_number);
+  return [...numbers].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 }
 
 /** How many orders sit in each status — real counts, zero included. */
@@ -356,7 +382,8 @@ export async function adminCommentsAvailable(): Promise<boolean> {
   requireAdmin();
   if (!isAdminSupabaseConfigured) return false;
   const { error } = await getSupabaseAdmin().from('dish_comments').select('id').limit(1);
-  return !error;
+  // Only a missing table means "not switched on"; any other hiccup lets the page load and report it itself.
+  return !error || !isMissingSchema(error.code);
 }
 
 export async function getCommentCounts(): Promise<{ visible: number; hidden: number }> {

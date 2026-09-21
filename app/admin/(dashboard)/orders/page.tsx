@@ -5,19 +5,32 @@ import { deleteOrder } from '@/app/admin/order-actions';
 import { AdminEmpty } from '@/components/admin/AdminEmpty';
 import { DeleteRecord } from '@/components/admin/DeleteRecord';
 import { OrderStatusSelect } from '@/components/admin/OrderStatusSelect';
-import { getOrderCounts, getOrders, ORDERS_PAGE_SIZE } from '@/lib/admin-data';
+import { OrderTableFilter } from '@/components/admin/OrderTableFilter';
+import { getOrderCounts, getOrders, getOrderTableNumbers, ORDERS_PAGE_SIZE, type OrderTypeFilter } from '@/lib/admin-data';
 import { getAdminLocaleAndDict } from '@/lib/admin-locale';
 import { displayUzPhone, mapsLink } from '@/lib/checkout';
 import { format, getDictionary, localeMeta } from '@/lib/i18n';
 import { formatAmount } from '@/lib/menu-format';
+import { tableOrderingAvailable } from '@/lib/tables-server';
 import { isOrderStatus, ORDER_STATUSES, type OrderStatus } from '@/lib/types';
 
 export const metadata: Metadata = { title: 'Orders' };
 
-export default async function OrdersPage({ searchParams }: { searchParams?: { status?: string; page?: string } }) {
+const TYPES = ['delivery', 'pickup', 'table'] as const;
+
+export default async function OrdersPage({ searchParams }: { searchParams?: { status?: string; type?: string; table?: string; page?: string } }) {
   const filter: OrderStatus | 'all' = isOrderStatus(searchParams?.status) ? searchParams.status : 'all';
   const page = Math.max(1, Math.floor(Number(searchParams?.page) || 1));
-  const [{ orders, total, error }, counts] = await Promise.all([getOrders(filter, page), getOrderCounts()]);
+  // A chosen table number is a table filter by itself.
+  const rawTable = typeof searchParams?.table === 'string' ? searchParams.table.trim().slice(0, 20) : '';
+  const tableFilter = rawTable !== '' ? rawTable : null;
+  const type: OrderTypeFilter = tableFilter ? 'table' : (TYPES as readonly string[]).includes(searchParams?.type ?? '') ? (searchParams!.type as OrderTypeFilter) : 'all';
+  const [{ orders, total, error }, counts, tablesEnabled, tableNumbers] = await Promise.all([
+    getOrders(filter, page, type, tableFilter),
+    getOrderCounts(),
+    tableOrderingAvailable(),
+    getOrderTableNumbers(),
+  ]);
   const pages = Math.max(1, Math.ceil(total / ORDERS_PAGE_SIZE));
   const { locale, dict: t } = getAdminLocaleAndDict();
   const currency = getDictionary(locale).menu.currency;
@@ -31,12 +44,34 @@ export default async function OrdersPage({ searchParams }: { searchParams?: { st
     minute: '2-digit',
   });
 
+  // Every filter link keeps the others, so status, type and table combine.
+  const hrefFor = (next: { status?: OrderStatus | 'all'; type?: OrderTypeFilter; table?: string | null; page?: number }) => {
+    const status = next.status ?? filter;
+    const nextTable = next.table === undefined ? tableFilter : next.table;
+    const nextType = nextTable ? 'table' : (next.type ?? type);
+    const parts = [
+      status !== 'all' ? `status=${status}` : null,
+      nextType !== 'all' ? `type=${nextType}` : null,
+      nextTable ? `table=${encodeURIComponent(nextTable)}` : null,
+      next.page && next.page > 1 ? `page=${next.page}` : null,
+    ].filter(Boolean);
+    return `/admin/orders${parts.length ? `?${parts.join('&')}` : ''}`;
+  };
+
   const allCount = ORDER_STATUSES.reduce((sum, status) => sum + counts[status], 0);
   const tabs: { key: OrderStatus | 'all'; label: string; count: number; href: string }[] = [
-    { key: 'all', label: t.orders.all, count: allCount, href: '/admin/orders' },
-    ...ORDER_STATUSES.map((status) => ({ key: status, label: t.orders.statuses[status], count: counts[status], href: `/admin/orders?status=${status}` })),
+    { key: 'all', label: t.orders.all, count: allCount, href: hrefFor({ status: 'all', page: 1 }) },
+    ...ORDER_STATUSES.map((status) => ({ key: status, label: t.orders.statuses[status], count: counts[status], href: hrefFor({ status, page: 1 }) })),
   ];
-  const pageHref = (target: number) => `/admin/orders?${filter !== 'all' ? `status=${filter}&` : ''}page=${target}`;
+  const typeTabs: { key: OrderTypeFilter; label: string }[] = [
+    { key: 'all', label: t.orders.all },
+    { key: 'delivery', label: t.orders.delivery },
+    { key: 'pickup', label: t.orders.pickup },
+    ...(tablesEnabled ? [{ key: 'table' as const, label: t.orders.atTable }] : []),
+  ];
+  const pageHref = (target: number) => hrefFor({ page: target });
+  const tableHrefs: Record<string, string> = { '': hrefFor({ table: null, type: 'table', page: 1 }), ...Object.fromEntries(tableNumbers.map((number) => [number, hrefFor({ table: number, page: 1 })])) };
+  const filtered = type !== 'all' || filter !== 'all';
 
   return (
     <main className="shell py-6 md:py-10">
@@ -70,6 +105,31 @@ export default async function OrdersPage({ searchParams }: { searchParams?: { st
         </div>
       </div>
 
+      {tablesEnabled ? (
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+          <div className="flex flex-wrap items-center gap-2" role="group" aria-label={t.orders.typeLabel}>
+            {typeTabs.map((tab) => {
+              const active = type === tab.key;
+              return (
+                <Link
+                  key={tab.key}
+                  href={hrefFor({ type: tab.key, table: null, page: 1 })}
+                  aria-current={active ? 'page' : undefined}
+                  className={`tap flex min-h-[2.75rem] items-center rounded-hair border px-3.5 text-micro font-semibold uppercase transition-colors duration-quick ${
+                    active ? 'border-ink bg-ink text-paper' : 'border-line-strong bg-surface text-ink-secondary hover:border-ink hover:text-ink'
+                  }`}
+                >
+                  {tab.label}
+                </Link>
+              );
+            })}
+          </div>
+          {type === 'table' && tableNumbers.length > 0 ? (
+            <OrderTableFilter label={t.orders.tableFilterLabel} allLabel={t.orders.allTables} numbers={tableNumbers} value={tableFilter} hrefFor={tableHrefs} />
+          ) : null}
+        </div>
+      ) : null}
+
       {error ? (
         <p role="alert" className="mt-6 border-l-2 border-critical bg-surface px-4 py-3 text-body-sm text-critical">
           {error}
@@ -77,14 +137,17 @@ export default async function OrdersPage({ searchParams }: { searchParams?: { st
       ) : null}
 
       {!error && orders.length === 0 ? (
-        <AdminEmpty rule title={filter === 'all' ? t.orders.emptyTitle : t.orders.emptyFilteredTitle}>{filter === 'all' ? t.orders.emptyBody : t.orders.emptyFilteredBody}</AdminEmpty>
+        <AdminEmpty rule title={!filtered ? t.orders.emptyTitle : type === 'table' && filter === 'all' ? t.orders.emptyTableTitle : t.orders.emptyFilteredTitle}>
+          {!filtered ? t.orders.emptyBody : type === 'table' && filter === 'all' ? t.orders.emptyTableBody : t.orders.emptyFilteredBody}
+        </AdminEmpty>
       ) : null}
 
       <ul className="mt-6 space-y-3">
         {orders.map((order) => {
           const fresh = order.status === 'new';
           const delivery = order.fulfillment_type === 'delivery';
-          const phone = displayUzPhone(order.phone);
+          const atTable = order.fulfillment_type === 'table';
+          const phone = order.phone ? displayUzPhone(order.phone) : null;
           const geo = order.geo_lat !== null && order.geo_lng !== null ? mapsLink({ lat: Number(order.geo_lat), lng: Number(order.geo_lng) }) : null;
           return (
             <li key={order.id}>
@@ -100,24 +163,40 @@ export default async function OrdersPage({ searchParams }: { searchParams?: { st
                         {timeFormat.format(new Date(order.created_at))}
                       </time>
                       <span aria-hidden="true" className="text-line-strong">·</span>
-                      <span className={`label rounded-hair px-1.5 py-1 ${delivery ? 'bg-anor-tint text-anor' : 'bg-paper-alt text-ink-secondary'}`}>{delivery ? t.orders.delivery : t.orders.pickup}</span>
+                      {atTable ? null : (
+                        <span className={`label rounded-hair px-1.5 py-1 ${delivery ? 'bg-anor-tint text-anor' : 'bg-paper-alt text-ink-secondary'}`}>{delivery ? t.orders.delivery : t.orders.pickup}</span>
+                      )}
                     </p>
+                    {atTable ? (
+                      // The table is the first thing staff need from a table order — big, and linked to that table's own filter.
+                      <Link
+                        href={hrefFor({ table: order.table_number ?? null, type: 'table', page: 1 })}
+                        aria-label={format(t.orders.tableBadge, { number: order.table_number ?? '' })}
+                        className="figures mt-2 inline-flex items-center rounded-hair bg-ink px-3 py-1.5 font-display text-[1.375rem] font-bold leading-none text-paper transition-opacity duration-quick hover:opacity-85"
+                      >
+                        {format(t.orders.tableBadge, { number: order.table_number ?? '?' })}
+                      </Link>
+                    ) : null}
                   </div>
                   <OrderStatusSelect id={order.id} code={order.order_code} status={order.status} />
                 </header>
 
                 <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-                  <a
-                    href={`tel:${order.phone}`}
-                    aria-label={format(t.orders.call, { phone })}
-                    className="tap figures inline-flex min-h-[2.75rem] items-center gap-2 rounded-hair bg-anor px-4 text-body font-semibold text-paper hover:bg-anor-hover"
-                  >
-                    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M6.6 3.5h2.6l1.5 4-2 1.3a11.3 11.3 0 0 0 6.5 6.5l1.3-2 4 1.5v2.6a2 2 0 0 1-2.2 2A16.8 16.8 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2Z" />
-                    </svg>
-                    {phone}
-                  </a>
-                  <span className={`text-body-sm ${order.customer_name ? 'text-ink' : 'text-ink-muted'}`}>{order.customer_name ?? t.orders.noName}</span>
+                  {order.phone && phone ? (
+                    <a
+                      href={`tel:${order.phone}`}
+                      aria-label={format(t.orders.call, { phone })}
+                      className="tap figures inline-flex min-h-[2.75rem] items-center gap-2 rounded-hair bg-anor px-4 text-body font-semibold text-paper hover:bg-anor-hover"
+                    >
+                      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M6.6 3.5h2.6l1.5 4-2 1.3a11.3 11.3 0 0 0 6.5 6.5l1.3-2 4 1.5v2.6a2 2 0 0 1-2.2 2A16.8 16.8 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2Z" />
+                      </svg>
+                      {phone}
+                    </a>
+                  ) : (
+                    <span className="text-body-sm text-ink-muted">{t.orders.noPhone}</span>
+                  )}
+                  {atTable ? null : <span className={`text-body-sm ${order.customer_name ? 'text-ink' : 'text-ink-muted'}`}>{order.customer_name ?? t.orders.noName}</span>}
                 </div>
 
                 <ul className="mt-4 divide-y divide-line border-y border-line">

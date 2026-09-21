@@ -157,3 +157,11 @@ export const FilmIcon = ({ className, size = 22 }: IconProps) => (
     <path d="M7.5 5v14M16.5 5v14M3 12h18" />
   </svg>
 );
+
+export const BellIcon = ({ className, size = 20, muted = false }: IconProps & { muted?: boolean }) => (
+  <svg {...base(size)} className={className}>
+    <path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15Z" />
+    <path d="M10 20.5a2 2 0 0 0 4 0" />
+    {muted ? <path d="M4 4l16 16" /> : null}
+  </svg>
+);

@@ -1,0 +1,157 @@
+import { AboutSection } from '@/components/site/AboutSection';
+import { BasketProvider } from '@/components/site/basket/BasketProvider';
+import { BasketSheetMount } from '@/components/site/basket/BasketSheetMount';
+import { BottomNav } from '@/components/site/BottomNav';
+import { ContactInfoSection } from '@/components/site/ContactInfoSection';
+import { Films } from '@/components/site/Films';
+import { ContactFab, ScrollTopButton } from '@/components/site/FloatingButtons';
+import { IntroOverlay } from '@/components/site/IntroOverlay';
+import { MenuExplorer } from '@/components/site/menu/MenuExplorer';
+import { RatingsProvider } from '@/components/site/menu/RatingsContext';
+import { PromotionsSection } from '@/components/site/PromotionsSection';
+import { ScrollSeed } from '@/components/site/ScrollSeed';
+import { SeedGutters } from '@/components/site/SeedGutters';
+import { SiteFooter } from '@/components/site/SiteFooter';
+import { SiteHeader } from '@/components/site/SiteHeader';
+import { SiteHero } from '@/components/site/SiteHero';
+import { SiteToaster } from '@/components/site/SiteToaster';
+import { TableFeedbackSection } from '@/components/site/TableFeedbackSection';
+import { TableOrderCard } from '@/components/site/TableOrderCard';
+import { VisitCard } from '@/components/site/VisitCard';
+import { issueFormToken } from '@/lib/antispam';
+import { commentsAvailable } from '@/lib/comments-server';
+import { getActiveBanners, heroSlides } from '@/lib/banners';
+import { getLocaleAndDictionary } from '@/lib/locale';
+import { getMenu } from '@/lib/menu';
+import { sectionsFor } from '@/lib/sections';
+import { getSiteSettings } from '@/lib/settings';
+import { brand } from '@/lib/site';
+import { getActiveVideos } from '@/lib/videos';
+
+/** Set on /t/[token]: the page knows which table it is being read at. */
+export type TableContext = { token: string; number: string };
+
+/**
+ * The whole customer page. `app/page.tsx` renders it as the homepage and
+ * `/t/[token]` renders the very same thing for a table's QR code — one menu,
+ * one basket, one checkout — with the table known from the first byte and the
+ * homepage's marketing hero swapped for a card that says where the order goes.
+ *
+ * Rendered per request (the language comes from a cookie). Every Supabase
+ * read underneath stays in Next's data cache and is refreshed by staff edits.
+ */
+export async function HomeView({ table = null }: { table?: TableContext | null }) {
+  const { locale, dict } = getLocaleAndDictionary();
+  const [menu, videos, banners, settings, commentsEnabled] = await Promise.all([
+    getMenu(locale, dict),
+    getActiveVideos(),
+    getActiveBanners(),
+    getSiteSettings(),
+    commentsAvailable(),
+  ]);
+
+  // Videos are only a destination when staff have actually uploaded one.
+  const sections = sectionsFor(videos.length > 0);
+
+  // Banners are the hero. Each one's link is resolved here, against the
+  // categories this page actually rendered.
+  const slides = heroSlides(banners, menu.categories);
+
+  const allDishes = menu.categories.flatMap((category) => category.dishes);
+  const discountedDishes = allDishes.filter((dish) => dish.discountPercent !== null);
+
+  const basketDishes = allDishes.map((dish) => ({
+    id: dish.id,
+    name: dish.name,
+    priceValue: dish.priceValue,
+    available: dish.available,
+    image: dish.images[0]?.src ?? null,
+    imageAlt: dish.images[0]?.alt ?? dish.name,
+  }));
+
+  // Offered only when the restaurant actually saved them in Settings.
+  const telegramHref = settings.configured.telegram && settings.telegram ? settings.telegram.href : null;
+  const phoneHref = settings.configured.phone && settings.phone ? settings.phone.href : null;
+
+  const cardLabels = { ...dict.menu, close: dict.menu.close, photoPosition: dict.menu.photoPosition, showPhoto: dict.menu.showPhoto };
+  const formToken = issueFormToken();
+
+  return (
+    <BasketProvider dishes={basketDishes} templates={dict.basket} currency={dict.menu.currency} telegramUsername={settings.telegramUsername}>
+      <RatingsProvider copy={dict.rating} locale={locale} commentsEnabled={commentsEnabled} formToken={formToken}>
+        <IntroOverlay />
+        <div id="top" />
+        <a
+          href="#menu"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-[12px] focus:bg-ink focus:px-4 focus:py-3 focus:text-white"
+        >
+          {dict.a11y.skipToContent}
+        </a>
+
+        <SiteHeader
+          locale={locale}
+          brandName={brand.name}
+          phoneHref={phoneHref}
+          nav={dict.nav}
+          sections={sections}
+          labels={{
+            home: dict.a11y.siteNav,
+            cta: dict.header.cta,
+            basket: dict.header.basket,
+            call: dict.header.call,
+            language: dict.a11y.language,
+            switchTo: dict.a11y.switchTo,
+            siteNav: dict.a11y.siteNav,
+          }}
+        />
+
+        <main id="main">
+          <h1 className="sr-only">{dict.meta.title}</h1>
+          {table ? (
+            <TableOrderCard number={table.number} copy={dict.tableOrder} />
+          ) : (
+            <SiteHero brandName={brand.name} hero={dict.hero} badge={dict.visit.badge} slides={slides} bannerLabels={dict.banners} />
+          )}
+
+          <MenuExplorer status={menu.status} categories={menu.categories} locale={locale} search={dict.search} picksHeading={dict.picks.heading} menu={dict.menu} />
+          {videos.length > 0 ? <Films dict={dict} videos={videos} /> : null}
+
+          <PromotionsSection
+            dishes={discountedDishes}
+            locale={locale}
+            copy={dict.promotions}
+            cardLabels={cardLabels}
+          />
+
+          <AboutSection locale={locale} copy={dict.about} settings={settings} />
+
+          <VisitCard visit={dict.visit} settings={settings} />
+
+          <ContactInfoSection copy={dict.contactSection} settings={settings} />
+
+          {table ? <TableFeedbackSection token={table.token} formToken={formToken} locale={locale} order={dict.tableOrder} copy={dict.tableFeedback} /> : null}
+        </main>
+
+        <SiteFooter dict={dict} settings={settings} />
+        <BottomNav nav={dict.nav} label={dict.a11y.bottomNav} />
+        <SeedGutters />
+        <ScrollSeed />
+        <ScrollTopButton label={dict.a11y.backToTop} />
+        <ContactFab labels={dict.fab} contactCopy={dict.contact} token={formToken} telegramHref={telegramHref} phoneHref={phoneHref} />
+        <BasketSheetMount
+          locale={locale}
+          basket={dict.basket}
+          menu={dict.menu}
+          order={dict.order}
+          privacy={dict.footer.privacy}
+          privacyLink={dict.footer.privacyLink}
+          token={formToken}
+          pickupAddress={settings.address}
+          telegramUsername={settings.configured.telegram ? settings.telegramUsername : null}
+          table={table ? { token: table.token, number: table.number } : null}
+        />
+        <SiteToaster closeLabel={dict.a11y.close} />
+      </RatingsProvider>
+    </BasketProvider>
+  );
+}

@@ -41,6 +41,8 @@ type BasketSheetProps = {
   /** From site_settings; null until the restaurant saves one. */
   pickupAddress: string | null;
   telegramUsername: string | null;
+  /** Set on /t/[token]: the order goes to this table. The number is for display — the server looks the table up from the token. */
+  table: { token: string; number: string } | null;
   onBrowse: () => void;
 };
 
@@ -55,11 +57,11 @@ const ORDER: View[] = ['basket', ...CHECKOUT_STEPS, 'done'];
  * is recorded on the server first; the basket is only cleared once it has
  * been, and any failure keeps both the basket and everything typed.
  */
-export function BasketSheet({ locale, basket, menu, order, privacy, privacyLink, token, pickupAddress, telegramUsername, onBrowse }: BasketSheetProps) {
+export function BasketSheet({ locale, basket, menu, order, privacy, privacyLink, token, pickupAddress, telegramUsername, table, onBrowse }: BasketSheetProps) {
   const { lines, dishes, count, total, isOpen, closeBasket, increment, decrement, remove, clear } = useBasket();
   const [view, setView] = useState<View>('basket');
   const [direction, setDirection] = useState(1);
-  const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
+  const [draft, setDraft] = useState<Draft>(table ? { ...EMPTY_DRAFT, fulfillment: 'table' } : EMPTY_DRAFT);
   const [invalid, setInvalid] = useState<OrderField[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<SubmitError | null>(null);
@@ -123,7 +125,8 @@ export function BasketSheet({ locale, basket, menu, order, privacy, privacyLink,
         token,
         company: trap.current,
         locale,
-        fulfillment: draft.fulfillment,
+        fulfillment: table ? 'table' : draft.fulfillment,
+        tableToken: table?.token,
         phone: draft.phone,
         name: draft.name,
         address: draft.address,
@@ -157,7 +160,7 @@ export function BasketSheet({ locale, basket, menu, order, privacy, privacyLink,
   const onBack = () => {
     if (view === 'fulfillment') go('basket');
     else if (view === 'details') go('fulfillment');
-    else if (view === 'review') go('details');
+    else if (view === 'review') go(table ? 'basket' : 'details');
   };
 
   const basketHeader = (
@@ -169,7 +172,7 @@ export function BasketSheet({ locale, basket, menu, order, privacy, privacyLink,
     </div>
   );
 
-  const header = view === 'basket' || view === 'done' ? (view === 'basket' ? basketHeader : <div className="h-1" />) : <CheckoutHeader step={view} copy={order} onBack={onBack} />;
+  const header = view === 'basket' || view === 'done' ? (view === 'basket' ? basketHeader : <div className="h-1" />) : <CheckoutHeader step={view} copy={order} onBack={onBack} steps={table ? ['review'] : undefined} />;
 
   const primary = 'tap flex h-12 w-full items-center justify-center rounded-[14px] bg-accent text-button text-white disabled:cursor-not-allowed disabled:opacity-50';
 
@@ -188,10 +191,10 @@ export function BasketSheet({ locale, basket, menu, order, privacy, privacyLink,
           ) : null}
           {orderable ? (
             <>
-              <button type="button" onClick={() => go('fulfillment')} className={primary}>
-                {order.cta}
+              <button type="button" onClick={() => go(table ? 'review' : 'fulfillment')} className={primary}>
+                {table ? order.tableCta : order.cta}
               </button>
-              <p className="text-center text-[12px] text-ink/60">{order.basketNote}</p>
+              <p className="text-center text-[12px] text-ink/60">{table ? order.tableBasketNote : order.basketNote}</p>
             </>
           ) : (
             <p className="rounded-[12px] bg-fill px-3 py-3 text-center text-[13px] text-ink/70">{order.priceless}</p>
@@ -296,7 +299,7 @@ export function BasketSheet({ locale, basket, menu, order, privacy, privacyLink,
           />
         );
       case 'review':
-        return <ReviewStep copy={order} draft={draft} lines={lines} dishes={dishes} total={total.amount} currency={menu.currency} pickupAddress={pickupAddress} onEdit={go} />;
+        return <ReviewStep copy={order} draft={draft} lines={lines} dishes={dishes} total={total.amount} currency={menu.currency} pickupAddress={pickupAddress} table={table?.number ?? null} onEdit={go} />;
       case 'done':
         return placed ? (
           <Confirmation

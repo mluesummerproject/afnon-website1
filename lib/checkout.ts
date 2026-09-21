@@ -9,7 +9,8 @@
 
 import { MAX_LINES, MAX_QTY, type BasketLine } from '@/lib/basket';
 
-export type Fulfillment = 'delivery' | 'pickup';
+/** 'table' is an order placed from a table's own QR code: no phone, no address, the table is the destination. */
+export type Fulfillment = 'delivery' | 'pickup' | 'table';
 export type OrderField = 'phone' | 'name' | 'address' | 'addressNote';
 
 export const ORDER_LIMITS = {
@@ -80,7 +81,8 @@ export type OrderDetails = {
 
 export type ValidatedDetails = {
   fulfillment: Fulfillment;
-  phone: string;
+  /** null only for a table order, which is placed from the table and needs no phone. */
+  phone: string | null;
   name: string | null;
   address: string | null;
   addressNote: string | null;
@@ -97,8 +99,13 @@ export function cleanGeo(raw: unknown): { lat: number; lng: number } | null {
 }
 
 export function validateDetails(raw: Partial<Record<keyof OrderDetails, unknown>>): { values: ValidatedDetails | null; invalid: OrderField[] } {
-  const fulfillment: Fulfillment = raw.fulfillment === 'delivery' ? 'delivery' : 'pickup';
+  const fulfillment: Fulfillment = raw.fulfillment === 'delivery' ? 'delivery' : raw.fulfillment === 'table' ? 'table' : 'pickup';
   const invalid: OrderField[] = [];
+
+  // A table order asks nothing of the guest: whatever else arrived with it is ignored, never stored.
+  if (fulfillment === 'table') {
+    return { values: { fulfillment, phone: null, name: null, address: null, addressNote: null, geo: null }, invalid: [] };
+  }
 
   const phone = normalizeUzPhone(raw.phone);
   if (!phone) invalid.push('phone');

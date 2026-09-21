@@ -40,8 +40,20 @@ function Seed({ className }: { className?: string }) {
 
 /* ------------------------------------------------------------------ header */
 
-export function CheckoutHeader({ step, copy, onBack }: { step: CheckoutStep; copy: OrderCopy; onBack: () => void }) {
-  const index = CHECKOUT_STEPS.indexOf(step);
+export function CheckoutHeader({
+  step,
+  copy,
+  onBack,
+  steps = CHECKOUT_STEPS,
+}: {
+  step: CheckoutStep;
+  copy: OrderCopy;
+  onBack: () => void;
+  /** A table order has one step (review), so it shows no counter and no progress bar. */
+  steps?: CheckoutStep[];
+}) {
+  const index = steps.indexOf(step);
+  const showProgress = steps.length > 1;
   return (
     <div className="px-4 pb-3">
       <div className="flex items-center gap-2">
@@ -51,25 +63,29 @@ export function CheckoutHeader({ step, copy, onBack }: { step: CheckoutStep; cop
         <h2 id="basket-title" className="min-w-0 flex-1 truncate text-[18px] font-bold">
           {copy.steps[step]}
         </h2>
-        <span className="shrink-0 text-[13px] font-semibold tabular-nums text-ink/60">
-          <span aria-hidden="true">
-            {index + 1}/{CHECKOUT_STEPS.length}
+        {showProgress ? (
+          <span className="shrink-0 text-[13px] font-semibold tabular-nums text-ink/60">
+            <span aria-hidden="true">
+              {index + 1}/{steps.length}
+            </span>
+            <span className="sr-only">{format(copy.stepOf, { step: index + 1, total: steps.length })}</span>
           </span>
-          <span className="sr-only">{format(copy.stepOf, { step: index + 1, total: CHECKOUT_STEPS.length })}</span>
-        </span>
+        ) : null}
       </div>
-      <div className="mt-2 grid grid-cols-3 gap-1.5" aria-hidden="true">
-        {CHECKOUT_STEPS.map((name, position) => (
-          <span key={name} className="h-1 overflow-hidden rounded-full bg-ink/10">
-            <motion.span
-              className="block h-full origin-left rounded-full bg-accent"
-              initial={false}
-              animate={{ scaleX: position <= index ? 1 : 0 }}
-              transition={{ duration: 0.32, ease }}
-            />
-          </span>
-        ))}
-      </div>
+      {showProgress ? (
+        <div className="mt-2 grid grid-cols-3 gap-1.5" aria-hidden="true">
+          {steps.map((name, position) => (
+            <span key={name} className="h-1 overflow-hidden rounded-full bg-ink/10">
+              <motion.span
+                className="block h-full origin-left rounded-full bg-accent"
+                initial={false}
+                animate={{ scaleX: position <= index ? 1 : 0 }}
+                transition={{ duration: 0.32, ease }}
+              />
+            </span>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -255,69 +271,69 @@ export function DetailsStep({
 
       {delivery ? (
         <>
-          <div>
-            <FieldLabel htmlFor="order-address">{copy.address}</FieldLabel>
-            <textarea
-              id="order-address"
-              rows={2}
-              maxLength={500}
-              autoComplete="street-address"
-              value={draft.address}
-              placeholder={copy.addressPlaceholder}
-              onChange={(event) => onChange({ address: event.target.value })}
-              aria-invalid={bad('address') || undefined}
-              aria-describedby={bad('address') ? 'order-address-error' : undefined}
-              className={`${inputClass(bad('address'))} placeholder:text-ink/40`}
-            />
-            {bad('address') ? <FieldError id="order-address-error">{copy.addressError}</FieldError> : null}
-          </div>
-
-          <div>
-            <FieldLabel htmlFor="order-addressNote" optional={copy.optional}>
-              {copy.addressNote}
-            </FieldLabel>
-            <input
-              id="order-addressNote"
-              type="text"
-              maxLength={200}
-              value={draft.addressNote}
-              onChange={(event) => onChange({ addressNote: event.target.value })}
-              aria-invalid={bad('addressNote') || undefined}
-              className={inputClass(bad('addressNote'))}
-            />
-            {bad('addressNote') ? <FieldError id="order-addressNote-error">{copy.addressNoteError}</FieldError> : null}
-          </div>
-
-          <div aria-live="polite">
-            {draft.geo ? (
-              <div className="flex min-h-[44px] items-center justify-between gap-2 rounded-[12px] bg-accent/[0.06] pl-3.5">
-                <span className="flex min-w-0 items-center gap-2 text-[14px] font-semibold text-accent">
-                  <PinIcon size={18} className="shrink-0" />
-                  {copy.located}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => onChange({ geo: null })}
-                  aria-label={copy.locationRemove}
-                  title={copy.locationRemove}
-                  className="tap flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink/60 hover:text-accent"
-                >
-                  <CloseIcon size={18} />
-                </button>
+              <div>
+                <FieldLabel htmlFor="order-address">{copy.address}</FieldLabel>
+                <textarea
+                  id="order-address"
+                  rows={2}
+                  maxLength={500}
+                  autoComplete="street-address"
+                  value={draft.address}
+                  placeholder={copy.addressPlaceholder}
+                  onChange={(event) => onChange({ address: event.target.value })}
+                  aria-invalid={bad('address') || undefined}
+                  aria-describedby={bad('address') ? 'order-address-error' : undefined}
+                  className={`${inputClass(bad('address'))} placeholder:text-ink/40`}
+                />
+                {bad('address') ? <FieldError id="order-address-error">{copy.addressError}</FieldError> : null}
               </div>
-            ) : (
-              <button
-                type="button"
-                onClick={locate}
-                disabled={geoState === 'locating'}
-                className="tap flex h-11 w-full items-center justify-center gap-2 rounded-[12px] border border-line-strong bg-card text-[14px] font-semibold text-ink disabled:cursor-wait disabled:opacity-70"
-              >
-                <PinIcon size={18} className="text-accent" />
-                {geoState === 'locating' ? copy.locating : copy.locate}
-              </button>
-            )}
-            {geoMessage && !draft.geo ? <p className="mt-1.5 text-[12px] leading-snug text-ink/60">{geoMessage}</p> : null}
-          </div>
+
+              <div>
+                <FieldLabel htmlFor="order-addressNote" optional={copy.optional}>
+                  {copy.addressNote}
+                </FieldLabel>
+                <input
+                  id="order-addressNote"
+                  type="text"
+                  maxLength={200}
+                  value={draft.addressNote}
+                  onChange={(event) => onChange({ addressNote: event.target.value })}
+                  aria-invalid={bad('addressNote') || undefined}
+                  className={inputClass(bad('addressNote'))}
+                />
+                {bad('addressNote') ? <FieldError id="order-addressNote-error">{copy.addressNoteError}</FieldError> : null}
+              </div>
+
+              <div aria-live="polite">
+                {draft.geo ? (
+                  <div className="flex min-h-[44px] items-center justify-between gap-2 rounded-[12px] bg-accent/[0.06] pl-3.5">
+                    <span className="flex min-w-0 items-center gap-2 text-[14px] font-semibold text-accent">
+                      <PinIcon size={18} className="shrink-0" />
+                      {copy.located}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onChange({ geo: null })}
+                      aria-label={copy.locationRemove}
+                      title={copy.locationRemove}
+                      className="tap flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink/60 hover:text-accent"
+                    >
+                      <CloseIcon size={18} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={locate}
+                    disabled={geoState === 'locating'}
+                    className="tap flex h-11 w-full items-center justify-center gap-2 rounded-[12px] border border-line-strong bg-card text-[14px] font-semibold text-ink disabled:cursor-wait disabled:opacity-70"
+                  >
+                    <PinIcon size={18} className="text-accent" />
+                    {geoState === 'locating' ? copy.locating : copy.locate}
+                  </button>
+                )}
+                {geoMessage && !draft.geo ? <p className="mt-1.5 text-[12px] leading-snug text-ink/60">{geoMessage}</p> : null}
+              </div>
         </>
       ) : (
         <div className="rounded-[12px] bg-fill px-3.5 py-3">
@@ -345,7 +361,9 @@ function PaymentNote({ copy, fulfillment }: { copy: OrderCopy; fulfillment: Fulf
   return (
     <div className="flex items-baseline justify-between gap-3 rounded-[12px] border border-line px-3.5 py-3">
       <span className="text-[13px] font-semibold text-ink/60">{copy.payment}</span>
-      <span className="text-right text-[14px] font-semibold text-ink">{fulfillment === 'delivery' ? copy.payDelivery : copy.payPickup}</span>
+      <span className="text-right text-[14px] font-semibold text-ink">
+        {fulfillment === 'delivery' ? copy.payDelivery : fulfillment === 'table' ? copy.payTable : copy.payPickup}
+      </span>
     </div>
   );
 }
@@ -360,6 +378,7 @@ export function ReviewStep({
   total,
   currency,
   pickupAddress,
+  table,
   onEdit,
 }: {
   copy: OrderCopy;
@@ -369,6 +388,8 @@ export function ReviewStep({
   total: number;
   currency: string;
   pickupAddress: string | null;
+  /** The table's number for a table order — then there is no type or contact section to review. */
+  table: string | null;
   onEdit: (step: CheckoutStep) => void;
 }) {
   const delivery = draft.fulfillment === 'delivery';
@@ -399,36 +420,50 @@ export function ReviewStep({
         </div>
       </section>
 
-      <section aria-labelledby="review-type" className="rounded-[14px] bg-fill px-3.5 py-3">
-        <SectionTitle id="review-type" edit={copy.edit} onEdit={() => onEdit('fulfillment')}>
-          {copy.reviewType}
-        </SectionTitle>
-        <p className="text-[15px] font-semibold text-ink">{delivery ? copy.delivery : copy.pickup}</p>
-        {!delivery ? <p className="mt-0.5 text-[13px] text-ink/60">{pickupAddress ?? copy.pickupAddressMissing}</p> : null}
-      </section>
+      {table ? (
+        <section aria-labelledby="review-table" className="rounded-[14px] bg-fill px-3.5 py-3">
+          <SectionTitle id="review-table" edit={copy.edit} onEdit={null}>
+            {copy.reviewTable}
+          </SectionTitle>
+          <p className="text-[22px] font-bold leading-tight text-accent">{table}</p>
+          <p className="mt-0.5 text-[13px] leading-snug text-ink/60">{copy.tableNote}</p>
+        </section>
+      ) : null}
 
-      <section aria-labelledby="review-contact" className="rounded-[14px] bg-fill px-3.5 py-3">
-        <SectionTitle id="review-contact" edit={copy.edit} onEdit={() => onEdit('details')}>
-          {copy.reviewPhone}
-        </SectionTitle>
-        <p className="text-[15px] font-semibold tabular-nums text-ink">{draft.phone.trim()}</p>
-        {name ? <p className="mt-0.5 text-[14px] text-ink/70">{name}</p> : null}
-        {delivery ? (
-          <>
-            <p className="mt-2 text-[12px] font-semibold text-ink/60">{copy.reviewAddress}</p>
-            <p className="text-[14px] leading-snug text-ink">{draft.address.trim()}</p>
-            {draft.addressNote.trim() ? <p className="text-[13px] leading-snug text-ink/60">{draft.addressNote.trim()}</p> : null}
-            {draft.geo ? (
-              <p className="mt-1 flex items-center gap-1.5 text-[13px] font-medium text-accent">
-                <PinIcon size={15} />
-                {copy.locationShared}
-              </p>
+      {!table ? (
+        <>
+          <section aria-labelledby="review-type" className="rounded-[14px] bg-fill px-3.5 py-3">
+            <SectionTitle id="review-type" edit={copy.edit} onEdit={() => onEdit('fulfillment')}>
+              {copy.reviewType}
+            </SectionTitle>
+            <p className="text-[15px] font-semibold text-ink">{delivery ? copy.delivery : copy.pickup}</p>
+            {!delivery ? <p className="mt-0.5 text-[13px] text-ink/60">{pickupAddress ?? copy.pickupAddressMissing}</p> : null}
+          </section>
+
+          <section aria-labelledby="review-contact" className="rounded-[14px] bg-fill px-3.5 py-3">
+            <SectionTitle id="review-contact" edit={copy.edit} onEdit={() => onEdit('details')}>
+              {copy.reviewPhone}
+            </SectionTitle>
+            <p className="text-[15px] font-semibold tabular-nums text-ink">{draft.phone.trim()}</p>
+            {name ? <p className="mt-0.5 text-[14px] text-ink/70">{name}</p> : null}
+            {delivery ? (
+              <>
+                <p className="mt-2 text-[12px] font-semibold text-ink/60">{copy.reviewAddress}</p>
+                <p className="text-[14px] leading-snug text-ink">{draft.address.trim()}</p>
+                {draft.addressNote.trim() ? <p className="text-[13px] leading-snug text-ink/60">{draft.addressNote.trim()}</p> : null}
+                {draft.geo ? (
+                  <p className="mt-1 flex items-center gap-1.5 text-[13px] font-medium text-accent">
+                    <PinIcon size={15} />
+                    {copy.locationShared}
+                  </p>
+                ) : null}
+              </>
             ) : null}
-          </>
-        ) : null}
-      </section>
+          </section>
+        </>
+      ) : null}
 
-      <PaymentNote copy={copy} fulfillment={draft.fulfillment} />
+      <PaymentNote copy={copy} fulfillment={table ? 'table' : draft.fulfillment} />
     </div>
   );
 }
@@ -461,7 +496,7 @@ export function composePlacedMessage(placed: PlacedWithDetails, templates: Order
   const delivery = details.fulfillment === 'delivery';
   const after = [
     format(m.type, { type: delivery ? copy.delivery : copy.pickup }),
-    format(m.phone, { phone: displayUzPhone(order.phone) }),
+    order.phone ? format(m.phone, { phone: displayUzPhone(order.phone) }) : null,
     details.name.trim() ? format(m.name, { name: details.name.trim() }) : null,
     delivery && details.address.trim() ? format(m.address, { address: details.address.trim() }) : null,
     delivery && details.addressNote.trim() ? format(m.note, { note: details.addressNote.trim() }) : null,
@@ -528,37 +563,42 @@ export function Confirmation({
         >
           <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-ink/60">{c.codeLabel}</p>
           <p className="mt-1 text-[34px] font-bold leading-none tracking-[0.02em] text-accent tabular-nums">{placed.order.code}</p>
-          <p className="mt-3 text-[15px] leading-snug text-ink">{format(c.body, { phone: displayUzPhone(placed.order.phone) })}</p>
-          <p className="mt-1.5 text-[13px] leading-snug text-ink/60">{c.saved}</p>
+          <p className="mt-3 text-[15px] leading-snug text-ink">
+            {placed.order.table ? format(c.tableBody, { table: placed.order.table }) : format(c.body, { phone: displayUzPhone(placed.order.phone ?? '') })}
+          </p>
+          <p className="mt-1.5 text-[13px] leading-snug text-ink/60">{placed.order.table ? c.tableSaved : c.saved}</p>
         </motion.div>
       </div>
 
-      <div className="mt-6 border-t border-line pt-4">
-        <p className="text-center text-[13px] text-ink/60">{c.faster}</p>
-        <div className={`mt-3 grid gap-2 ${telegramUsername ? 'grid-cols-1 min-[400px]:grid-cols-2' : 'grid-cols-1'}`}>
-          {telegramUsername ? (
-            <a
-              href={orderUrl(message, telegramUsername)}
-              target="_blank"
-              rel="noreferrer noopener"
-              onClick={onTelegram}
-              className="tap flex h-11 items-center justify-center gap-2 rounded-[12px] border border-line-strong bg-card px-3 text-[14px] font-semibold text-ink"
-            >
-              <TelegramIcon size={18} className="text-accent" />
-              {c.telegram}
-            </a>
-          ) : null}
-          <button type="button" onClick={() => void copyText()} className="tap flex h-11 items-center justify-center gap-2 rounded-[12px] border border-line-strong bg-card px-3 text-[14px] font-semibold text-ink">
-            {c.copy}
-          </button>
-        </div>
-        {manualCopy ? (
-          <div className="mt-3">
-            <p className="text-[12px] text-ink/60">{c.copyManual}</p>
-            <textarea readOnly rows={6} value={message} onFocus={(event) => event.target.select()} className="field mt-1.5 border-line-strong text-[13px]" />
+      {/* Sending to staff on Telegram, or copying the text, is for orders that come with a phone number; a table order needs neither. */}
+      {placed.order.table ? null : (
+        <div className="mt-6 border-t border-line pt-4">
+          <p className="text-center text-[13px] text-ink/60">{c.faster}</p>
+          <div className={`mt-3 grid gap-2 ${telegramUsername ? 'grid-cols-1 min-[400px]:grid-cols-2' : 'grid-cols-1'}`}>
+            {telegramUsername ? (
+              <a
+                href={orderUrl(message, telegramUsername)}
+                target="_blank"
+                rel="noreferrer noopener"
+                onClick={onTelegram}
+                className="tap flex h-11 items-center justify-center gap-2 rounded-[12px] border border-line-strong bg-card px-3 text-[14px] font-semibold text-ink"
+              >
+                <TelegramIcon size={18} className="text-accent" />
+                {c.telegram}
+              </a>
+            ) : null}
+            <button type="button" onClick={() => void copyText()} className="tap flex h-11 items-center justify-center gap-2 rounded-[12px] border border-line-strong bg-card px-3 text-[14px] font-semibold text-ink">
+              {c.copy}
+            </button>
           </div>
-        ) : null}
-      </div>
+          {manualCopy ? (
+            <div className="mt-3">
+              <p className="text-[12px] text-ink/60">{c.copyManual}</p>
+              <textarea readOnly rows={6} value={message} onFocus={(event) => event.target.select()} className="field mt-1.5 border-line-strong text-[13px]" />
+            </div>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }

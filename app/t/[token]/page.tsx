@@ -7,20 +7,32 @@ import { issueFormToken } from '@/lib/antispam';
 import { format } from '@/lib/i18n';
 import { getLocaleAndDictionary } from '@/lib/locale';
 import { brand } from '@/lib/site';
-import { resolveTableByToken } from '@/lib/tables-server';
+import { resolveTableByToken, tableOrderingAvailable } from '@/lib/tables-server';
+import { HomeView } from '@/components/site/HomeView';
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /**
  * Printed on a QR code at a physical table. Resolved entirely server-side —
- * the token list itself is never exposed to a browser — and carries the full
- * customer-facing visual language, because for many diners this is the very
- * first page of the site they ever open.
+ * the token list itself is never exposed to a browser.
+ *
+ * For an active table this is the full menu and basket with the table already
+ * known (the homepage's own view, so there is one ordering flow, not two), and
+ * the visit-feedback form at its foot. An unknown or switched-off token gets
+ * the same friendly "not active" page as always, which says nothing that would
+ * help someone guess tokens.
+ *
+ * Until the table-orders SQL has been run the page stays what it was: the
+ * feedback form on its own.
  */
-export default async function TableFeedbackPage({ params }: { params: { token: string } }) {
+export default async function TablePage({ params }: { params: { token: string } }) {
   const { locale, dict } = getLocaleAndDictionary();
   const copy = dict.tableFeedback;
   const table = await resolveTableByToken(params.token);
+
+  if (table && (await tableOrderingAvailable())) {
+    return <HomeView table={{ token: params.token, number: table.tableNumber }} />;
+  }
 
   return (
     <div className="min-h-[100svh] bg-page">

@@ -64,9 +64,10 @@ export type Order = {
   id: number;
   created_at: string;
   order_code: string;
-  fulfillment_type: 'delivery' | 'pickup';
+  fulfillment_type: 'delivery' | 'pickup' | 'table';
   customer_name: string | null;
-  phone: string;
+  /** null for a table order (placed from the table itself). */
+  phone: string | null;
   address: string | null;
   address_note: string | null;
   geo_lat: number | null;
@@ -77,6 +78,9 @@ export type Order = {
   status: OrderStatus;
   language: 'uz' | 'ru' | 'en' | null;
   telegram_opened: boolean;
+  /** Set only on table orders; table_number is the number as it was when the order was placed. */
+  table_id?: number | null;
+  table_number?: string | null;
 };
 
 /** A printed table QR code. Never readable by anon — resolved server-side only. */

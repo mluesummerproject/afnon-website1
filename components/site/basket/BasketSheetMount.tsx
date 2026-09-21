@@ -15,6 +15,7 @@ export function BasketSheetMount(props: {
   token: string;
   pickupAddress: string | null;
   telegramUsername: string | null;
+  table: { token: string; number: string } | null;
 }) {
   return (
     <BasketSheet

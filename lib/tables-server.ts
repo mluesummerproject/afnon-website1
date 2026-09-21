@@ -26,3 +26,32 @@ export async function resolveTableByToken(token: string): Promise<{ id: number; 
   if (error || !data || data.is_active === false) return null;
   return { id: data.id, tableNumber: data.table_number };
 }
+
+/**
+ * Whether supabase/migrations/0002_table_orders_and_dish_comments.sql has been
+ * run (orders can carry a table). Until it has, /t/[token] stays the plain
+ * feedback page and nothing can be ordered to a table, so the site never
+ * offers what it cannot record.
+ *
+ * A positive answer is remembered for the life of the server process; a
+ * negative one is rechecked at most every 30 seconds.
+ */
+let tableOrdersKnown = false;
+let tableOrdersCheckedAt = 0;
+
+export async function tableOrderingAvailable(): Promise<boolean> {
+  if (!isAdminSupabaseConfigured) return false;
+  if (tableOrdersKnown) return true;
+  if (Date.now() - tableOrdersCheckedAt < 30_000) return false;
+  const { error } = await getSupabaseAdmin().from('orders').select('table_id, table_number').limit(1);
+  // Only "these columns do not exist" counts as not-run-yet (and is then remembered for 30s). A dropped
+  // connection or a timeout says nothing about the schema, so it is retried on the next request instead.
+  if (!error) tableOrdersKnown = true;
+  else if (isMissingSchema(error.code)) tableOrdersCheckedAt = Date.now();
+  return tableOrdersKnown;
+}
+
+/** Postgres/PostgREST codes for "no such column / table" — the migration has not been run. */
+export function isMissingSchema(code: string | undefined): boolean {
+  return code === '42703' || code === '42P01' || code === 'PGRST204' || code === 'PGRST205' || code === 'PGRST200';
+}
